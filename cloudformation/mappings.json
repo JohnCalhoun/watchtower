@@ -1,0 +1,8 @@
+/*  
+*/
+"Mappings":{
+    "DNS":{
+        "HostingURL":{"Name":"disclosure.johnmcalhoun.guru"}, 
+        "HostedZone":{"ID":"Z1H907X2VR5MUK"}
+    }
+}

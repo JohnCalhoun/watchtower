@@ -1,0 +1,11 @@
+/*
+    security groups
+        server
+        lambdas 
+        elb
+
+    roles
+        server
+        lambdas
+        users
+*/

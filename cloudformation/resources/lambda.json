@@ -1,0 +1,5 @@
+/*
+    lambda to deal with dynamodb streams
+    lambdas for SWF
+    lambda to create Cognito as custom resource
+*/

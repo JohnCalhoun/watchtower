@@ -1,0 +1,6 @@
+/*
+    dynamodb table to host backend for titandb
+        streams to lambda for 
+            logging
+            backup/versioning
+*/
