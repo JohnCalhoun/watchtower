@@ -35,15 +35,15 @@ module.exports=function(event,context){
     this.succeed=function(data){
         console.log('data',data)
         if(data){
+            var ID=data.UserPool.Id
             var responseBody = JSON.stringify({
                 Status:"SUCCESS" ,
-                PhysicalResourceId:data.ID+'|'+data.clientID,
+                PhysicalResourceId:ID,
                 StackId: event.StackId,
                 RequestId: event.RequestId,
                 LogicalResourceId: event.LogicalResourceId,
                 Data:{
-                    Id:data.ID,
-                    clientID:data.clientID
+                    Id:ID
                 }
             });
             //send(responseBody)

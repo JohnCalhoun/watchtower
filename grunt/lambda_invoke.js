@@ -1,4 +1,11 @@
 module.exports={
+    createcognitoIdentity:{
+        options:{
+            handler:'handler',
+            file_name:'lambda/CreateCognitoIdentity/build/handler.js',
+            event:'lambda/CreateCognitoIdentity/event.json'
+        }
+    },
     createcognitopool:{
         options:{
             handler:'handler',

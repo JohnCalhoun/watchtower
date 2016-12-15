@@ -6,6 +6,13 @@ module.exports={
             "lambda/CreateCognitoPool/build/response.js":['lambda/CreateCognitoPool/response.js']
         }
     },
+    createcognitoidentity:{
+        files:{
+            "lambda/CreateCognitoIdentity/build/handler.js":['lambda/CreateCognitoIdentity/handler.js'],
+            "lambda/CreateCognitoIdentity/build/process.js":['lambda/CreateCognitoIdentity/process.js'],
+            "lambda/CreateCognitoIdentity/build/response.js":['lambda/CreateCognitoIdentity/response.js']
+        }
+    },
     client:{
         files:{
             "build/timing.js":["client/timing.js"]

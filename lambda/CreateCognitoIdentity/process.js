@@ -31,13 +31,21 @@ module.exports.create=function(event){
 module.exports.destory=function(event){
     var out=new Promise(function(resolve,reject){
         if(event.RequestType==="Delete" | event.RequestType==="Update"){
-            cognito.deleteBoth(event)
-                .then(function(){
-                    resolve()
-                },
-                function(err){
-                    reject(err)
-                })
+            var props=event.ResourceProperties
+            var params={
+                UserPoolId:event.PhysicalResourceId
+            }
+            cognito.deleteIdentityPool(
+                params,
+                function(err,data){
+                    if(err){
+                        console.log(err)
+                        reject(err)
+                    }else{
+                        resolve(data)
+                    }
+                }
+                )
         }else{
             resolve()
         }

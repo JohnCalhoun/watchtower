@@ -13,7 +13,9 @@ module.exports=function(grunt){
     grunt.registerTask('lambda',[
         'clean:lambda', 
         'uglify:createcognitopool',
+        'uglify:createcognitoidentity',
         'lambda_package:createcognitopool',
+        'lambda_package:createcognitoidentity',
         'shell:moveLambda'
     ])
     grunt.registerTask('runpool',[
@@ -21,6 +23,12 @@ module.exports=function(grunt){
         'env:dev',
         'lambda_invoke:createcognitopool'
     ])
+    grunt.registerTask('runid',[
+        'lambda',
+        'env:dev',
+        'lambda_invoke:createcognitoidentity'
+    ])
+
 
 
     grunt.registerTask('cloudformation',[
