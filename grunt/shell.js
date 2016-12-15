@@ -1,4 +1,7 @@
 module.exports={
+    moveLambda:{
+        command:"mv tmp/createcognitopool*.zip tmp/createcognitopool.zip;"
+    },
     updateStack:{
         command:"aws cloudformation update-stack --template-body file://tmp/template.json --stack-name <%= stackName %> --capabilities CAPABILITY_IAM"
     },

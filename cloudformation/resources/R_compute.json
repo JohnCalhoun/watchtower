@@ -1,0 +1,69 @@
+/*
+    Titan DB gremlin server 
+        Gremlin Launch Config
+        AutoScaling Group
+        ELB
+*/
+"GremlinServerLC":{
+    "Type":"AWS::AutoScaling::LaunchConfiguration",
+    "Properties":{
+        "EbsOptimized" : false,
+        "KeyName":{ "Fn::FindInMap": [ "RegionKeys", { "Ref": "AWS::Region" }, "Name" ] },
+        "ImageId" :  { "Fn::FindInMap": [ "RegionAmis", { "Ref": "AWS::Region" }, "ID" ] },
+        "InstanceType" : { "Fn::FindInMap": [ "InstanceType", "Instance", "ID"] },
+        "SecurityGroups" : [{"Ref":"GremlinServerSG"}],
+        "IamInstanceProfile":{"Ref":"GremlinServerProfile"},
+        "UserData" : {"Fn::Base64":
+            {"Fn::Join":["\n",[
+                "#! /bin/bash",
+                "exec >/root/user-data.log 2>&1",
+                "yum install git -y",
+                "yum update -y"
+            ]]}
+        } 
+    }
+},
+"AutoScalingGroup":{
+    "Type" : "AWS::AutoScaling::AutoScalingGroup",
+    "Properties" : {
+        "HealthCheckType" : "ELB",
+        "LaunchConfigurationName" : {"Ref":"GremlinServerLC"},
+        "LoadBalancerNames" : [{"Ref":"ELB"}],
+        "HealthCheckGracePeriod":"360",
+        "MaxSize" : "1",
+        "DesiredCapacity" : "1",
+        "MinSize" : "1",
+        "VPCZoneIdentifier" : [ {"Ref":"subnet1"},{"Ref":"subnet2"}]
+    }
+},
+"ELB":{
+    "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+    "Properties": {
+        "HealthCheck" : {
+            "Interval" : 5,
+            "Target" : "HTTP:80/healthcheck",
+            "Timeout" : 2,
+            "UnhealthyThreshold" : 10,
+            "HealthyThreshold" : 2
+        },
+        "Listeners" : [ 
+            {
+                "InstancePort" : "80",
+                "InstanceProtocol" : "HTTP",
+                "LoadBalancerPort" : "80",
+                "Protocol" : "HTTP"
+            },
+            {
+                "InstancePort" : "80",
+                "InstanceProtocol" : "HTTP",
+                "LoadBalancerPort" : "443",
+                "Protocol" : "HTTPS",
+                "SSLCertificateId":{"Fn::FindInMap":["Cert","ACM","ARN"]}
+            }
+        ],
+        "Subnets" : [{"Ref":"subnet1"},{"Ref":"subnet2"}],
+        "SecurityGroups":[{"Ref":"ELBSG"}]
+    },
+    "DependsOn":"VPCattach"
+}
+

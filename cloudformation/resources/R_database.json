@@ -1,0 +1,23 @@
+/*
+    dynamodb table to host backend for titandb
+        streams to lambda for 
+            logging
+            backup/versioning
+*/
+"GraphDatabase":{
+    "Type" : "AWS::DynamoDB::Table",
+    "Properties" : {
+        "AttributeDefinitions" : [ 
+            {
+                "AttributeName" : "Album",
+                "AttributeType" : "S"
+            }
+        ],
+        "KeySchema" : [ 
+            {
+                "AttributeName" : "Album",
+                "KeyType" : "HASH"
+            }
+        ]
+    }
+}

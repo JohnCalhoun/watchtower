@@ -9,6 +9,20 @@ module.exports=function(grunt){
         data:grunt.file.readJSON('config.json')
     });
     
+
+    grunt.registerTask('lambda',[
+        'clean:lambda', 
+        'uglify:createcognitopool',
+        'lambda_package:createcognitopool',
+        'shell:moveLambda'
+    ])
+    grunt.registerTask('runpool',[
+        'lambda',
+        'env:dev',
+        'lambda_invoke:createcognitopool'
+    ])
+
+
     grunt.registerTask('cloudformation',[
         'concat:resources',
         'concat:cloudformation'

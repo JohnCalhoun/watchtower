@@ -1,7 +1,7 @@
 module.exports={
-    dump:{
+    createcognitopool:{
         options:{
-            package_folder:'lambda/dump/build',
+            package_folder:'lambda/CreateCognitoPool/build',
             dist_folder:'tmp'
         }
     }

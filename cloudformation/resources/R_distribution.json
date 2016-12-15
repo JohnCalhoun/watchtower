@@ -1,0 +1,46 @@
+/*
+    cloudfront distirbution for website
+    needs ssl termination 
+    needs certificate
+*/
+"distribution":{
+    "Type" : "AWS::CloudFront::Distribution",
+    "Properties" : {
+        "DistributionConfig" :{
+            "Aliases" : [
+                {"Fn::Join":["",[ 
+                    {"Ref":"AWS::StackName"},
+                    ".",
+                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
+                ]]}
+            ],
+            "DefaultCacheBehavior" : 
+            {
+                "Compress" : true,
+                "ForwardedValues" : {
+                    "QueryString" : false
+                },
+                "TargetOriginId" : "bucket",
+                "ViewerProtocolPolicy" : "redirect-to-https"
+            } 
+            ,
+            "DefaultRootObject" : "/index.html",
+            "Enabled" : true,
+            "Origins" : [ 
+                {
+                "DomainName" : {"Fn::GetAtt":["HostingBucket","DomainName"]},
+                "Id" : "bucket",
+                "S3OriginConfig" : {
+                    "OriginAccessIdentity" : ""
+                }
+                } 
+            ],
+            "ViewerCertificate":{
+                "AcmCertificateArn" : {"Fn::FindInMap":["Cert","ACM","ARN"]},
+                "SslSupportMethod":"sni-only"
+            },
+            "PriceClass" : "PriceClass_100"
+        }
+    }
+}
+

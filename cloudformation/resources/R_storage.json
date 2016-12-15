@@ -1,0 +1,43 @@
+/*
+    website
+    backup
+*/
+"HostingBucket":{
+    "Type" : "AWS::S3::Bucket",
+    "Properties" : {
+        "WebsiteConfiguration" :{
+            "ErrorDocument":"error.html",
+            "IndexDocument":"index.html"
+        },
+        "BucketName":{"Fn::Join":[".",[
+            {"Ref":"AWS::StackName"},
+            {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
+        ]]}
+    }
+},
+"HostingPolicy":{
+    "Type" : "AWS::S3::BucketPolicy",
+    "Properties" : {
+        "Bucket" : {"Ref":"HostingBucket"},
+        "PolicyDocument" : {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": [{ "Fn::Join" : ["", [
+                       "arn:aws:s3:::", 
+                        { "Ref" : "HostingBucket" } 
+                        , "/*" ]]},
+                        { "Fn::Join" : ["", [
+                       "arn:aws:s3:::", 
+                        { "Ref" : "HostingBucket" } 
+                        ]]}
+                    ]
+                }
+            ]
+        } 
+    }
+}
+

@@ -1,9 +1,9 @@
 module.exports={
-    dump:{
+    createcognitopool:{
         options:{
             handler:'handler',
-            file_name:'lambda/dump/build/handler.js',
-            event:'lambda/dump/event.json'
+            file_name:'lambda/CreateCognitoPool/build/handler.js',
+            event:'lambda/CreateCognitoPool/event.json'
         }
     }
 }

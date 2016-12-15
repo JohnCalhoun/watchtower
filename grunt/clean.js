@@ -2,6 +2,7 @@ module.exports={
     options:{
         "no-write":false
     },
-    all:["tmp/*"]
+    all:["tmp/*"],
+    lambda:["tmp/*.zip"]
 }
 

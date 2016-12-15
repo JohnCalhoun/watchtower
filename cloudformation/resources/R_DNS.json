@@ -1,0 +1,40 @@
+/*
+    DNS record and website Cloudfront distribution
+    DNS record for gremlin server ELB
+*/
+"DNSRecord" : {
+    "Type" : "AWS::Route53::RecordSet",
+    "Properties" : {
+        "HostedZoneId" : {"Fn::FindInMap":["DNS","HostedZone","ID"]},
+        "Name":{"Fn::Join":["",[ 
+                    {"Ref":"AWS::StackName"},
+                    ".",
+                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]},
+                    "."
+        ]]},
+        "Type" : "CNAME",
+        "TTL" : "30",
+        "ResourceRecords" : [
+            { "Fn::GetAtt" : [ "distribution", "DomainName" ] }
+        ]
+    }
+},
+"GremlinDNSRecord" : {
+    "Type" : "AWS::Route53::RecordSet",
+    "Properties" : {
+        "HostedZoneId" : {"Fn::FindInMap":["DNS","HostedZone","ID"]},
+        "Name":{"Fn::Join":["",[
+                "gremlin",
+                "-",
+                {"Ref":"AWS::StackName"},
+                ".",
+                {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]},
+                "."
+        ]]},
+        "Type" : "CNAME",
+        "TTL" : "30",
+        "ResourceRecords" : [
+            { "Fn::GetAtt" : [ "ELB", "DNSName" ] }
+        ]
+    }
+}

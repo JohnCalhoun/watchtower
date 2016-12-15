@@ -1,0 +1,277 @@
+/*
+    security groups
+        server
+        lambdas 
+        elb
+
+    roles
+        server
+        lambdas
+        users
+*/
+"GremlinServerSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"Allows server to take in http traffic and lambda REDIS request",
+        "SecurityGroupIngress" : [ 
+            {
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "22",
+                "ToPort" : "22",
+                "IpProtocol" : "tcp"
+            },
+            {
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "80",
+                "ToPort" : "80",
+                "IpProtocol" : "tcp"
+            },
+            {
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "443",
+                "ToPort" : "443",
+                "IpProtocol" : "tcp"
+            }
+        ],
+        "VpcId" : {"Ref":"VPC"}
+    }
+},
+"ELBSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"Allows traffic through load balancer",
+        "SecurityGroupIngress" : [ 
+            {
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "80",
+                "ToPort" : "80",
+                "IpProtocol" : "tcp"
+            },
+            {
+                "CidrIp" : "0.0.0.0/0",
+                "FromPort" : "443",
+                "ToPort" : "443",
+                "IpProtocol" : "tcp"
+            }
+        ],
+        "VpcId" : {"Ref":"VPC"}
+    }
+},
+"GremlinServerProfile":{
+    "Type": "AWS::IAM::InstanceProfile",
+    "Properties": {
+        "Path": "/",
+        "Roles": [ {"Ref":"GremlinServerRole"} ]
+    }
+},
+"GremlinServerRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+        "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "ec2.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "Policies": []
+    }
+},
+"CreateHealthCheckRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"S3PutGet",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:DeleteObject",
+                            "s3:PutObject",
+                            "s3:ListObjects"
+                        ],
+                        "Resource":[
+                            { "Fn::Join" : ["", [
+                            "arn:aws:s3:::", 
+                            { "Ref" : "HostingBucket" },
+                            "/*" ]]},
+                            { "Fn::Join" : ["", [
+                            "arn:aws:s3:::", 
+                            { "Ref" : "HostingBucket" } 
+                            ]]}
+                        ]
+                    }
+                    ]
+              }
+            }
+        ]
+    }
+},
+"CreateCognitoPool":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"CreateCognitoProvider":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"CreateSWF":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"AdminRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"RequesterRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"OberserverRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+}

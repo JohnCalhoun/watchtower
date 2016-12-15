@@ -1,9 +1,9 @@
 module.exports={
-    dump:{
+    createcognitopool:{
         files:{
-            "lambda/dump/build/handler.js":['lambda/dump/handler.js'],
-            "lambda/dump/build/build/save.js":['lambda/dump/save.js'],
-            "lambda/dump/build/build/dump.js":['lambda/dump/dump.js']
+            "lambda/CreateCognitoPool/build/handler.js":['lambda/CreateCognitoPool/handler.js'],
+            "lambda/CreateCognitoPool/build/process.js":['lambda/CreateCognitoPool/process.js'],
+            "lambda/CreateCognitoPool/build/response.js":['lambda/CreateCognitoPool/response.js']
         }
     },
     client:{

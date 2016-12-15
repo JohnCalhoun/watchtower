@@ -1,0 +1,88 @@
+/*
+    alarms
+        website health
+        gremlin server health
+    cloudtrail 
+*/
+"Websitehealthcheck":{
+    "Type" : "AWS::Route53::HealthCheck",
+    "Properties" : {
+        "HealthCheckConfig" : {
+			"FailureThreshold" : 3,
+			"FullyQualifiedDomainName" :
+                {"Fn::Join":["",[ 
+                    {"Ref":"AWS::StackName"},
+                    ".",
+                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
+                ]]},
+			"Port" : 80,
+			"ResourcePath" : "/healthcheck.html",
+			"Type" : "HTTP"
+        }
+    }
+},
+"Websitehealthalarm":{
+    "Type" : "AWS::CloudWatch::Alarm",
+    "Properties" : {
+        "ComparisonOperator" : "LessThanThreshold",
+        "Period" : "240",
+        "EvaluationPeriods" : "2",
+        "Namespace" : "AWS/Route53",
+        "MetricName" : "HealthCheckPercentageHealthy",
+        "Dimensions" : [ 
+            {"Name":"HealthCheckId",
+            "Value":{"Ref":"Websitehealthcheck"}
+            }
+        ],
+        "Unit":"Percent", 
+        "Statistic" : "Minimum",
+        "Threshold" : "100"
+    }
+},
+"Gremlinhealthcheck":{
+    "Type" : "AWS::Route53::HealthCheck",
+    "Properties" : {
+        "HealthCheckConfig" : {
+			"FailureThreshold" : 3,
+			"FullyQualifiedDomainName" :
+                {"Fn::Join":["",[ 
+                    "gremlin",
+                    ".",
+                    {"Ref":"AWS::StackName"},
+                    ".",
+                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
+                ]]},
+			"Port" : 80,
+			"ResourcePath" : "/healthcheck.html",
+			"Type" : "HTTP"
+        }
+    }
+},
+"Gremlinhealthalarm":{
+    "Type" : "AWS::CloudWatch::Alarm",
+    "Properties" : {
+        "ComparisonOperator" : "LessThanThreshold",
+        "Period" : "240",
+        "EvaluationPeriods" : "2",
+        "Namespace" : "AWS/Route53",
+        "MetricName" : "HealthCheckPercentageHealthy",
+        "Dimensions" : [ 
+            {"Name":"HealthCheckId",
+            "Value":{"Ref":"Gremlinhealthcheck"}
+            }
+        ],
+        "Unit":"Percent", 
+        "Statistic" : "Minimum",
+        "Threshold" : "100"
+    }
+
+}
+
+
+
+
+
+
+
+
+
