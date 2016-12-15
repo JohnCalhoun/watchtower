@@ -46,7 +46,7 @@ module.exports=function(event,context){
                     clientID:data.clientID
                 }
             });
-            //send(responseBody)
+            send(responseBody)
         }else{
             var responseBody = JSON.stringify({
                 Status:"SUCCESS" ,
@@ -55,7 +55,7 @@ module.exports=function(event,context){
                 RequestId: event.RequestId,
                 LogicalResourceId: event.LogicalResourceId,
             });
-            //send(responseBody)
+            send(responseBody)
         }
     }
     this.fail=function(err){
@@ -68,6 +68,6 @@ module.exports=function(event,context){
             RequestId: event.RequestId,
             LogicalResourceId: event.LogicalResourceId
         });
-        //send(responseBody) 
+        send(responseBody) 
     } 
 }

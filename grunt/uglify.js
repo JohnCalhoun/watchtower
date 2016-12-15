@@ -3,7 +3,8 @@ module.exports={
         files:{
             "lambda/CreateCognitoPool/build/handler.js":['lambda/CreateCognitoPool/handler.js'],
             "lambda/CreateCognitoPool/build/process.js":['lambda/CreateCognitoPool/process.js'],
-            "lambda/CreateCognitoPool/build/response.js":['lambda/CreateCognitoPool/response.js']
+            "lambda/CreateCognitoPool/build/response.js":['lambda/CreateCognitoPool/response.js'],
+            "lambda/CreateCognitoPool/build/cognito.js":['lambda/CreateCognitoPool/cognito.js']
         }
     },
     createcognitoidentity:{

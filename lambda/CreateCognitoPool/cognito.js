@@ -2,7 +2,7 @@ var aws=require('aws-sdk')
 var region=process.env.REGION
 var cognito=new aws.CognitoIdentityServiceProvider({region:region})
 
-module.exports.createPool=function(props){   
+module.exports.CreatePool=function(props){   
     var params={
         PoolName:props.PoolName,
         AdminCreateUserConfig: {
@@ -55,11 +55,12 @@ module.exports.createPool=function(props){
                 }
             })
     })
+    return out
 }
 
-module.exports.createApp=function(props,userPoolId){   
+module.exports.CreateApp=function(props,userPoolId){   
     var params={
-        ClientName: props.ClientName, /* required */
+        ClientName: props.PoolName+'-app', /* required */
         UserPoolId: userPoolId
     }
     
@@ -74,19 +75,22 @@ module.exports.createApp=function(props,userPoolId){
                 }
             })
     })
+    return out
 }
 
 module.exports.deleteBoth=function(event){ 
-    pool=event.PhyscialResourceId.split('|')[0]
-    app=event.PhyscialResourceId.split('|')[1]
-    var paramsApp={
+    pool=event.PhysicalResourceId.split('|')[0]
+    app=event.PhysicalResourceId.split('|')[1]
+
+    var paramsPool={
         UserPoolId:pool
     }
-    
     var paramsApp={
         UserPoolId:pool,
         ClientId:app
     }
+    console.log(paramsPool)  
+    console.log(paramsApp)  
 
     var deleteApp=function(resolve,reject){
         cognito.deleteUserPoolClient(
@@ -103,7 +107,7 @@ module.exports.deleteBoth=function(event){
     }
 
     var deletePool=function(resolve,reject){
-        cognito.deleteIdentityPool(
+        cognito.deleteUserPool(
             paramsPool,
             function(err,data){
                 if(err){
@@ -121,6 +125,7 @@ module.exports.deleteBoth=function(event){
     var out=tmp.then(function(){
         return new Promise(deletePool)
     })
+    return out
 }
 
 

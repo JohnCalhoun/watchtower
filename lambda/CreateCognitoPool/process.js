@@ -5,14 +5,14 @@ module.exports.create=function(event){
         if(event.RequestType==="Create" | event.RequestType==="Update"){
             var props=event.ResourceProperties
             
-            congito.CreatePool(props)
+            cognito.CreatePool(props)
                 .then(function(data){
                     var id=data.UserPool.Id
-                    cognito.createApp(props,id)
+                    cognito.CreateApp(props,id)
                         .then(function(data2){
                             var out={}
                             out.ID=id
-                            out.clientID=data2.UserPoolClient.UserPoolId
+                            out.clientID=data2.UserPoolClient.ClientId
                             resolve(out)
                         },
                         function(err){
