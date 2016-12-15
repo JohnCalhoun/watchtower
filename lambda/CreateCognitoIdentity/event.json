@@ -5,8 +5,8 @@
     "StackName": "stack-name",
     "PoolName":"test"
   },
-  "PhysicalResourceId":"us-east-1_8g4ssC5KD",
-  "RequestType": "Create",
+  "PhysicalResourceId":"us-east-1_ZnDNBPOin|6ockthf77ikdod50mm4fenkb0u",
+  "RequestType": "Delete",
   "ResourceType": "Custom::TestResource",
   "RequestId": "unique id for this create request",
   "LogicalResourceId": "ET-arn"

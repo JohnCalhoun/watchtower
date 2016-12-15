@@ -5,14 +5,13 @@ module.exports.create=function(event){
         if(event.RequestType==="Create" | event.RequestType==="Update"){
             var props=event.ResourceProperties
             
-            congito.CreatePool(props)
+            cognito.CreatePool(props)
                 .then(function(data){
-                    var id=data.UserPool.Id
-                    cognito.createApp(props,id)
+                    var id=data.IDPool.Id
+                    cognito.CreateRoles(props,id)
                         .then(function(data2){
                             var out={}
                             out.ID=id
-                            out.clientID=data2.UserPoolClient.UserPoolId
                             resolve(out)
                         },
                         function(err){
@@ -31,21 +30,13 @@ module.exports.create=function(event){
 module.exports.destory=function(event){
     var out=new Promise(function(resolve,reject){
         if(event.RequestType==="Delete" | event.RequestType==="Update"){
-            var props=event.ResourceProperties
-            var params={
-                UserPoolId:event.PhysicalResourceId
-            }
-            cognito.deleteIdentityPool(
-                params,
-                function(err,data){
-                    if(err){
-                        console.log(err)
-                        reject(err)
-                    }else{
-                        resolve(data)
-                    }
-                }
-                )
+            cognito.deletePool(event)
+                .then(function(){
+                    resolve()
+                },
+                function(err){
+                    reject(err)
+                })
         }else{
             resolve()
         }

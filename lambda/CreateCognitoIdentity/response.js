@@ -35,18 +35,18 @@ module.exports=function(event,context){
     this.succeed=function(data){
         console.log('data',data)
         if(data){
-            var ID=data.UserPool.Id
             var responseBody = JSON.stringify({
                 Status:"SUCCESS" ,
-                PhysicalResourceId:ID,
+                PhysicalResourceId:data.ID+'|'+data.clientID,
                 StackId: event.StackId,
                 RequestId: event.RequestId,
                 LogicalResourceId: event.LogicalResourceId,
                 Data:{
-                    Id:ID
+                    Id:data.ID,
+                    clientID:data.clientID
                 }
             });
-            //send(responseBody)
+            send(responseBody)
         }else{
             var responseBody = JSON.stringify({
                 Status:"SUCCESS" ,
@@ -55,7 +55,7 @@ module.exports=function(event,context){
                 RequestId: event.RequestId,
                 LogicalResourceId: event.LogicalResourceId,
             });
-            //send(responseBody)
+            send(responseBody)
         }
     }
     this.fail=function(err){
@@ -68,6 +68,6 @@ module.exports=function(event,context){
             RequestId: event.RequestId,
             LogicalResourceId: event.LogicalResourceId
         });
-        //send(responseBody) 
+        send(responseBody) 
     } 
 }
