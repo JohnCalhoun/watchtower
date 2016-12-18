@@ -3,9 +3,17 @@
   "ResponseURL": "http://pre-signed-S3-url-for-response",
   "ResourceProperties": {
     "StackName": "stack-name",
-    "PoolName":"test"
+    "IdentityPoolName":"test",
+    "authenticatedRole":"arn:aws:iam::677241476911:role/disclosure-1-AdminRole-13VEFU75QQ4X5",
+    "unauthenticatedRole":"arn:aws:iam::677241476911:role/disclosure-1-unauthenticatedRole-16OES4Z1370LF",
+    "Providers":[
+        {
+            "ClientId":"6elpuj5kj18fb1l7dne7jc2j4",
+            "ProviderName":"us-east-1_wM8eJFPvo"
+        }
+    ]
   },
-  "PhysicalResourceId":"us-east-1_ZnDNBPOin|6ockthf77ikdod50mm4fenkb0u",
+  "PhysicalResourceId":"us-east-1:30475d08-8fe4-4767-8bbc-3852014010b2",
   "RequestType": "Delete",
   "ResourceType": "Custom::TestResource",
   "RequestId": "unique id for this create request",

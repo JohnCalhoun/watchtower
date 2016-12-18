@@ -7,12 +7,9 @@ module.exports.create=function(event){
             
             cognito.CreatePool(props)
                 .then(function(data){
-                    var id=data.IDPool.Id
-                    cognito.CreateRoles(props,id)
-                        .then(function(data2){
-                            var out={}
-                            out.ID=id
-                            resolve(out)
+                    cognito.CreateRoles(props,data)
+                        .then(function(){
+                            resolve(data)
                         },
                         function(err){
                             reject(err)

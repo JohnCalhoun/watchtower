@@ -1,4 +1,4 @@
 {
-    "s3AssetsBucket":"s3://jmc-artifacts",
+    "AssetsBucket":"jmc-artifacts",
     "stackName":"disclosure-1"
 }

@@ -1,6 +1,12 @@
 #! /bin/bash
-
 set -x
+
+STACKNAME=$1
+ELASTICSEARCHDOMAIN=$2
+ELASTICSEARCHENDPOINT=`aws es describe-elasticsearch-domains    \
+                        --domain-names ${ELASTICSEARCHDOMAIN}   \
+                        | jq '.DomainStatusList[0].Endpoint'    \
+                        | tr -d '"'`
 
 #install dependencies
 yum install -y sqlite-devel java-1.8.0-openjdk
@@ -31,16 +37,23 @@ chmod u+x ${SERVICE_SCRIPT}
 #install as a service
 ln -s ${SERVICE_SCRIPT} /etc/init.d/gremlin-server
 chkconfig --add gremlin-server
+
+read -r SED_EXPR <<-EOF
+s#^channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer\$#channelizer: org.apache.tinkerpop.gremlin.server.channel.HttpChannelizer\
+EOF
+sed -r "$SED_EXPR" ${INSTALL_DIR}/conf/gremlin-server/gremlin-server.yaml  >> ${INSTALL_DIR}/conf/gremlin-server/gremlin-server.yaml
+
+
 #download the Titan storage backend properties file
 BACKEND_PROPERTIES=${INSTALL_DIR}/conf/gremlin-server/dynamodb.properties
-aws s3 cp 
-{
-Ref: StorageBackendPropertiesFileS3Url
-}
- ${BACKEND_PROPERTIES}
+
+read -r SED_EXPR <<-EOF
+s#^storage.dynamodb.prefix=v100\$#storage.dynamodb.prefix=${STACKNAME}#; \
+s#^index.search.elasticsearch.ext.discovery.zen.ping.unicast.hosts=host1\$#index.search.elasticsearch.ext.discovery.zen.ping.unicast.hosts=${ELASTICSEARCHENDPOINT}#; \
+EOF
+sed -r "$SED_EXPR" dynamodb.properties  >> ${BACKEND_PROPERTIES}
+
 #make ec2-user own everything
 chown -R ${GREMLIN_SERVER_USERNAME}:${GREMLIN_SERVER_USERNAME} ${INSTALL_DIR}
 #start Gremlin Server endpoints 
 service gremlin-server start
-
-

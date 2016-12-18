@@ -23,6 +23,6 @@ module.exports={
             }
         },
         src:['cloudformation/*.json','tmp/resources.json'],
-        dest:'tmp/template.json'
+        dest:'tmp/template.tmp.json'
     }
 }

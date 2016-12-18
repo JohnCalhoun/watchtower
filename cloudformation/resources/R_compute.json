@@ -18,10 +18,28 @@
                 "#! /bin/bash",
                 "exec >/root/user-data.log 2>&1",
                 "yum install git -y",
-                "yum update -y"
+                "yum update -y",
+                {"Fn::Join":["",[
+                    "aws s3 cp s3://",
+                    {"Fn::FindInMap":["Buckets","assets","name"]},
+                    "/disclosure/server ",
+                    " . ",
+                    "--recursive"
+                ]]},
+                "chmod +x ./*.sh",
+                {"Fn::Join":["",[
+                    "./titandb.sh ",
+                    {"Ref":"AWS::StackName"},
+                    " ",
+                    {"Fn::Join":["-",[
+                        {"Ref":"AWS::StackName"},
+                        "elasticSearch"
+                    ]]}
+                ]]}
             ]]}
         } 
-    }
+    },
+    "DependsOn":"ElasticSearch"
 },
 "AutoScalingGroup":{
     "Type" : "AWS::AutoScaling::AutoScalingGroup",

@@ -1,0 +1,15 @@
+{
+  "StackId": "arn:aws:cloudformation:us-west-2:EXAMPLE/stack-name/guid",
+  "ResponseURL": "http://pre-signed-S3-url-for-response",
+  "ResourceProperties": {
+    "StackName": "stack-name",
+    "domain":"test-test",
+    "name":"test-w",
+    "version":"1.0"
+  },
+  "PhysicalResourceId":"test-test|test-w|1.0",
+  "RequestType": "Delete",
+  "ResourceType": "Custom::TestResource",
+  "RequestId": "unique id for this create request",
+  "LogicalResourceId": "ET-arn"
+}

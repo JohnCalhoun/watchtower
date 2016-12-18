@@ -8,15 +8,40 @@ module.exports=function(grunt){
     require('load-grunt-config')(grunt,{
         data:grunt.file.readJSON('config.json')
     });
-    
+    grunt.registerTask('upload',[
+        "shell:uploadServerAssets"
+    ])
 
     grunt.registerTask('lambda',[
         'clean:lambda', 
         'uglify:createcognitopool',
         'uglify:createcognitoidentity',
+        'uglify:createhealthcheck',
+        'uglify:createswfdomain',
+        'uglify:createswfworkflow',
+        'uglify:createswfactivity',
         'lambda_package:createcognitopool',
         'lambda_package:createcognitoidentity',
+        'lambda_package:createhealthcheck',
+        'lambda_package:createswfdomain',
+        'lambda_package:createswfworkflow',
+        'lambda_package:createswfactivity',
         'shell:moveLambda'
+    ])
+    grunt.registerTask('runact',[
+        'lambda',
+        'env:dev',
+        'lambda_invoke:createswfactivity'
+    ])
+    grunt.registerTask('runflow',[
+        'lambda',
+        'env:dev',
+        'lambda_invoke:createswfworkflow'
+    ])
+    grunt.registerTask('rundomain',[
+        'lambda',
+        'env:dev',
+        'lambda_invoke:createswfdomain'
     ])
     grunt.registerTask('runpool',[
         'lambda',
@@ -29,16 +54,15 @@ module.exports=function(grunt){
         'lambda_invoke:createcognitoidentity'
     ])
 
-
-
     grunt.registerTask('cloudformation',[
         'concat:resources',
-        'concat:cloudformation'
+        'concat:cloudformation',
+        'shell:packageStack'
     ])
     
     grunt.registerTask('stackup',[
-        'cloudformation',
-        'shell:updateStack'])
+        'stack'
+    ])
 
     grunt.registerTask('stack',[
         'cloudformation',
@@ -47,10 +71,6 @@ module.exports=function(grunt){
     grunt.registerTask('stackrm',[
         'shell:deleteStack'])
 
-    grunt.registerTask('upload',[
-        'cloudformation',
-        'shell:uploadCloudFormation'
-    ])
     grunt.registerTask('val',[
         'cloudformation',
         'shell:validate'

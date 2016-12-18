@@ -1,11 +1,25 @@
 var aws=require('aws-sdk')
-var region=process.env.REGION
+var region=process.env.AWS_REGION
 var cognito=new aws.CognitoIdentity({region:region})
 
 module.exports.CreatePool=function(props){   
     var params={
+            AllowUnauthenticatedIdentities: true,
+            IdentityPoolName: props.IdentityPoolName,
+            CognitoIdentityProviders: []
+        }
+
+    props.Providers.forEach(function(provider){
+        var client=provider.ClientId
+        var provider="cognito-idp."+region+".amazonaws.com/"+provider.ProviderName
+        
+        params.CognitoIdentityProviders.push(
+            {   ClientId:client,
+                ProviderName:provider
             }
-    
+            )
+    })
+    console.log(params) 
     var out=new Promise(function(resolve,reject){
         cognito.createIdentityPool(
             params,
@@ -13,7 +27,8 @@ module.exports.CreatePool=function(props){
                 if(err){
                     reject(err)
                 }else{
-                    resolve(data)
+                    console.log(data)
+                    resolve(data.IdentityPoolId)
                 }
             })
     })
@@ -22,6 +37,11 @@ module.exports.CreatePool=function(props){
 
 module.exports.CreateRoles=function(props,IdentityPoolId){   
     var params={
+        IdentityPoolId:IdentityPoolId,
+        Roles:{
+            authenticated:props.authenticatedRole,
+            unauthenticated:props.unauthenticatedRole
+        }
     }
     
     var out=new Promise(function(resolve,reject){
@@ -31,7 +51,8 @@ module.exports.CreateRoles=function(props,IdentityPoolId){
                 if(err){
                     reject(err)
                 }else{
-                    resolve(data)
+                    console.log(data)
+                    resolve()
                 }
             })
     })
@@ -45,7 +66,7 @@ module.exports.deletePool=function(event){
     
     var deletePool=function(resolve,reject){
         cognito.deleteIdentityPool(
-            paramsPool,
+            params,
             function(err,data){
                 if(err){
                     console.log(err)
@@ -56,7 +77,6 @@ module.exports.deletePool=function(event){
             }
             )
     }
-    
     return new Promise(deletePool)
 }
 

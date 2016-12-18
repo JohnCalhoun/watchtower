@@ -1,0 +1,50 @@
+/*
+    simple work flow to cordinate task
+        -domain
+            -request workflow
+            -report workflow
+*/
+"SWFDomain":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateSWFDomain", "Arn"] },
+        "name":{"Ref":"AWS::StackName"},
+        "retention":"0"
+    }
+},
+"RequestWorkflow":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateSWFWorkflow", "Arn"] },
+        "domain":{"Fn::GetAtt":["SWFDomain","Domain"]},
+        "name":{"Fn::Join":["-",[
+            "Request", 
+            {"Ref":"AWS::StackName"}
+        ]]},
+        "version":"1.0.0",
+    }
+},
+"ReportWorkflow":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateSWFWorkflow", "Arn"] },
+        "domain":{"Fn::GetAtt":["SWFDomain","Domain"]},
+        "name":{"Fn::Join":["-",[
+            "Report", 
+            {"Ref":"AWS::StackName"}
+        ]]},
+        "version":"1.0.0",
+    }
+},
+"EmptyActivity":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateSWFActivity", "Arn"] },
+        "domain":{"Fn::GetAtt":["SWFDomain","Domain"]},
+        "name":{"Fn::Join":["-",[
+            "Report", 
+            {"Ref":"AWS::StackName"}
+        ]]},
+        "version":"1.0.0",
+    }
+}

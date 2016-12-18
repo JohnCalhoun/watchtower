@@ -39,5 +39,13 @@
             ]
         } 
     }
+},
+"HealthCheckFile":{
+    "Type": "Custom::HealthCheckFile",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateHealthCheck", "Arn"] },
+        "bucket":{"Ref":"HostingBucket"},
+        "key":"healthcheck.html"
+    }
 }
 

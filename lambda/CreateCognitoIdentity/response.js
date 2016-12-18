@@ -37,7 +37,7 @@ module.exports=function(event,context){
         if(data){
             var responseBody = JSON.stringify({
                 Status:"SUCCESS" ,
-                PhysicalResourceId:data.ID+'|'+data.clientID,
+                PhysicalResourceId:data,
                 StackId: event.StackId,
                 RequestId: event.RequestId,
                 LogicalResourceId: event.LogicalResourceId,

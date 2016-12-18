@@ -1,0 +1,10 @@
+/* api
+    -gremlin
+
+*/
+"Api":{
+    "Type" : "AWS::ApiGateway::RestApi",
+    "Properties" : {
+        "Name" : {"Ref":"AWS::StackName"}
+    }
+}

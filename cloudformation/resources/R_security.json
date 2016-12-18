@@ -78,7 +78,78 @@
             }]
         },
         "Path": "/",
-        "Policies": []
+        "Policies": [
+             {
+                "PolicyName":"DynamoDB",
+                "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                    "Action": [
+                        "dynamodb:*"
+                    ],
+                    "Effect": "Allow",
+                    "Resource": [
+                        {"Fn::Join":["",[
+                            "arn:aws:dynamodb:",
+                            {"Ref":"AWS::Region"},
+                            ":",
+                            {"Ref":"AWS::AccountId"},
+                            ":",
+                            "table/",
+                            {"Ref":"edgestore"}
+                        ]]},
+                        {"Fn::Join":["",[
+                            "arn:aws:dynamodb:",
+                            {"Ref":"AWS::Region"},
+                            ":",
+                            {"Ref":"AWS::AccountId"},
+                            ":",
+                            "table/",
+                            {"Ref":"graphindex"}
+                        ]]},
+                        {"Fn::Join":["",[
+                            "arn:aws:dynamodb:",
+                            {"Ref":"AWS::Region"},
+                            ":",
+                            {"Ref":"AWS::AccountId"},
+                            ":",
+                            "table/",
+                            {"Ref":"systemProperties"}
+                        ]]},
+                        {"Fn::Join":["",[
+                            "arn:aws:dynamodb:",
+                            {"Ref":"AWS::Region"},
+                            ":",
+                            {"Ref":"AWS::AccountId"},
+                            ":",
+                            "table/",
+                            {"Ref":"titanIds"}
+                        ]]},
+                        {"Fn::Join":["",[
+                            "arn:aws:dynamodb:",
+                            {"Ref":"AWS::Region"},
+                            ":",
+                            {"Ref":"AWS::AccountId"},
+                            ":",
+                            "table/",
+                            {"Ref":"txlog"}
+                        ]]},
+                        {"Fn::Join":["",[
+                            "arn:aws:dynamodb:",
+                            {"Ref":"AWS::Region"},
+                            ":",
+                            {"Ref":"AWS::AccountId"},
+                            ":",
+                            "table/",
+                            {"Ref":"systemlog"}
+                        ]]}
+                    ]
+                    }
+                ]
+                }
+        }
+        ]
     }
 },
 "CreateHealthCheckRole":{
@@ -128,7 +199,7 @@
         ]
     }
 },
-"CreateCognitoPool":{
+"CreateCognitoPoolRole":{
     "Type": "AWS::IAM::Role",
     "Properties": {
          "AssumeRolePolicyDocument": { 
@@ -146,10 +217,29 @@
             "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
         ],
         "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "cognito-idp:CreateUserPool",  
+                            "cognito-idp:CreateUserPoolClient", 
+                            "cognito-idp:DeleteUserPool",  
+                            "cognito-idp:DeleteUserPoolClient" 
+                        ],
+                        "Resource":"*"
+                    }
+                    ]
+              }
+            }
+
         ]
     }
 },
-"CreateCognitoProvider":{
+"CreateCognitoIdentityRole":{
     "Type": "AWS::IAM::Role",
     "Properties": {
          "AssumeRolePolicyDocument": { 
@@ -167,10 +257,31 @@
             "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
         ],
         "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1482095556000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "cognito-identity:CreateIdentityPool",
+                                "cognito-identity:DeleteIdentityPool",
+                                "cognito-identity:SetIdentityPoolRoles",
+                                "iam:PassRole"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
         ]
     }
 },
-"CreateSWF":{
+"CreateSWFActivityRole":{
     "Type": "AWS::IAM::Role",
     "Properties": {
          "AssumeRolePolicyDocument": { 
@@ -188,6 +299,108 @@
             "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
         ],
         "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1482095556000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "swf:DeprecateActivityType",
+                                "swf:RegisterActivityType"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+
+        ]
+    }
+},
+"CreateSWFWorkflowRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1482095556000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "swf:DeprecateWorkflowType",
+                                "swf:RegisterWorkflowType"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+
+        ]
+    }
+},
+"CreateSWFDomainRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1482095556000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "swf:DeprecateDomain",
+                                "swf:RegisterDomain"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+
         ]
     }
 },
@@ -271,6 +484,31 @@
         "ManagedPolicyArns":[
             "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
         ],
+        "Policies": [ 
+        ]
+    }
+},
+"unauthenticatedRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
         "Policies": [ 
         ]
     }

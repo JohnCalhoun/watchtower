@@ -8,16 +8,16 @@
     "Type" : "AWS::Route53::HealthCheck",
     "Properties" : {
         "HealthCheckConfig" : {
-			"FailureThreshold" : 3,
-			"FullyQualifiedDomainName" :
+            "FailureThreshold" : 3,
+            "FullyQualifiedDomainName" :
                 {"Fn::Join":["",[ 
                     {"Ref":"AWS::StackName"},
                     ".",
                     {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
                 ]]},
-			"Port" : 80,
-			"ResourcePath" : "/healthcheck.html",
-			"Type" : "HTTP"
+            "Port" : 80,
+            "ResourcePath" : "/healthcheck.html",
+            "Type" : "HTTP"
         }
     }
 },
@@ -43,8 +43,8 @@
     "Type" : "AWS::Route53::HealthCheck",
     "Properties" : {
         "HealthCheckConfig" : {
-			"FailureThreshold" : 3,
-			"FullyQualifiedDomainName" :
+            "FailureThreshold" : 3,
+            "FullyQualifiedDomainName" :
                 {"Fn::Join":["",[ 
                     "gremlin",
                     ".",
@@ -52,9 +52,9 @@
                     ".",
                     {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
                 ]]},
-			"Port" : 80,
-			"ResourcePath" : "/healthcheck.html",
-			"Type" : "HTTP"
+            "Port" : 80,
+            "ResourcePath" : "/?gremlin=100-1",
+            "Type" : "HTTP"
         }
     }
 },
