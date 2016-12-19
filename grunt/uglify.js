@@ -7,30 +7,6 @@ module.exports={
             "lambda/CreateCognitoPool/build/cognito.js":['lambda/CreateCognitoPool/cognito.js']
         }
     },
-    createswfactivity:{
-        files:{
-            "lambda/CreateSWFActivity/build/handler.js":['lambda/CreateSWFActivity/handler.js'],
-            "lambda/CreateSWFActivity/build/process.js":['lambda/CreateSWFActivity/process.js'],
-            "lambda/CreateSWFActivity/build/response.js":['lambda/CreateSWFActivity/response.js'],
-            "lambda/CreateSWFActivity/build/swf.js":['lambda/CreateSWFActivity/swf.js']
-        }
-    },
-    createswfworkflow:{
-        files:{
-            "lambda/CreateSWFWorkFlow/build/handler.js":['lambda/CreateSWFWorkFlow/handler.js'],
-            "lambda/CreateSWFWorkFlow/build/process.js":['lambda/CreateSWFWorkFlow/process.js'],
-            "lambda/CreateSWFWorkFlow/build/response.js":['lambda/CreateSWFWorkFlow/response.js'],
-            "lambda/CreateSWFWorkFlow/build/swf.js":['lambda/CreateSWFWorkFlow/swf.js']
-        }
-    },
-    createswfdomain:{
-        files:{
-            "lambda/CreateSWFDomain/build/handler.js":['lambda/CreateSWFDomain/handler.js'],
-            "lambda/CreateSWFDomain/build/process.js":['lambda/CreateSWFDomain/process.js'],
-            "lambda/CreateSWFDomain/build/response.js":['lambda/CreateSWFDomain/response.js'],
-            "lambda/CreateSWFDomain/build/swf.js":['lambda/CreateSWFDomain/swf.js']
-        }
-    },
     createcognitoidentity:{
         files:{
             "lambda/CreateCognitoIdentity/build/handler.js":['lambda/CreateCognitoIdentity/handler.js'],

@@ -1,10 +1,87 @@
 /* api
     -gremlin
-
+        
 */
 "Api":{
     "Type" : "AWS::ApiGateway::RestApi",
     "Properties" : {
         "Name" : {"Ref":"AWS::StackName"}
+    }
+},
+"ApiDeployment":{
+    "Type" : "AWS::ApiGateway::Deployment",
+    "Properties" : {
+        "RestApiId" : {"Ref":"Api"}
+    },
+    "DependsOn":["SubmitGremlinMethod"]
+},
+"ApiStage":{
+    "Type" : "AWS::ApiGateway::Stage",
+    "Properties" : {
+        "DeploymentId" : {"Ref":"ApiDeployment"},
+        "RestApiId" : {"Ref":"Api"},
+        "StageName" : "production"
+    }
+},
+"GremlinResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
+        "PathPart" : "gremlin",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"IAMAuthorizor":{
+    "Type" : "AWS::ApiGateway::Authorizer",
+    "Properties" : {
+        "AuthorizerResultTtlInSeconds" : "0",
+        "IdentitySource" : "method.request.header.Authorization",
+        "Name" : "Admin",
+        "ProviderARNs" : [{"Fn::Join":["",[
+            "arn:aws:cognito-idp:",
+            {"Ref":"AWS::Region"},
+            ":",
+            {"Ref":"AWS::AccountId"},           
+            ":userpool/",
+            {"Fn::GetAtt":["adminUserPool","Id"]}
+        ]]}],
+        "RestApiId" : {"Ref":"Api"},
+        "Type" : "COGNITO_USER_POOLS"
+    }
+},
+"SubmitGremlinMethod":{
+    "Type" : "AWS::ApiGateway::Method",
+    "Properties" : {
+        "AuthorizationType" : "COGNITO_USER_POOLS",
+        "AuthorizerId" : {"Ref":"IAMAuthorizor"},
+        "HttpMethod" : "POST",
+        "Integration" : {
+            "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
+            "IntegrationHttpMethod" : "POST",
+            "PassthroughBehavior":"WHEN_NO_MATCH", 
+            "IntegrationResponses" : [
+                {
+                    "StatusCode" : "200"
+                }
+            ],
+            "Type" : "HTTP",
+            "Uri" :{"Fn::Join":["",[ 
+                "http://",
+                "gremlin",
+                ".",
+                {"Ref":"AWS::StackName"},
+                ".",
+                {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
+            ]]}
+        },
+        "MethodResponses" : [
+            {
+                "StatusCode" : "200"
+            }
+        ],
+        "RequestModels" : {},
+        "RequestParameters" : {},
+        "ResourceId" : {"Ref":"GremlinResource"},
+        "RestApiId" : {"Ref":"Api"}
     }
 }

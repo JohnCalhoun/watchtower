@@ -281,129 +281,6 @@
         ]
     }
 },
-"CreateSWFActivityRole":{
-    "Type": "AWS::IAM::Role",
-    "Properties": {
-         "AssumeRolePolicyDocument": { 
-            "Version" : "2012-10-17",
-            "Statement": [ {
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": [ "lambda.amazonaws.com" ]
-                },
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        },
-        "Path": "/",
-        "ManagedPolicyArns":[
-            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-        ],
-        "Policies": [ 
-            {
-                "PolicyName":"CreateCognitoPool",
-                "PolicyDocument":{
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Sid": "Stmt1482095556000",
-                            "Effect": "Allow",
-                            "Action": [
-                                "swf:DeprecateActivityType",
-                                "swf:RegisterActivityType"
-                            ],
-                            "Resource": [
-                                "*"
-                            ]
-                        }
-                    ]
-                }
-            }
-
-        ]
-    }
-},
-"CreateSWFWorkflowRole":{
-    "Type": "AWS::IAM::Role",
-    "Properties": {
-         "AssumeRolePolicyDocument": { 
-            "Version" : "2012-10-17",
-            "Statement": [ {
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": [ "lambda.amazonaws.com" ]
-                },
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        },
-        "Path": "/",
-        "ManagedPolicyArns":[
-            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-        ],
-        "Policies": [ 
-            {
-                "PolicyName":"CreateCognitoPool",
-                "PolicyDocument":{
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Sid": "Stmt1482095556000",
-                            "Effect": "Allow",
-                            "Action": [
-                                "swf:DeprecateWorkflowType",
-                                "swf:RegisterWorkflowType"
-                            ],
-                            "Resource": [
-                                "*"
-                            ]
-                        }
-                    ]
-                }
-            }
-
-        ]
-    }
-},
-"CreateSWFDomainRole":{
-    "Type": "AWS::IAM::Role",
-    "Properties": {
-         "AssumeRolePolicyDocument": { 
-            "Version" : "2012-10-17",
-            "Statement": [ {
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": [ "lambda.amazonaws.com" ]
-                },
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        },
-        "Path": "/",
-        "ManagedPolicyArns":[
-            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-        ],
-        "Policies": [ 
-            {
-                "PolicyName":"CreateCognitoPool",
-                "PolicyDocument":{
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Sid": "Stmt1482095556000",
-                            "Effect": "Allow",
-                            "Action": [
-                                "swf:DeprecateDomain",
-                                "swf:RegisterDomain"
-                            ],
-                            "Resource": [
-                                "*"
-                            ]
-                        }
-                    ]
-                }
-            }
-
-        ]
-    }
-},
 "AdminRole":{
     "Type": "AWS::IAM::Role",
     "Properties": {
@@ -511,5 +388,23 @@
         "Path": "/",
         "Policies": [ 
         ]
+    }
+},
+"ApiGatewayRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "apigateway.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[],
+        "Policies": []
     }
 }

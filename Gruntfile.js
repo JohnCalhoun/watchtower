@@ -17,16 +17,11 @@ module.exports=function(grunt){
         'uglify:createcognitopool',
         'uglify:createcognitoidentity',
         'uglify:createhealthcheck',
-        'uglify:createswfdomain',
-        'uglify:createswfworkflow',
-        'uglify:createswfactivity',
         'lambda_package:createcognitopool',
         'lambda_package:createcognitoidentity',
         'lambda_package:createhealthcheck',
-        'lambda_package:createswfdomain',
-        'lambda_package:createswfworkflow',
-        'lambda_package:createswfactivity',
-        'shell:moveLambda'
+        'shell:moveLambda',
+        'shell:uploadLambda'
     ])
     grunt.registerTask('runact',[
         'lambda',
@@ -56,12 +51,12 @@ module.exports=function(grunt){
 
     grunt.registerTask('cloudformation',[
         'concat:resources',
-        'concat:cloudformation',
-        'shell:packageStack'
+        'concat:cloudformation'
     ])
     
     grunt.registerTask('stackup',[
-        'stack'
+        'cloudformation',
+        'shell:updateStack'
     ])
 
     grunt.registerTask('stack',[

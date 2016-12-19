@@ -9,7 +9,7 @@ module.exports={
                 line:true
             }
         },
-        src:['cloudformation/resources/R_*.json'],
+        src:['cloudformation/resources/*.json'],
         dest:'tmp/resources.json'
     },
     cloudformation:{
@@ -23,6 +23,6 @@ module.exports={
             }
         },
         src:['cloudformation/*.json','tmp/resources.json'],
-        dest:'tmp/template.tmp.json'
+        dest:'tmp/template.json'
     }
 }
