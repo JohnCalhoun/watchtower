@@ -19,6 +19,7 @@
                 "exec >/root/user-data.log 2>&1",
                 "yum install git -y",
                 "yum update -y",
+                "cd /root",
                 {"Fn::Join":["",[
                     "aws s3 cp s3://",
                     {"Fn::FindInMap":["Buckets","assets","name"]},
@@ -33,8 +34,16 @@
                     " ",
                     {"Fn::Join":["-",[
                         {"Ref":"AWS::StackName"},
-                        "elasticSearch"
+                        "elasticsearch"
                     ]]}
+                ]]},
+                {"Fn::Join":["",[
+                    "aws s3 cp /root/titandb.log ",
+                    "s3://",
+                    {"Fn::FindInMap":["Buckets","log","name"]},
+                    "/disclosure/",
+                    {"Ref":"AWS::StackName"},
+                    ".log"
                 ]]}
             ]]}
         } 
@@ -59,20 +68,20 @@
     "Properties": {
         "HealthCheck" : {
             "Interval" : 5,
-            "Target" : "HTTP:80/healthcheck",
+            "Target" : "HTTP:8182/?gremlin=100-1",
             "Timeout" : 2,
-            "UnhealthyThreshold" : 10,
+            "UnhealthyThreshold" : 2,
             "HealthyThreshold" : 2
         },
         "Listeners" : [ 
             {
-                "InstancePort" : "80",
+                "InstancePort" : "8182",
                 "InstanceProtocol" : "HTTP",
                 "LoadBalancerPort" : "80",
                 "Protocol" : "HTTP"
             },
             {
-                "InstancePort" : "80",
+                "InstancePort" : "8182",
                 "InstanceProtocol" : "HTTP",
                 "LoadBalancerPort" : "443",
                 "Protocol" : "HTTPS",

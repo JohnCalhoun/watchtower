@@ -1,4 +1,6 @@
 {
-    "AssetsBucket":"jmc-artifacts",
-    "stackName":"disclosure-1"
+  "AssetsBucket": "jmc-artifacts",
+  "stackName": "disclosure-5",
+  "WebsiteBucket": "disclosure-4.disclosure.johnmcalhoun.guru",
+  "ApiId": "13fxqrqkhe"
 }

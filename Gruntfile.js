@@ -11,15 +11,21 @@ module.exports=function(grunt){
     grunt.registerTask('upload',[
         "shell:uploadServerAssets"
     ])
-
+    grunt.registerTask('sdk',[
+        "shell:getSdk",
+        "concat:sdk",
+        "uglify:sdk"
+    ])
     grunt.registerTask('lambda',[
         'clean:lambda', 
         'uglify:createcognitopool',
         'uglify:createcognitoidentity',
         'uglify:createhealthcheck',
+        'uglify:gremlinproxy',
         'lambda_package:createcognitopool',
         'lambda_package:createcognitoidentity',
         'lambda_package:createhealthcheck',
+        'lambda_package:gremlinproxy',
         'shell:moveLambda',
         'shell:uploadLambda'
     ])

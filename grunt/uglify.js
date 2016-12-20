@@ -1,4 +1,9 @@
 module.exports={
+    gremlinproxy:{
+        files:{
+            "lambda/GremlinProxy/build/handler.js":['lambda/GremlinProxy/handler.js']
+        }
+    },
     createcognitopool:{
         files:{
             "lambda/CreateCognitoPool/build/handler.js":['lambda/CreateCognitoPool/handler.js'],
@@ -22,6 +27,11 @@ module.exports={
             "lambda/CreateHealthCheck/build/response.js":['lambda/CreateHealthCheck/response.js']
         }
     },
+    sdk:{
+        files:{
+            "website/js/sdk.js":["tmp/sdk.tmp.js"]
+        }
+    },    
     client:{
         files:{
             "build/timing.js":["client/timing.js"]

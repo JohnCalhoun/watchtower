@@ -21,16 +21,10 @@
                 "IpProtocol" : "tcp"
             },
             {
-                "CidrIp" : "0.0.0.0/0",
-                "FromPort" : "80",
-                "ToPort" : "80",
-                "IpProtocol" : "tcp"
-            },
-            {
-                "CidrIp" : "0.0.0.0/0",
-                "FromPort" : "443",
-                "ToPort" : "443",
-                "IpProtocol" : "tcp"
+                "FromPort" : "8182",
+                "ToPort" : "8182",
+                "IpProtocol" : "tcp",
+                "SourceSecurityGroupId" : {"Ref":"ELBSG"}
             }
         ],
         "VpcId" : {"Ref":"VPC"}
@@ -42,18 +36,26 @@
         "GroupDescription":"Allows traffic through load balancer",
         "SecurityGroupIngress" : [ 
             {
-                "CidrIp" : "0.0.0.0/0",
                 "FromPort" : "80",
                 "ToPort" : "80",
-                "IpProtocol" : "tcp"
+                "IpProtocol" : "tcp",
+                "SourceSecurityGroupId" : {"Ref":"GremlinlambdaSG"}
             },
             {
-                "CidrIp" : "0.0.0.0/0",
                 "FromPort" : "443",
                 "ToPort" : "443",
-                "IpProtocol" : "tcp"
+                "IpProtocol" : "tcp",
+                "SourceSecurityGroupId" : {"Ref":"GremlinlambdaSG"}
             }
         ],
+        "VpcId" : {"Ref":"VPC"}
+    }
+},
+"GremlinlambdaSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"na",
+        "SecurityGroupIngress" : [],
         "VpcId" : {"Ref":"VPC"}
     }
 },
@@ -148,7 +150,83 @@
                     }
                 ]
                 }
-        }
+            },
+            {
+                "PolicyName":"s3logput",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:PutObject"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": [
+                                { "Fn::Join" : ["", [
+                                "arn:aws:s3:::", 
+                                {"Fn::FindInMap":["Buckets","log","name"]},
+                                "/*" ]]},
+                                { "Fn::Join" : ["", [
+                                "arn:aws:s3:::", 
+                                {"Fn::FindInMap":["Buckets","log","name"]},
+                                ]]}
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "PolicyName":"s3getbootstrap",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:GetObject",
+                                "s3:ListBucket",
+                                "s3:ListObjects"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": [
+                                { "Fn::Join" : ["", [
+                                "arn:aws:s3:::", 
+                                {"Fn::FindInMap":["Buckets","assets","name"]},
+                                "/disclosure/*" ]]},
+                                { "Fn::Join" : ["", [
+                                "arn:aws:s3:::", 
+                                {"Fn::FindInMap":["Buckets","assets","name"]}
+                                ]]}
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "PolicyName":"getESendpoint",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "es:*"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": [
+                                {"Fn::Join":["",[ 
+                                    "arn:aws:es:",
+                                    {"Ref":"AWS::Region"},
+                                    ":",
+                                    {"Ref":"AWS::AccountId"}, 
+                                    ":domain/",
+                                    {"Ref":"AWS::StackName"},
+                                    "-",
+                                    "elasticsearch"
+                                ]]}
+                            ]
+                        }
+                    ]
+                }
+            }
         ]
     }
 },
@@ -236,6 +314,26 @@
               }
             }
 
+        ]
+    }
+},
+"GremlinProxyRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
         ]
     }
 },
@@ -405,6 +503,28 @@
         },
         "Path": "/",
         "ManagedPolicyArns":[],
-        "Policies": []
+        "Policies": [
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1482095556000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "lambda:invokeFunction"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+
+        
+        
+        ]
     }
 }

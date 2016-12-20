@@ -20,7 +20,10 @@
     "Properties" : {
         "DeploymentId" : {"Ref":"ApiDeployment"},
         "RestApiId" : {"Ref":"Api"},
-        "StageName" : "production"
+        "StageName" : "production",
+        "Variables":{
+            "server":{"Fn::GetAtt":["ELB","DNSName"]}
+        }
     }
 },
 "GremlinResource":{
@@ -28,6 +31,22 @@
     "Properties" : {
         "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
         "PathPart" : "gremlin",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"ScriptResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{"Ref":"GremlinResource"} ,
+        "PathPart" : "script",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"HealthCheckResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{"Ref":"GremlinResource"} ,
+        "PathPart" : "healthcheck",
         "RestApiId" : {"Ref":"Api"}
     }
 },
@@ -49,6 +68,60 @@
         "Type" : "COGNITO_USER_POOLS"
     }
 },
+"ScriptModel":{
+    "Type" : "AWS::ApiGateway::Model",
+    "Properties" : {
+        "ContentType" : "application/json",
+        "Name" : "ScriptSubmit",
+        "RestApiId" : {"Ref":"Api"},
+        "Schema" : {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Script",
+            "type": "object",
+            "properties": {
+                "script":{
+                    "type":"string"
+                }
+            }
+        }
+    }
+},
+"HealthcheckModel":{
+    "Type" : "AWS::ApiGateway::Model",
+    "Properties" : {
+        "ContentType" : "application/json",
+        "Name" : "Healthcheck",
+        "RestApiId" : {"Ref":"Api"},
+        "Schema" : {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Script",
+            "type": "object",
+            "properties": {
+                "script":{
+                    "type":"string"
+                }
+            }
+        }
+    }
+},
+"ResponseModel":{
+    "Type" : "AWS::ApiGateway::Model",
+    "Properties" : {
+        "ContentType" : "application/json",
+        "Name" : "response",
+        "RestApiId" : {"Ref":"Api"},
+        "Schema" : {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Script",
+            "type": "object",
+            "properties": {
+                "script":{
+                    "type":"string"
+                }
+            }
+        }
+    }
+},
 "SubmitGremlinMethod":{
     "Type" : "AWS::ApiGateway::Method",
     "Properties" : {
@@ -58,30 +131,107 @@
         "Integration" : {
             "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
             "IntegrationHttpMethod" : "POST",
-            "PassthroughBehavior":"WHEN_NO_MATCH", 
+            "PassthroughBehavior":"NEVER", 
             "IntegrationResponses" : [
                 {
+                    "ResponseTemplates": {
+                        "application/json": "$input.json('$.body')"
+                     },
                     "StatusCode" : "200"
+                },
+                {
+                    "SelectionPattern": "^ERROR.*",
+                    "ResponseTemplates": {
+                        "application/json": "{}"
+                    },
+                    "StatusCode": 404
                 }
             ],
-            "Type" : "HTTP",
-            "Uri" :{"Fn::Join":["",[ 
-                "http://",
-                "gremlin",
-                ".",
-                {"Ref":"AWS::StackName"},
-                ".",
-                {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
-            ]]}
+            "Type" : "AWS",
+            "Uri": {
+                "Fn::Join": ["",[
+                    "arn:aws:apigateway:",
+                    {"Ref": "AWS::Region"},
+                    ":lambda:path/2015-03-31/functions/",
+                    {"Fn::GetAtt": ["GremlinProxy", "Arn"]},
+                    "/invocations"
+                  ]
+                ]
+              }
         },
         "MethodResponses" : [
             {
+                "ResponseModels":{
+                    "application/json":{"Ref":"ResponseModel"}
+                },
                 "StatusCode" : "200"
+            },
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "404"
             }
         ],
-        "RequestModels" : {},
         "RequestParameters" : {},
-        "ResourceId" : {"Ref":"GremlinResource"},
+        "ResourceId" : {"Ref":"ScriptResource"},
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"HealthCheckMethod":{
+    "Type" : "AWS::ApiGateway::Method",
+    "Properties" : {
+        "AuthorizationType" : "NONE",
+        "HttpMethod" : "GET",
+        "Integration" : {
+            "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
+            "IntegrationHttpMethod" : "POST",
+            "PassthroughBehavior":"NEVER", 
+            "IntegrationResponses" : [
+                {
+                    "ResponseTemplates": {
+                        "application/json": "Empty"
+                     },
+                    "StatusCode" : "200"
+                },
+                {
+                    "SelectionPattern": "^ERROR.*",
+                    "ResponseTemplates": {
+                        "application/json": "Empty"
+                    },
+                    "StatusCode": 404
+                }
+            ],
+            "Type" : "AWS",
+            "Uri": {
+                "Fn::Join": ["",[
+                    "arn:aws:apigateway:",
+                    {"Ref": "AWS::Region"},
+                    ":lambda:path/2015-03-31/functions/",
+                    {"Fn::GetAtt": ["GremlinProxy", "Arn"]},
+                    "/invocations"
+                  ]
+                ]
+              }
+        },
+        "MethodResponses" : [
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "200"
+            },
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "404"
+            }
+        ],
+        "RequestParameters" : {},
+        "ResourceId" : {"Ref":"HealthCheckResource"},
         "RestApiId" : {"Ref":"Api"}
     }
 }
+
+

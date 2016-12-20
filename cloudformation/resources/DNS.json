@@ -19,12 +19,12 @@
         ]
     }
 },
-"GremlinDNSRecord" : {
+"ApiDNSRecord" : {
     "Type" : "AWS::Route53::RecordSet",
     "Properties" : {
         "HostedZoneId" : {"Fn::FindInMap":["DNS","HostedZone","ID"]},
         "Name":{"Fn::Join":["",[
-                "gremlin",
+                "api",
                 "-",
                 {"Ref":"AWS::StackName"},
                 ".",
@@ -33,8 +33,14 @@
         ]]},
         "Type" : "CNAME",
         "TTL" : "30",
-        "ResourceRecords" : [
-            { "Fn::GetAtt" : [ "ELB", "DNSName" ] }
+        "ResourceRecords" : [ 
+            { "Fn::Join" : ["",[
+                "https://",
+                {"Ref":"Api"},
+                ".execute-api.",
+                {"Ref":"AWS::Region"},
+                ".amazonaws.com",
+            ]]}
         ]
     }
 }

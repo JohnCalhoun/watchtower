@@ -39,26 +39,23 @@
         "Threshold" : "100"
     }
 },
-"Gremlinhealthcheck":{
+"Apihealthcheck":{
     "Type" : "AWS::Route53::HealthCheck",
     "Properties" : {
         "HealthCheckConfig" : {
             "FailureThreshold" : 3,
-            "FullyQualifiedDomainName" :
-                {"Fn::Join":["",[ 
-                    "gremlin",
-                    ".",
-                    {"Ref":"AWS::StackName"},
-                    ".",
-                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
-                ]]},
+            "FullyQualifiedDomainName" :{"Ref":"ApiDNSRecord"}, 
             "Port" : 80,
-            "ResourcePath" : "/?gremlin=100-1",
+            "ResourcePath" : {"Fn::Join":["",[
+                "/",
+                {"Ref":"ApiStage"},
+                "/gremlin/heathcheck"
+            ]]},
             "Type" : "HTTP"
         }
     }
 },
-"Gremlinhealthalarm":{
+"Apihealthalarm":{
     "Type" : "AWS::CloudWatch::Alarm",
     "Properties" : {
         "ComparisonOperator" : "LessThanThreshold",
@@ -68,21 +65,11 @@
         "MetricName" : "HealthCheckPercentageHealthy",
         "Dimensions" : [ 
             {"Name":"HealthCheckId",
-            "Value":{"Ref":"Gremlinhealthcheck"}
+            "Value":{"Ref":"Apihealthcheck"}
             }
         ],
         "Unit":"Percent", 
         "Statistic" : "Minimum",
         "Threshold" : "100"
     }
-
 }
-
-
-
-
-
-
-
-
-

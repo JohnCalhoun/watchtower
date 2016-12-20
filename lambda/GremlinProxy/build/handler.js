@@ -1,0 +1,1 @@
+var process=require("./process.js"),request=require("request");exports.handler=function(a,b,c){console.log("Received event:",JSON.stringify(a,null,2));var d=a.body.script,e="https://"+a.stageVariables.server;request.post(e,d,function(a,b,d){a?c("ERROR"+a):200===d.status.code?c(null,d.result):c("ERROR"+d.status.message)})};

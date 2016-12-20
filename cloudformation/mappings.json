@@ -13,7 +13,8 @@
     },    
     "Buckets":{
         "assets":{"name":"jmc-artifacts"},
-        "archive":{"name":"jmc-tmp-test"}
+        "archive":{"name":"jmc-tmp-test"},
+        "log":{"name":"jmc-logfiles"}
     },
     "RegionKeys":{
         "us-east-1":{"Name":"ec2-dev-us-east-1"},

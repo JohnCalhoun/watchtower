@@ -1,4 +1,10 @@
 module.exports={
+    gremlinproxy:{
+        options:{
+            package_folder:'lambda/GremlinProxy/build',
+            dist_folder:'tmp'
+        }
+    },
     createcognitoidentity:{
         options:{
             package_folder:'lambda/CreateCognitoIdentity/build',
