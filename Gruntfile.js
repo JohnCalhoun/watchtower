@@ -9,7 +9,8 @@ module.exports=function(grunt){
         data:grunt.file.readJSON('config.json')
     });
     grunt.registerTask('upload',[
-        "shell:uploadServerAssets"
+        "shell:uploadServerAssets",
+        "shell:uploadLambda"
     ])
     grunt.registerTask('sdk',[
         "shell:getSdk",

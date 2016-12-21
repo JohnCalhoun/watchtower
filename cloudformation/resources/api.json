@@ -81,24 +81,9 @@
             "properties": {
                 "script":{
                     "type":"string"
-                }
-            }
-        }
-    }
-},
-"HealthcheckModel":{
-    "Type" : "AWS::ApiGateway::Model",
-    "Properties" : {
-        "ContentType" : "application/json",
-        "Name" : "Healthcheck",
-        "RestApiId" : {"Ref":"Api"},
-        "Schema" : {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "title": "Script",
-            "type": "object",
-            "properties": {
-                "script":{
-                    "type":"string"
+                },
+                "bindings":{
+                    "type":"object"
                 }
             }
         }
@@ -115,7 +100,7 @@
             "title": "Script",
             "type": "object",
             "properties": {
-                "script":{
+                "output":{
                     "type":"string"
                 }
             }
@@ -132,18 +117,35 @@
             "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
             "IntegrationHttpMethod" : "POST",
             "PassthroughBehavior":"NEVER", 
+            "RequestTemplates":{
+                "application/json":{"Fn::Join":["",[
+                    "{",
+                        "\"script\": \"$input.json($.script)\",", 
+                        "\"bindings\": \"$input.json($.bindings)\",",
+                        "\"server\": \"",{"Fn::GetAtt":["ELB","DNSName"]},"\"", 
+                    "}"
+                    ]]}
+            },
             "IntegrationResponses" : [
                 {
                     "ResponseTemplates": {
-                        "application/json": "$input.json('$.body')"
+                        "application/json": {"Fn::Join":["",[
+                            "{",
+                                "\"output\": \"$input.json($.result.data)\"", 
+                            "}"
+                        ]]}
                      },
                     "StatusCode" : "200"
                 },
                 {
                     "SelectionPattern": "^ERROR.*",
                     "ResponseTemplates": {
-                        "application/json": "{}"
-                    },
+                        "application/json":{"Fn::Join":["",[
+                            "{",
+                                "\"message\": \"$input.json($.status.message)\"", 
+                            "}"
+                        ]]}
+                     },
                     "StatusCode": 404
                 }
             ],
@@ -173,6 +175,9 @@
                 "StatusCode" : "404"
             }
         ],
+        "RequestModels":{
+            "application/json":{"Ref":"ScriptModel"}
+        },
         "RequestParameters" : {},
         "ResourceId" : {"Ref":"ScriptResource"},
         "RestApiId" : {"Ref":"Api"}
@@ -187,6 +192,15 @@
             "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
             "IntegrationHttpMethod" : "POST",
             "PassthroughBehavior":"NEVER", 
+            "RequestTemplates":{
+                "application/json":{"Fn::Join":["",[
+                    "{",
+                        "\"script\": \"102-1\",", 
+                        "\"bindings\": {},",
+                        "\"server\": \"",{"Fn::GetAtt":["ELB","DNSName"]},"\"", 
+                    "}"
+                ]]}
+            },
             "IntegrationResponses" : [
                 {
                     "ResponseTemplates": {

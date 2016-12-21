@@ -12,5 +12,6 @@
   "author": "John M Calhoun",
   "license": "ISC",
   "dependencies": {
+    "request": "^2.79.0"
   }
 }

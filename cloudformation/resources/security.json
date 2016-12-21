@@ -15,12 +15,6 @@
         "GroupDescription":"Allows server to take in http traffic and lambda REDIS request",
         "SecurityGroupIngress" : [ 
             {
-                "CidrIp" : "0.0.0.0/0",
-                "FromPort" : "22",
-                "ToPort" : "22",
-                "IpProtocol" : "tcp"
-            },
-            {
                 "FromPort" : "8182",
                 "ToPort" : "8182",
                 "IpProtocol" : "tcp",

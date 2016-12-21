@@ -73,6 +73,7 @@
             "UnhealthyThreshold" : 2,
             "HealthyThreshold" : 2
         },
+        "Scheme":"internal",
         "Listeners" : [ 
             {
                 "InstancePort" : "8182",

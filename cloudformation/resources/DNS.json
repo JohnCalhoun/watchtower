@@ -39,7 +39,7 @@
                 {"Ref":"Api"},
                 ".execute-api.",
                 {"Ref":"AWS::Region"},
-                ".amazonaws.com",
+                ".amazonaws.com"
             ]]}
         ]
     }

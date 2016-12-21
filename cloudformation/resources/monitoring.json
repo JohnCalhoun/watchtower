@@ -44,14 +44,19 @@
     "Properties" : {
         "HealthCheckConfig" : {
             "FailureThreshold" : 3,
-            "FullyQualifiedDomainName" :{"Ref":"ApiDNSRecord"}, 
-            "Port" : 80,
+            "FullyQualifiedDomainName" :{ "Fn::Join" : ["",[
+                {"Ref":"Api"},
+                ".execute-api.",
+                {"Ref":"AWS::Region"},
+                ".amazonaws.com"
+            ]]}, 
+            "Port" : 443,
             "ResourcePath" : {"Fn::Join":["",[
                 "/",
                 {"Ref":"ApiStage"},
                 "/gremlin/heathcheck"
             ]]},
-            "Type" : "HTTP"
+            "Type" : "HTTPS"
         }
     }
 },
