@@ -77,6 +77,30 @@ module.exports=function(grunt){
         'cloudformation',
         'shell:validate'
     ])
+
+    grunt.registerTask('html',[
+        "shell:metalsmith"
+    ])
+    grunt.registerTask('style',[
+        "sass:style",
+        "autoprefixer:style",
+        "cssmin:style"
+    ])
+    grunt.registerTask('sdk',[
+        "shell:getSdk",
+        "concat:sdk",
+        "uglify:sdk"
+    ])
+    grunt.registerTask('js',[
+        "copy:sdk" 
+    ])
+    grunt.registerTask('website',[
+        "clean:website",
+        "shell:favicon", 
+        "html",
+        "js",
+        "style"
+    ])
 }
 
 

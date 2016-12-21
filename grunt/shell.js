@@ -33,6 +33,12 @@ module.exports={
             "aws apigateway get-sdk --rest-api-id <%= ApiId %> --stage-name production --sdk-type javascript tmp/sdk.zip",
             "unzip  -u tmp/sdk.zip -d tmp"
             ].join(';')
+    },
+    metalsmith:{
+        command:"node website/html/metalsmith.js"
+    },
+    favicon:{
+        command:'convert -size 16x16 xc:#418b7e website/build/favicon.gif'
     }
 }
 

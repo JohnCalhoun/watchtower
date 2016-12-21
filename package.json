@@ -22,5 +22,17 @@
     "redis": "^2.6.3",
     "time-grunt": "^1.4.0",
     "uglify": "^0.1.5"
+  },
+  "dependencies": {
+    "grunt-autoprefixer": "^3.0.4",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.2",
+    "grunt-sass": "^2.0.0",
+    "handlebars": "^4.0.6",
+    "install": "^0.8.4",
+    "metalsmith": "^2.3.0",
+    "metalsmith-ignore": "^0.1.2",
+    "metalsmith-layouts": "^1.7.0",
+    "sass": "^0.5.0"
   }
 }
