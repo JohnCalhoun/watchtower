@@ -92,7 +92,9 @@ module.exports=function(grunt){
         "uglify:sdk"
     ])
     grunt.registerTask('js',[
-        "copy:sdk" 
+        "copy:sdk",
+        "browserify:dist",
+        "uglify:dist"
     ])
     grunt.registerTask('website',[
         "clean:website",

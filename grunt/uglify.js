@@ -32,9 +32,9 @@ module.exports={
             "website/js/sdk.js":["tmp/sdk.tmp.js"]
         }
     },    
-    client:{
+    dist:{
         files:{
-            "build/timing.js":["client/timing.js"]
+            "website/build/main.js":["tmp/main.js"]
         }
     }
 }

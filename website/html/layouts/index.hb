@@ -12,6 +12,7 @@
 </head>
 <body>
     {{contents}} 
+    <script src="main.js"></script>
     <script src="sdk.js"></script>
 </body>
 </html>
