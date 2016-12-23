@@ -10,15 +10,6 @@ alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java
 cd /root
 export REGION=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone | rev | cut -c 2- | rev`
 STACKNAME=$1
-ELASTICSEARCHDOMAIN=$2
-ELASTICSEARCHENDPOINT=`aws es describe-elasticsearch-domains    \
-                        --domain-names ${ELASTICSEARCHDOMAIN}   \
-                        --region $REGION                        \
-                        | jq '.DomainStatusList[0].Endpoint'    \
-                        | tr -d '"'`
-echo $STACKNAME
-echo $ELASTICSEARCHDOMAIN
-echo $ELASTICSEARCHENDPOINT
 
 #install dependencies
 #constants for use in user data script
@@ -52,8 +43,7 @@ cp /root/gremlin-server.yaml ${INSTALL_DIR}/conf/gremlin-server/gremlin-server.y
 BACKEND_PROPERTIES=${INSTALL_DIR}/conf/gremlin-server/dynamodb.properties
 
 read -r SED_EXPR <<-EOF
-s#^storage.dynamodb.prefix=v100\$#storage.dynamodb.prefix=${STACKNAME}#; \
-s#^index.search.elasticsearch.hostname=NA\$#index.search.elasticsearch.hostname=${ELASTICSEARCHENDPOINT}#; 
+s#^storage.dynamodb.prefix=v100\$#storage.dynamodb.prefix=${STACKNAME}#;
 EOF
 sed -r "$SED_EXPR" /root/dynamodb.properties  > ${BACKEND_PROPERTIES}
 

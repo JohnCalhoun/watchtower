@@ -47,8 +47,7 @@
                 ]]}
             ]]}
         } 
-    },
-    "DependsOn":"ElasticSearch"
+    }
 },
 "AutoScalingGroup":{
     "Type" : "AWS::AutoScaling::AutoScalingGroup",

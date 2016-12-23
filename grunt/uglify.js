@@ -28,6 +28,9 @@ module.exports={
         }
     },
     sdk:{
+        options:{
+            mangle:false
+        },
         files:{
             "website/js/sdk.js":["tmp/sdk.tmp.js"]
         }
