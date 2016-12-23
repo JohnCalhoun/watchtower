@@ -12,8 +12,10 @@
 </head>
 <body>
     {{contents}} 
-    <script src="main.js"></script>
+    <script src="main.js"></script> 
+    <script src="CryptoJS.js"></script>
     <script src="sdk.js"></script>
+    <script src="cognito.js"></script>
 </body>
 </html>
 

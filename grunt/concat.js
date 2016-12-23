@@ -25,14 +25,36 @@ module.exports={
         src:['cloudformation/*.json','tmp/resources.json'],
         dest:'tmp/template.json'
     },
+    CryptoJS:{
+        options:{},
+        src:[   
+                'tmp/apiGateway-js-sdk/lib/CryptoJS/rollups/hmac-sha256.js',
+                'tmp/apiGateway-js-sdk/lib/CryptoJS/rollups/sha256.js',
+                'tmp/apiGateway-js-sdk/lib/CryptoJS/components/hmac.js',
+                'tmp/apiGateway-js-sdk/lib/CryptoJS/components/enc-base64.js'
+                ],
+        dest:'tmp/CryptoJS.tmp.js'
+    },
     sdk:{
         options:{},
-        src:[   'tmp/apiGateway-js-sdk/lib/apiGatewayCore/*.js',
+        src:[   
                 'tmp/apiGateway-js-sdk/lib/axios/dist/*.js',
-                'tmp/apiGateway-js-sdk/lib/CryptoJS/*/*.js',
                 'tmp/apiGateway-js-sdk/lib/url-template/*.js',
+                'tmp/apiGateway-js-sdk/lib/apiGatewayCore/*.js',
                 'tmp/apiGateway-js-sdk/*.js'
                 ],
         dest:'tmp/sdk.tmp.js'
+    },
+    cognitoSdk:{
+        options:{},
+        src:[
+                'tmp/jsbn.min.js',
+                'tmp/jsbn2.min.js',
+                'tmp/sjcl.js',
+                'tmp/moment.js',
+                'tmp/cognito-sdk.js',
+                'tmp/cognito-ID-sdk.js'
+                ],
+        dest:'website/js/cognito.js'
     }
 }

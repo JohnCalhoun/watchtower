@@ -27,6 +27,14 @@ module.exports={
             "lambda/CreateHealthCheck/build/response.js":['lambda/CreateHealthCheck/response.js']
         }
     },
+    CryptoJS:{
+        options:{
+            mangle:false
+        },
+        files:{
+            "website/js/CryptoJS.js":["tmp/CryptoJS.tmp.js"]
+        }
+    },      
     sdk:{
         options:{
             mangle:false
@@ -38,6 +46,12 @@ module.exports={
     dist:{
         files:{
             "website/build/main.js":["tmp/main.js"]
+        }
+    },
+    cognitoSdk:{
+        files:{
+            "tmp/jsbn.min.js":["tmp/jsbn.js"],
+            "tmp/jsbn2.min.js":["tmp/jsbn2.js"]
         }
     }
 }

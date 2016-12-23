@@ -86,13 +86,24 @@ module.exports=function(grunt){
         "autoprefixer:style",
         "cssmin:style"
     ])
+    grunt.registerTask('cognito',[
+        "shell:getCognitoSdk",
+        "uglify:cognitoSdk",
+        "concat:cognitoSdk"
+    ])
+
     grunt.registerTask('sdk',[
         "shell:getSdk",
         "concat:sdk",
-        "uglify:sdk"
+        "concat:CryptoJS",
+        "uglify:sdk",
+        "uglify:CryptoJS"
     ])
+    
     grunt.registerTask('js',[
         "copy:sdk",
+        "copy:CryptoJS",
+        "copy:cognitoSdk", 
         "browserify:dist",
         "uglify:dist"
     ])
