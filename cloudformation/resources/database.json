@@ -1,205 +1,23 @@
 /*
-    dynamodb tables to host backend for titandb
-        streams to lambda for 
-            logging
-            backup/versioning
 */
-"edgestore":{
-    "Type" : "AWS::DynamoDB::Table",
+"DB" : {
+    "Type" : "AWS::RDS::DBInstance",
     "Properties" : {
-        "TableName":{"Fn::Join":["_",[
-            {"Ref":"AWS::StackName"}, 
-            "edgestore"
-        ]]},
-        "ProvisionedThroughput":{
-            "ReadCapacityUnits":"1",
-            "WriteCapacityUnits":"1"
-        },
-        "AttributeDefinitions" : [ 
-            {
-                "AttributeName" : "hk",
-                "AttributeType" : "S"
-            },
-            {
-                "AttributeName" : "rk",
-                "AttributeType" : "S"
-            }
-        ],
-        "KeySchema" : [ 
-            {
-                "AttributeName" : "hk",
-                "KeyType" : "HASH"
-            },
-            {
-                "AttributeName" : "rk",
-                "KeyType" : "RANGE"
-            }
-        ]
+        "AllocatedStorage" : "5",
+        "DBInstanceClass" : "db.t2.micro",
+        "Engine" : "MySQL",
+        "MultiAZ":"true",
+        "MasterUsername" :      { "Ref" : "DBUser" },
+        "MasterUserPassword" :  { "Ref" : "DBPassword" },
+        "DBName":               { "Ref" : "DBName" },
+        "VPCSecurityGroups":[{"Ref":"DBSG"}],
+        "DBSubnetGroupName":{"Ref":"DBsubnet"}
     }
 },
-"graphindex":{
-    "Type" : "AWS::DynamoDB::Table",
+"DBsubnet":{
+    "Type" : "AWS::RDS::DBSubnetGroup",
     "Properties" : {
-        "TableName":{"Fn::Join":["_",[
-            {"Ref":"AWS::StackName"}, 
-            "graphindex"
-        ]]},
-        "ProvisionedThroughput":{
-            "ReadCapacityUnits":"1",
-            "WriteCapacityUnits":"1"
-        },
-        "AttributeDefinitions" : [ 
-            {
-                "AttributeName" : "hk",
-                "AttributeType" : "S"
-            },
-            {
-                "AttributeName" : "rk",
-                "AttributeType" : "S"
-            }
-        ],
-        "KeySchema" : [ 
-            {
-                "AttributeName" : "hk",
-                "KeyType" : "HASH"
-            },
-            {
-                "AttributeName" : "rk",
-                "KeyType" : "RANGE"
-            }
-        ]
+        "DBSubnetGroupDescription" : "DB subnet",
+        "SubnetIds" : [ {"Ref":"subnet1"},{"Ref":"subnet2"}]
     }
-},
-"systemProperties":{
-    "Type" : "AWS::DynamoDB::Table",
-    "Properties" : {
-        "TableName":{"Fn::Join":["_",[
-            {"Ref":"AWS::StackName"}, 
-            "system_properties"
-        ]]},
-        "ProvisionedThroughput":{
-            "ReadCapacityUnits":"1",
-            "WriteCapacityUnits":"1"
-        },
-        "AttributeDefinitions" : [ 
-            {
-                "AttributeName" : "hk",
-                "AttributeType" : "S"
-            },
-            {
-                "AttributeName" : "rk",
-                "AttributeType" : "S"
-           }
-        ],
-        "KeySchema" : [ 
-            {
-                "AttributeName" : "hk",
-                "KeyType" : "HASH"
-            },
-            {
-                "AttributeName" : "rk",
-                "KeyType" : "RANGE"
-            }
-        ]
-    }
-},
-"systemlog":{
-    "Type" : "AWS::DynamoDB::Table",
-    "Properties" : {
-        "TableName":{"Fn::Join":["_",[
-            {"Ref":"AWS::StackName"}, 
-            "systemlog"
-        ]]},
-        "ProvisionedThroughput":{
-            "ReadCapacityUnits":"1",
-            "WriteCapacityUnits":"1"
-        },
-        "AttributeDefinitions" : [ 
-            {
-                "AttributeName" : "hk",
-                "AttributeType" : "S"
-            },
-            {
-                "AttributeName" : "rk",
-                "AttributeType" : "S"
-            }
-        ],
-        "KeySchema" : [ 
-            {
-                "AttributeName" : "hk",
-                "KeyType" : "HASH"
-            },
-            {
-                "AttributeName" : "rk",
-                "KeyType" : "RANGE"
-            }
-        ]
-    }
-},
-"titanIds":{
-    "Type" : "AWS::DynamoDB::Table",
-    "Properties" : {
-        "TableName":{"Fn::Join":["_",[
-            {"Ref":"AWS::StackName"}, 
-            "titan_ids"
-        ]]},
-        "ProvisionedThroughput":{
-            "ReadCapacityUnits":"1",
-            "WriteCapacityUnits":"1"
-        },
-        "AttributeDefinitions" : [ 
-            {
-                "AttributeName" : "hk",
-                "AttributeType" : "S"
-            },
-            {
-                "AttributeName" : "rk",
-                "AttributeType" : "S"
-            }
-        ],
-        "KeySchema" : [ 
-            {
-                "AttributeName" : "hk",
-                "KeyType" : "HASH"
-            },
-            {
-                "AttributeName" : "rk",
-                "KeyType" : "RANGE"
-            }
-        ]
-    }
-},
-"txlog":{
-    "Type" : "AWS::DynamoDB::Table",
-    "Properties" : {
-        "TableName":{"Fn::Join":["_",[
-            {"Ref":"AWS::StackName"}, 
-            "txlog"
-        ]]},
-        "ProvisionedThroughput":{
-            "ReadCapacityUnits":"1",
-            "WriteCapacityUnits":"1"
-        },
-        "AttributeDefinitions" : [ 
-            {
-                "AttributeName" : "hk",
-                "AttributeType" : "S"
-            },
-            {
-                "AttributeName" : "rk",
-                "AttributeType" : "S"
-            }
-        ],
-        "KeySchema" : [ 
-            {
-                "AttributeName" : "hk",
-                "KeyType" : "HASH"
-            },
-            {
-                "AttributeName" : "rk",
-                "KeyType" : "RANGE"
-            }
-        ]
-    }
-}
-
+}     

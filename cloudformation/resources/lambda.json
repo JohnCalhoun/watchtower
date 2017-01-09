@@ -60,25 +60,79 @@
         "Timeout" : "100"
       }
 },
-"GremlinProxy":{
+"RDSProxyReadyOnly":{
       "Type" : "AWS::Lambda::Function",
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
-            "S3Key":"disclosure/lambda/lambda-gremlinproxy.zip"
+            "S3Key":"disclosure/lambda/lambda-rdsproxy.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
-                "GremlinProxy", 
+                "RDSProxyReadyOnly", 
                 {"Ref":"AWS::StackName"}
             ]]},
         "Handler" : "handler.handler",
         "MemorySize" : "128",
-        "Role" : {"Fn::GetAtt":["GremlinProxyRole","Arn"]},
+        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
         "Runtime" : "nodejs4.3",
         "Timeout" : "100",
         "VpcConfig":{
             "SecurityGroupIds":[
-                {"Ref":"GremlinlambdaSG"} 
+                {"Ref":"RDSlambdaSG"} 
+            ],
+            "SubnetIds":[
+                {"Ref":"subnet1"},
+                {"Ref":"subnet2"}
+            ]
+        }
+      }
+},
+"RDSProxyWrite":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
+            "S3Key":"disclosure/lambda/lambda-rdsproxy.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "RDSProxyWrite", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100",
+        "VpcConfig":{
+            "SecurityGroupIds":[
+                {"Ref":"RDSlambdaSG"} 
+            ],
+            "SubnetIds":[
+                {"Ref":"subnet1"},
+                {"Ref":"subnet2"}
+            ]
+        }
+    }
+},
+"InitDataBase":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
+            "S3Key":"disclosure/lambda/lambda-initdatabase.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "initdatabase", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100",
+        "VpcConfig":{
+            "SecurityGroupIds":[
+                {"Ref":"RDSlambdaSG"} 
             ],
             "SubnetIds":[
                 {"Ref":"subnet1"},

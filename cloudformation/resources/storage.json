@@ -47,18 +47,4 @@
         "bucket":{"Ref":"HostingBucket"},
         "key":"healthcheck.html"
     }
-},
-"BackupBucket":{
-    "Type" : "AWS::S3::Bucket",
-    "Properties" : {
-        "BucketName":{"Fn::Join":[".",[
-            "backup",
-            {"Ref":"AWS::StackName"},
-            {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
-        ]]},
-        "VersioningConfiguration":{
-            "Status":"Enabled"
-        }
-    }
-},
-
+}

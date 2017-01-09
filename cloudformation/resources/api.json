@@ -13,7 +13,7 @@
     "Properties" : {
         "RestApiId" : {"Ref":"Api"}
     },
-    "DependsOn":["SubmitGremlinMethod"]
+    "DependsOn":["SubmitMethod"]
 },
 "ApiStage":{
     "Type" : "AWS::ApiGateway::Stage",
@@ -22,30 +22,30 @@
         "RestApiId" : {"Ref":"Api"},
         "StageName" : "production",
         "Variables":{
-            "server":{"Fn::GetAtt":["ELB","DNSName"]}
+            "server":{"Fn::GetAtt":["DB","Endpoint.Address"]}
         }
     }
 },
-"GremlinResource":{
+"RequestResource":{
     "Type" : "AWS::ApiGateway::Resource",
     "Properties" : {
         "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
-        "PathPart" : "gremlin",
+        "PathPart" : "submit",
         "RestApiId" : {"Ref":"Api"}
     }
 },
-"ScriptResource":{
+"SubmitResource":{
     "Type" : "AWS::ApiGateway::Resource",
     "Properties" : {
-        "ParentId" :{"Ref":"GremlinResource"} ,
-        "PathPart" : "script",
+        "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
+        "PathPart" : "submit",
         "RestApiId" : {"Ref":"Api"}
     }
 },
 "HealthCheckResource":{
     "Type" : "AWS::ApiGateway::Resource",
     "Properties" : {
-        "ParentId" :{"Ref":"GremlinResource"} ,
+        "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
         "PathPart" : "healthcheck",
         "RestApiId" : {"Ref":"Api"}
     }
@@ -107,7 +107,7 @@
         }
     }
 },
-"SubmitGremlinMethod":{
+"RequestMethod":{
     "Type" : "AWS::ApiGateway::Method",
     "Properties" : {
         "AuthorizationType" : "COGNITO_USER_POOLS",
@@ -122,7 +122,6 @@
                     "{",
                         "\"script\": \"$input.json($.script)\",", 
                         "\"bindings\": \"$input.json($.bindings)\",",
-                        "\"server\": \"",{"Fn::GetAtt":["ELB","DNSName"]},"\"", 
                     "}"
                     ]]}
             },
@@ -155,7 +154,7 @@
                     "arn:aws:apigateway:",
                     {"Ref": "AWS::Region"},
                     ":lambda:path/2015-03-31/functions/",
-                    {"Fn::GetAtt": ["GremlinProxy", "Arn"]},
+                    {"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
                     "/invocations"
                   ]
                 ]
@@ -179,7 +178,82 @@
             "application/json":{"Ref":"ScriptModel"}
         },
         "RequestParameters" : {},
-        "ResourceId" : {"Ref":"ScriptResource"},
+        "ResourceId" : {"Ref":"RequestResource"},
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"SubmitMethod":{
+    "Type" : "AWS::ApiGateway::Method",
+    "Properties" : {
+        "AuthorizationType" : "COGNITO_USER_POOLS",
+        "AuthorizerId" : {"Ref":"IAMAuthorizor"},
+        "HttpMethod" : "POST",
+        "Integration" : {
+            "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
+            "IntegrationHttpMethod" : "POST",
+            "PassthroughBehavior":"NEVER", 
+            "RequestTemplates":{
+                "application/json":{"Fn::Join":["",[
+                    "{",
+                        "\"script\": \"$input.json($.script)\",", 
+                        "\"bindings\": \"$input.json($.bindings)\",",
+                    "}"
+                    ]]}
+            },
+            "IntegrationResponses" : [
+                {
+                    "ResponseTemplates": {
+                        "application/json": {"Fn::Join":["",[
+                            "{",
+                                "\"output\": \"$input.json($.result.data)\"", 
+                            "}"
+                        ]]}
+                     },
+                    "StatusCode" : "200"
+                },
+                {
+                    "SelectionPattern": "^ERROR.*",
+                    "ResponseTemplates": {
+                        "application/json":{"Fn::Join":["",[
+                            "{",
+                                "\"message\": \"$input.json($.status.message)\"", 
+                            "}"
+                        ]]}
+                     },
+                    "StatusCode": 404
+                }
+            ],
+            "Type" : "AWS",
+            "Uri": {
+                "Fn::Join": ["",[
+                    "arn:aws:apigateway:",
+                    {"Ref": "AWS::Region"},
+                    ":lambda:path/2015-03-31/functions/",
+                    {"Fn::GetAtt": ["RDSProxyWrite", "Arn"]},
+                    "/invocations"
+                  ]
+                ]
+              }
+        },
+        "MethodResponses" : [
+            {
+                "ResponseModels":{
+                    "application/json":{"Ref":"ResponseModel"}
+                },
+                "StatusCode" : "200"
+            },
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "404"
+            }
+        ],
+        "RequestModels":{
+            "application/json":{"Ref":"ScriptModel"}
+        },
+        "RequestParameters" : {},
+        "ResourceId" : {"Ref":"SubmitResource"},
         "RestApiId" : {"Ref":"Api"}
     }
 },
@@ -197,7 +271,6 @@
                     "{",
                         "\"script\": \"102-1\",", 
                         "\"bindings\": {},",
-                        "\"server\": \"",{"Fn::GetAtt":["ELB","DNSName"]},"\"", 
                     "}"
                 ]]}
             },
@@ -222,7 +295,7 @@
                     "arn:aws:apigateway:",
                     {"Ref": "AWS::Region"},
                     ":lambda:path/2015-03-31/functions/",
-                    {"Fn::GetAtt": ["GremlinProxy", "Arn"]},
+                    {"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
                     "/invocations"
                   ]
                 ]

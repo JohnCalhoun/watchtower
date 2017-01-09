@@ -1,0 +1,17 @@
+{
+  "name": "lambda-rdsproxy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lambda"
+  ],
+  "author": "John M Calhoun",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.79.0"
+  }
+}

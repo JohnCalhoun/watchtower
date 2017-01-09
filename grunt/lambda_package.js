@@ -1,7 +1,7 @@
 module.exports={
-    gremlinproxy:{
+    rdsproxy:{
         options:{
-            package_folder:'lambda/GremlinProxy/build',
+            package_folder:'lambda/RDSProxy/build',
             dist_folder:'tmp'
         }
     },
@@ -20,6 +20,12 @@ module.exports={
     createhealthcheck:{
         options:{
             package_folder:'lambda/CreateHealthCheck/build',
+            dist_folder:'tmp'
+        }
+    },
+    initdatabase:{
+        options:{
+            package_folder:'lambda/InitDataBase/build',
             dist_folder:'tmp'
         }
     }

@@ -9,7 +9,6 @@ module.exports=function(grunt){
         data:grunt.file.readJSON('config.json')
     });
     grunt.registerTask('upload',[
-        "shell:uploadServerAssets",
         "shell:uploadLambda"
     ])
     grunt.registerTask('sdk',[
@@ -22,11 +21,13 @@ module.exports=function(grunt){
         'uglify:createcognitopool',
         'uglify:createcognitoidentity',
         'uglify:createhealthcheck',
-        'uglify:gremlinproxy',
+        'uglify:rdsproxy',
+        'uglify:initdatabase',
         'lambda_package:createcognitopool',
         'lambda_package:createcognitoidentity',
         'lambda_package:createhealthcheck',
-        'lambda_package:gremlinproxy',
+        'lambda_package:rdsproxy',
+        'lambda_package:initdatabase',
         'shell:moveLambda',
         'shell:uploadLambda'
     ])
@@ -113,12 +114,6 @@ module.exports=function(grunt){
         "html",
         "js",
         "style"
-    ])
-
-    grunt.registerTask('bake',[
-        "shell:cleanAMI",
-        "shell:bakeAMI",
-        "shell:updateAMI"
     ])
 }
 

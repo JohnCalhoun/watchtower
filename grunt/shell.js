@@ -1,7 +1,4 @@
 module.exports={
-    uploadServerAssets:{
-        command:'aws s3 sync server/assets/ s3://<%= AssetsBucket %>/disclosure/server --exclude "node_modules/*"'
-    },
     uploadLambda:{
         command:'aws s3 sync tmp/ s3://<%= AssetsBucket %>/disclosure/lambda --exclude "*" --include "l*.zip" '
     },
@@ -9,8 +6,9 @@ module.exports={
         command:[
                 "mv tmp/lambda-createcognitopool*.zip tmp/lambda-createcognitopool.zip",
                 "mv tmp/lambda-createcognitoidentity*.zip tmp/lambda-createcognitoidentity.zip",
-                "mv tmp/lambda-gremlinproxy*.zip tmp/lambda-gremlinproxy.zip",
-                "mv tmp/lambda-createhealthcheck*.zip tmp/lambda-createhealthcheck.zip"
+                "mv tmp/lambda-rdsproxy*.zip tmp/lambda-rdsproxy.zip",
+                "mv tmp/lambda-createhealthcheck*.zip tmp/lambda-createhealthcheck.zip",
+                "mv tmp/lambda-initdatabase*.zip tmp/lambda-initdatabase.zip"
                 ].join(';')
     },
     createStack:{

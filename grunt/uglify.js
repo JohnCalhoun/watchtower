@@ -1,7 +1,7 @@
 module.exports={
-    gremlinproxy:{
+    rdsproxy:{
         files:{
-            "lambda/GremlinProxy/build/handler.js":['lambda/GremlinProxy/handler.js']
+            "lambda/RDSProxy/build/handler.js":['lambda/RDSProxy/handler.js']
         }
     },
     createcognitopool:{
@@ -18,6 +18,13 @@ module.exports={
             "lambda/CreateCognitoIdentity/build/process.js":['lambda/CreateCognitoIdentity/process.js'],
             "lambda/CreateCognitoIdentity/build/response.js":['lambda/CreateCognitoIdentity/response.js'],
             "lambda/CreateCognitoIdentity/build/cognito.js":['lambda/CreateCognitoIdentity/cognito.js']
+        }
+    },
+    initdatabase:{
+        files:{
+            "lambda/InitDataBase/build/handler.js":['lambda/InitDataBase/handler.js'],
+            "lambda/InitDataBase/build/process.js":['lambda/InitDataBase/process.js'],
+            "lambda/InitDataBase/build/response.js":['lambda/InitDataBase/response.js']
         }
     },
     createhealthcheck:{
