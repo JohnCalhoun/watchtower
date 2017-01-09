@@ -9,7 +9,7 @@
         "ACM":{"ARN":"arn:aws:acm:us-east-1:677241476911:certificate/2f45e9b0-ea4f-4b2e-b02d-e44a01331c13"}
     },
     "InstanceType":{
-        "Instance":{"ID":"t2.nano"}
+        "Instance":{"ID":"t2.micro"}
     },    
     "Buckets":{
         "assets":{"name":"jmc-artifacts"},
@@ -19,20 +19,13 @@
     "RegionKeys":{
         "us-east-1":{"Name":"ec2-dev-us-east-1"},
         "us-east-2":{"Name":"ec2-dev-us-east-2"},
-        "us-west-1":{"Name":"ec2-dev-us-west-1"}
+        "us-west-1":{"Name":"ec2-dev-us-west-1"},
+        "us-west-2":{"Name":"ec2-dev-us-west-2"}
     },
     "RegionAmis":{
-        "us-east-1":{"ID":"ami-b73b63a0"},
-        "us-east-2":{"ID":"ami-58277d3d"},
-        "us-west-1":{"ID":"ami-23e8a343"},
-        "us-west-2":{"ID":"ami-5ec1673e"},
-        "eu-west-1":{"ID":"ami-9398d3e0"},
-        "eu-central-1":{"ID":"ami-f9619996"},
-        "ap-northeast-1":{"ID":"ami-0c11b26d"},
-        "ap-northeast-2":{"ID":"ami-983ce8f6"},
-        "ap-southeast-1":{"ID":"ami-b953f2da"},
-        "ap-southeast-2":{"ID":"ami-db704cb8"},
-        "ap-south-1":{"ID":"ami-34b4c05b"},
-        "sa-east-1":{"ID":"ami-97831ffb"}
+        "us-east-1":{"ID":"ami-6be6f07c"},
+        "us-east-2":{"ID":"ami-cffaa0aa"},
+        "us-west-1":{"ID":"ami-1b6a3b7b"},
+        "us-west-2":{"ID":"ami-6140f701"}
     }
 }

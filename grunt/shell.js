@@ -1,16 +1,16 @@
 module.exports={
     uploadServerAssets:{
-        command:'aws s3 sync server/ s3://<%= AssetsBucket %>/disclosure/server --exclude "node_modules/*"'
+        command:'aws s3 sync server/assets/ s3://<%= AssetsBucket %>/disclosure/server --exclude "node_modules/*"'
     },
     uploadLambda:{
-        command:'aws s3 sync tmp/ s3://<%= AssetsBucket %>/disclosure/lambda --exclude "*" --include "*.zip" '
+        command:'aws s3 sync tmp/ s3://<%= AssetsBucket %>/disclosure/lambda --exclude "*" --include "l*.zip" '
     },
     moveLambda:{
         command:[
-                "mv tmp/createcognitopool*.zip tmp/createcognitopool.zip",
-                "mv tmp/createcognitoidentity*.zip tmp/createcognitoidentity.zip",
-                "mv tmp/gremlinproxy*.zip tmp/gremlinproxy.zip",
-                "mv tmp/createhealthcheck*.zip tmp/createhealthcheck.zip"
+                "mv tmp/lambda-createcognitopool*.zip tmp/lambda-createcognitopool.zip",
+                "mv tmp/lambda-createcognitoidentity*.zip tmp/lambda-createcognitoidentity.zip",
+                "mv tmp/lambda-gremlinproxy*.zip tmp/lambda-gremlinproxy.zip",
+                "mv tmp/lambda-createhealthcheck*.zip tmp/lambda-createhealthcheck.zip"
                 ].join(';')
     },
     createStack:{
@@ -56,8 +56,14 @@ module.exports={
                         "cd ../..",
                     "wget http://momentjs.com/downloads/moment.min.js -O tmp/moment.js"
                 ].join(';')
+    },
+    cleanAMI:{
+        command:'cd ./server; ./clean-images.sh'
+    },
+    bakeAMI:{
+        command:'cd ./server; ./packer build ./config.json | tee ./build.log'
+    },
+    updateAMI:{
+        command:'cd ./server; ./update-mappings.sh'
     }
 }
-
-
-

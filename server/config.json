@@ -1,0 +1,20 @@
+{
+  "builders": [{
+    "type": "amazon-ebs",
+    "region": "us-east-1",
+    "source_ami": "ami-b73b63a0",
+    "instance_type": "t2.micro",
+    "ssh_username": "ec2-user",
+    "iam_instance_profile":"s3Access",
+    "ami_name": "gremlinServer",
+    "ami_regions":["us-east-2","us-west-1","us-west-2"],
+    "force_deregister":true,
+    "force_delete_snapshot":true,
+    "shutdown_behavior":"terminate"
+  }],
+  "provisioners":[{
+    "type":"shell",
+    "script":"user-data.sh",
+    "execute_command":"chmod +x {{ .Path }}; {{ .Vars }} sudo {{ .Path }}"
+  }]
+}

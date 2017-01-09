@@ -114,6 +114,12 @@ module.exports=function(grunt){
         "js",
         "style"
     ])
+
+    grunt.registerTask('bake',[
+        "shell:cleanAMI",
+        "shell:bakeAMI",
+        "shell:updateAMI"
+    ])
 }
 
 

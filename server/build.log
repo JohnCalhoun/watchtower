@@ -1,0 +1,37 @@
+[1;32mamazon-ebs output will be in this color.[0m
+
+[1;32m==> amazon-ebs: Force Deregister flag found, skipping prevalidating AMI Name[0m
+[0;32m    amazon-ebs: Found Image ID: ami-b73b63a0[0m
+[1;32m==> amazon-ebs: Creating temporary keypair: packer_585d8912-2e8c-2614-c24d-65e17174a9e7[0m
+[1;32m==> amazon-ebs: Creating temporary security group for this instance...[0m
+[1;32m==> amazon-ebs: Authorizing access to port 22 the temporary security group...[0m
+[1;32m==> amazon-ebs: Launching a source AWS instance...[0m
+[0;32m    amazon-ebs: Instance ID: i-0bb07fe64d454e4e8[0m
+[1;32m==> amazon-ebs: Waiting for instance (i-0bb07fe64d454e4e8) to become ready...[0m
+[1;32m==> amazon-ebs: Waiting for SSH to become available...[0m
+[1;32m==> amazon-ebs: Connected to SSH![0m
+[1;32m==> amazon-ebs: Provisioning with shell script: user-data.sh[0m
+[1;32m==> amazon-ebs: Stopping the source instance...[0m
+[1;32m==> amazon-ebs: Waiting for the instance to stop...[0m
+[1;32m==> amazon-ebs: Creating the AMI: gremlinServer[0m
+[0;32m    amazon-ebs: AMI: ami-6be6f07c[0m
+[1;32m==> amazon-ebs: Waiting for AMI to become ready...[0m
+[1;32m==> amazon-ebs: Copying AMI (ami-6be6f07c) to other regions...[0m
+[0;32m    amazon-ebs: Copying to: us-east-2[0m
+[0;32m    amazon-ebs: Copying to: us-west-1[0m
+[0;32m    amazon-ebs: Copying to: us-west-2[0m
+[0;32m    amazon-ebs: Waiting for all copies to complete...[0m
+[1;32m==> amazon-ebs: Terminating the source AWS instance...[0m
+[1;32m==> amazon-ebs: Cleaning up any extra volumes...[0m
+[1;32m==> amazon-ebs: No volumes to clean up, skipping[0m
+[1;32m==> amazon-ebs: Deleting temporary security group...[0m
+[1;32m==> amazon-ebs: Deleting temporary keypair...[0m
+[1;32mBuild 'amazon-ebs' finished.[0m
+
+==> Builds finished. The artifacts of successful builds are:
+--> amazon-ebs: AMIs were created:
+
+us-east-1: ami-6be6f07c
+us-east-2: ami-cffaa0aa
+us-west-1: ami-1b6a3b7b
+us-west-2: ami-6140f701

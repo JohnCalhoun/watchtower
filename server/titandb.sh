@@ -6,7 +6,6 @@ set -x
 yum install -y sqlite-devel java-1.8.0-openjdk jq
 alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java
 
-
 cd /root
 export REGION=`curl http://169.254.169.254/latest/meta-data/placement/availability-zone | rev | cut -c 2- | rev`
 STACKNAME=$1

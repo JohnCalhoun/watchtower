@@ -17,34 +17,13 @@
             {"Fn::Join":["\n",[
                 "#! /bin/bash",
                 "exec >/root/user-data.log 2>&1",
-                "yum install git -y",
                 "yum update -y",
-                "cd /root",
-                {"Fn::Join":["",[
-                    "aws s3 cp s3://",
-                    {"Fn::FindInMap":["Buckets","assets","name"]},
-                    "/disclosure/server ",
-                    " . ",
-                    "--recursive"
+                {"Fn::Join":[" ",[
+                    "/root/update-config.sh",  
+                    {"Ref":"AWS::StackName"}
                 ]]},
-                "chmod +x ./*.sh",
-                {"Fn::Join":["",[
-                    "./titandb.sh ",
-                    {"Ref":"AWS::StackName"},
-                    " ",
-                    {"Fn::Join":["-",[
-                        {"Ref":"AWS::StackName"},
-                        "elasticsearch"
-                    ]]}
-                ]]},
-                {"Fn::Join":["",[
-                    "aws s3 cp /root/titandb.log ",
-                    "s3://",
-                    {"Fn::FindInMap":["Buckets","log","name"]},
-                    "/disclosure/",
-                    {"Ref":"AWS::StackName"},
-                    ".log"
-                ]]}
+                "chkconfig gremlin-server on",
+                "service gremlin-server start"
             ]]}
         } 
     }

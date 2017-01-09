@@ -1,5 +1,5 @@
 {
-  "name": "createcognitoidentity",
+  "name": "lambda-createcognitoidentity",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",

@@ -11,7 +11,7 @@
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
-            "S3Key":"disclosure/lambda/createhealthcheck.zip"
+            "S3Key":"disclosure/lambda/lambda-createhealthcheck.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
                 "CreateHealthCheck", 
@@ -29,7 +29,7 @@
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
-            "S3Key":"disclosure/lambda/createcognitopool.zip"
+            "S3Key":"disclosure/lambda/lambda-createcognitopool.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
                 "CreateCognitoPool", 
@@ -47,7 +47,7 @@
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
-            "S3Key":"disclosure/lambda/createcognitoidentity.zip"
+            "S3Key":"disclosure/lambda/lambda-createcognitoidentity.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
                 "CreateCognitoIdentity", 
@@ -65,7 +65,7 @@
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Fn::FindInMap":["Buckets","assets","name"]},
-            "S3Key":"disclosure/lambda/gremlinproxy.zip"
+            "S3Key":"disclosure/lambda/lambda-gremlinproxy.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
                 "GremlinProxy", 

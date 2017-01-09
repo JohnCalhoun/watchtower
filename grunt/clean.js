@@ -3,7 +3,7 @@ module.exports={
         "no-write":false
     },
     all:["tmp/*"],
-    lambda:["tmp/*.zip"],
+    lambda:["tmp/lambda-*.zip"],
     website:["website/build/*"]
 }
 

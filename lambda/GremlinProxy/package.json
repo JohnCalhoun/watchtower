@@ -1,5 +1,5 @@
 {
-  "name": "gremlinproxy",
+  "name": "lambda-gremlinproxy",
   "version": "1.0.0",
   "description": "",
   "main": "handler.js",
