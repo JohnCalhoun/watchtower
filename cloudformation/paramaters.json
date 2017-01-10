@@ -20,12 +20,12 @@
         "NoEcho":"true",
         "Type" : "String"
     },
-    "DBUserReadOnly" : {
+    "DBUserRead" : {
         "NoEcho":"true",
         "Default" : "test",
         "Type" : "String"
     },
-    "DBPasswordReadOnly" : {
+    "DBPasswordRead" : {
         "NoEcho":"true",
         "Type" : "String"
     }

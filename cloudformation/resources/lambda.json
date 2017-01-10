@@ -84,6 +84,14 @@
                 {"Ref":"subnet1"},
                 {"Ref":"subnet2"}
             ]
+        },
+        "Environment":{
+            "Variables":{
+                "DBNAME":{ "Ref" : "DBName" }, 
+                "DBUSER":{ "Ref" : "DBUserRead" },
+                "DBPASSWORD":{ "Ref" : "DBPasswordRead" },
+                "DBENDPOINT":{ "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+            }
         }
       }
 },
@@ -111,6 +119,14 @@
                 {"Ref":"subnet1"},
                 {"Ref":"subnet2"}
             ]
+        },
+        "Environment":{
+            "Variables":{
+                "DBNAME":{ "Ref" : "DBName" }, 
+                "DBUSER":{ "Ref" : "DBUserWrite" },
+                "DBPASSWORD":{ "Ref" : "DBPasswordWrite" },
+                "DBENDPOINT":{ "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+            }
         }
     }
 },
@@ -138,6 +154,14 @@
                 {"Ref":"subnet1"},
                 {"Ref":"subnet2"}
             ]
+        },
+        "Environment":{
+            "Variables":{
+                "DBNAME":{ "Ref" : "DBName" }, 
+                "DBUSER":{ "Ref" : "DBUser" },
+                "DBPASSWORD":{ "Ref" : "DBPassword" },
+                "DBENDPOINT":{ "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+            }
         }
       }
 }

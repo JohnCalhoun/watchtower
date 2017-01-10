@@ -1,5 +1,5 @@
 --Create nessasery tables and users
-USE ?;
+USE :database;
 
 CREATE TABLE 
     edgelist(
@@ -38,7 +38,7 @@ GRANT
     SELECT,
     INSERT,
     DELETE
-ON ?.*
+ON :database.*
 TO user 'write';
 
 --read user
@@ -46,5 +46,5 @@ CREATE USER 'read'@'%' IDENTIFIED BY 'read';
 
 GRANT 
     SELECT
-ON ?.*
+ON :database.*
 TO user 'read'; 

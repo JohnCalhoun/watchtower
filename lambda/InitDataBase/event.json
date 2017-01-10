@@ -3,12 +3,9 @@
   "ResponseURL": "http://pre-signed-S3-url-for-response",
   "ResourceProperties": {
     "StackName": "stack-name",
-    "bucket":"jmc-tmp-test",
-    "createkey":"healthcheck.html",
-    "destroykey":"healthcheck.html",
-    "dbuser":"",
+    "dbuser":"john",
     "dbpassword":"",
-    "dbname":""
+    "dbname":"test"
   },
   "PhysicalResourceId":"1480985147002-ujq6k6",
   "RequestType": "Delete",

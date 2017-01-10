@@ -20,4 +20,15 @@
         "DBSubnetGroupDescription" : "DB subnet",
         "SubnetIds" : [ {"Ref":"subnet1"},{"Ref":"subnet2"}]
     }
-}     
+},
+"DBtables":{
+    "Type": "Custom::GraphDatabase",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["InitDataBase", "Arn"] },
+        "dbname":{ "Ref" : "DBName" }, 
+        "dbuser":{ "Ref" : "DBUser" },
+        "dbpassword":{ "Ref" : "DBPassword" },
+        "dbendpoint":{ "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+    },
+    "DependsOn":"DB"
+}

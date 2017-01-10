@@ -2,7 +2,8 @@ module.exports={
     rdsproxy:{
         options:{
             package_folder:'lambda/RDSProxy/build',
-            dist_folder:'tmp'
+            dist_folder:'tmp',
+            include_files:"lambda/RDSProxy/scripts/*"
         }
     },
     createcognitoidentity:{
@@ -26,7 +27,8 @@ module.exports={
     initdatabase:{
         options:{
             package_folder:'lambda/InitDataBase/build',
-            dist_folder:'tmp'
+            dist_folder:'tmp',
+            include_files:"lambda/InitDataBase/scripts/*"
         }
     }
 }

@@ -1,5 +1,5 @@
 {
-  "body": "{\"test\":\"body\"}",
+  "body": "{\"script\":\"healthcheck\",\"binding\":{}}",
   "resource": "/{proxy+}",
   "requestContext": {
     "resourceId": "123456",

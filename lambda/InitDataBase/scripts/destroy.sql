@@ -1,5 +1,5 @@
 --Create nessasery tables and users
-USE ?;
+USE :database;
 
 DROP TABLE edgelist;
 DROP TABLE edgeattributes;
