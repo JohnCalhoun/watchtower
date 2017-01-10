@@ -63,5 +63,11 @@ module.exports={
     },
     updateAMI:{
         command:'cd ./server; ./update-mappings.sh'
+    },
+    genPass:{
+        command:"cd ./scripts; node ./genPass.js"
+    },
+    clearPass:{
+        command:"cd ./scripts; node ./clearPass.js"
     }
 }

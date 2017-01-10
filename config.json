@@ -2,5 +2,12 @@
   "AssetsBucket": "jmc-artifacts",
   "stackName": "disclosure-6",
   "WebsiteBucket": "disclosure-5.disclosure.johnmcalhoun.guru",
-  "ApiId": "qcidhb7jyd"
+  "ApiId": "qcidhb7jyd",
+    "DBName" :"graphdatabase",
+    "DBUserWrite" : "write",
+    "DBUserRead" : "read",
+    "DBUser" :"init",
+    "DBPassword" : "random",
+    "DBPasswordWrite" : "random",
+    "DBPasswordRead" : "random"
 }
