@@ -9,9 +9,9 @@ function run(name,resolve,reject){
     database=process.env.DBNAME
 
     //load in script
-    script=fs.readFileSync(source_dir+'/scripts/'+name+'.sql').toString()
+    script=fs.readFileSync(__dirname+'/'+name+'.sql').toString()
 
-   var connection = mysql.createConnection({
+    var connection = sql.createConnection({
         host     : endpoint,
         user     : user,
         password : password,

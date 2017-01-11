@@ -1,0 +1,6 @@
+"Conditions" : {
+    "CreateProdResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "prod"]},
+    "CreateFromBackup" : {"Fn::Not":[
+        {"Fn::Equals" : [{"Ref" : "SnapshotIdentifier"}, "false"]}
+    ]}
+}

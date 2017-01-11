@@ -28,5 +28,41 @@
     "DBPasswordRead" : {
         "NoEcho":"true",
         "Type" : "String"
+    },
+    "EnvType":{
+        "Type" : "String",
+        "Default":"dev"
+    },
+    "SnapshotIdentifier":{
+        "Type" : "String",
+        "Default":"false"
+    },
+    "ArtifactsBucket":{
+        "Type" : "String"
+    },
+    "LogBucket":{
+        "Type" : "String"
+    },
+    "Cert":{
+        "Type" : "String"
+    },
+    "DNSZone":{
+        "Type" : "String"
+    },
+    "DNSName":{
+        "Type" : "String"
+    },
+    "GitCloneUrl":{
+        "Type" : "String"
     }
 }
+
+
+
+
+
+
+
+
+
+

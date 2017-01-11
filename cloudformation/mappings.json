@@ -1,31 +1,3 @@
 /*  
 */
-"Mappings":{
-    "DNS":{
-        "HostingBaseDomain":{"Name":"disclosure.johnmcalhoun.guru"}, 
-        "HostedZone":{"ID":"Z1H907X2VR5MUK"}
-    },
-    "Cert" : {
-        "ACM":{"ARN":"arn:aws:acm:us-east-1:677241476911:certificate/2f45e9b0-ea4f-4b2e-b02d-e44a01331c13"}
-    },
-    "InstanceType":{
-        "Instance":{"ID":"t2.micro"}
-    },    
-    "Buckets":{
-        "assets":{"name":"jmc-artifacts"},
-        "archive":{"name":"jmc-tmp-test"},
-        "log":{"name":"jmc-logfiles"}
-    },
-    "RegionKeys":{
-        "us-east-1":{"Name":"ec2-dev-us-east-1"},
-        "us-east-2":{"Name":"ec2-dev-us-east-2"},
-        "us-west-1":{"Name":"ec2-dev-us-west-1"},
-        "us-west-2":{"Name":"ec2-dev-us-west-2"}
-    },
-    "RegionAmis":{
-        "us-east-1":{"ID":"ami-6be6f07c"},
-        "us-east-2":{"ID":"ami-cffaa0aa"},
-        "us-west-1":{"ID":"ami-1b6a3b7b"},
-        "us-west-2":{"ID":"ami-6140f701"}
-    }
-}
+"Mappings":{}

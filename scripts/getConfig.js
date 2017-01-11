@@ -1,8 +1,4 @@
 var aws=require('aws-sdk')
-var config_file=__dirname+'/../config.json'
-var config=require(config_file)
-var stackname=config.stackName
-
 var parseStacks=function(data){
     var out={}
     for(var i=0;i<data.length;i++){
@@ -13,9 +9,6 @@ var parseStacks=function(data){
                 if(key==="WebsiteBucket"){ 
                     out[key]=outputs[j].OutputValue
                 }
-                if(key==="ApiId"){ 
-                    out[key]=outputs[j].OutputValue
-                }
             }
         }
     }
@@ -23,11 +16,10 @@ var parseStacks=function(data){
     return out
 }
 
-
-var getOutputs=function(){
+var getOutputs=function(stack){
     var cloudformation=new aws.CloudFormation({region:'us-east-1'})
     var params={
-            StackName:stackname
+            StackName:stack
         }
 
     var out=new Promise(function(resolve,reject){
@@ -43,21 +35,19 @@ var getOutputs=function(){
     return out
 }
 
-var getWebsiteBucket=function(){
+var getWebsiteBucket=function(config){
+    stackname=config.get("stackName")
     getOutputs(stackname)
         .then(function(output){
-            var fs=require('fs')
-            
             for(key in output){
-                config[key]=output[key]
+                config.set(key,output[key])
             } 
-            fs.writeFileSync(config_file,JSON.stringify(config,null,2))
         },function(err){
             console.log(err)
         })
 }
 
-getWebsiteBucket()
+module.exports=getWebsiteBucket
 
 
 

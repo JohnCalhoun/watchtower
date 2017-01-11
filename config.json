@@ -1,13 +1,12 @@
 {
-  "AssetsBucket": "jmc-artifacts",
-  "stackName": "disclosure-6",
-  "WebsiteBucket": "disclosure-5.disclosure.johnmcalhoun.guru",
-  "ApiId": "qcidhb7jyd",
+    "ArtifactsBucket": "jmc-artifacts",
+    "stackName": "watchtower-2",
     "DBName" :"graphdatabase",
-    "DBUserWrite" : "write",
-    "DBUserRead" : "read",
-    "DBUser" :"init",
-    "DBPassword" : "random",
-    "DBPasswordWrite" : "random",
-    "DBPasswordRead" : "random"
+    "DBUserWrite" : "Write",
+    "DBUserRead" : "Read",
+    "DBUser" :"Admin",
+    "DNSZone":"Z2TRO3VQM1Z8P5",
+    "DNSName":"watchtower.jmc.ninja", 
+    "LogBucket":"jmc-logfiles", 
+    "Cert":"arn:aws:acm:us-east-1:677241476911:certificate/23b07ed6-65b7-47ec-83c0-f46be5b69d86"
 }

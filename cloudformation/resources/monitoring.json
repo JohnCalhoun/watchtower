@@ -1,7 +1,6 @@
 /*
     alarms
         website health
-        gremlin server health
     cloudtrail 
 */
 "Websitehealthcheck":{
@@ -13,7 +12,7 @@
                 {"Fn::Join":["",[ 
                     {"Ref":"AWS::StackName"},
                     ".",
-                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
+                    {"Ref":"DNSName"}
                 ]]},
             "Port" : 80,
             "ResourcePath" : "/healthcheck.html",
@@ -52,9 +51,7 @@
             ]]}, 
             "Port" : 443,
             "ResourcePath" : {"Fn::Join":["",[
-                "/",
-                {"Ref":"ApiStage"},
-                "/gremlin/heathcheck"
+                "/heathcheck"
             ]]},
             "Type" : "HTTPS"
         }

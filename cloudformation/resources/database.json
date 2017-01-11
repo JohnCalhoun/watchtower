@@ -6,12 +6,24 @@
         "AllocatedStorage" : "5",
         "DBInstanceClass" : "db.t2.micro",
         "Engine" : "MySQL",
-        "MultiAZ":"true",
+        "MultiAZ":{"Fn::If" : [
+            "CreateProdResources",
+            "true",
+            "false"
+            ]
+        },
+        "DBSnapshotIdentifier":{"Fn::If" : [
+            "CreateFromBackup",
+            {"Ref":"SnapshotIdentifier"},
+            {"Ref":"AWS::NoValue"}
+            ]
+        },
         "MasterUsername" :      { "Ref" : "DBUser" },
         "MasterUserPassword" :  { "Ref" : "DBPassword" },
         "DBName":               { "Ref" : "DBName" },
         "VPCSecurityGroups":[{"Ref":"DBSG"}],
-        "DBSubnetGroupName":{"Ref":"DBsubnet"}
+        "DBSubnetGroupName":{"Ref":"DBsubnet"},
+        "PubliclyAccessible":"false"
     }
 },
 "DBsubnet":{

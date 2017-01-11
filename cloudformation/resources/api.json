@@ -1,6 +1,4 @@
 /* api
-    -gremlin
-        
 */
 "Api":{
     "Type" : "AWS::ApiGateway::RestApi",
@@ -12,7 +10,12 @@
     "Type" : "AWS::ApiGateway::Deployment",
     "Properties" : {
         "RestApiId" : {"Ref":"Api"}
-    }
+    },
+    "DependsOn":[
+        "ReadMethod",
+        "WriteMethod",
+        "HealthCheckMethod"
+    ]
 },
 "ApiStage":{
     "Type" : "AWS::ApiGateway::Stage",

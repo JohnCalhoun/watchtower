@@ -1,0 +1,23 @@
+"WebsiteBuild":{
+    "Type" : "AWS::CodeBuild::Project",
+    "Properties" : {
+        "Artifacts" : {
+            "Location" : {"Ref":"HostingBucket"},
+            "Name" : "website",
+            "Packaging" : "NONE",
+            "Path" : "/",
+            "Type" : "S3"
+        },
+        "Environment" : {
+            "ComputeType" : "BUILD_GENERAL1_SMALL",
+            "Image" : "aws/codebuild/eb-nodejs-4.4.6-amazonlinux-64:2.1.3",
+            "Type" : "LINUX_CONTAINER"
+        },
+        "Name" : "WebsiteBuild",
+        "ServiceRole" :{"Fn::GetAtt":["BuildRole","Arn"]} ,
+        "Source" : {
+            "Location" : {"Ref":"GitCloneUrl"},
+            "Type" : "CODECOMMIT"
+        }
+    }
+}

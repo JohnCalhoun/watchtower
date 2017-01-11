@@ -1,6 +1,9 @@
 module.exports={
     uploadLambda:{
-        command:'aws s3 sync tmp/ s3://<%= AssetsBucket %>/disclosure/lambda --exclude "*" --include "l*.zip" '
+        command:'aws s3 sync tmp/ s3://<%= ArtifactsBucket %>/disclosure/lambda --exclude "*" --include "l*.zip" '
+    },
+    moveSqlScripts:{
+        command:"cp lambda/InitDataBase/scripts/*.sql lambda/InitDataBase/build"
     },
     moveLambda:{
         command:[
@@ -12,10 +15,47 @@ module.exports={
                 ].join(';')
     },
     createStack:{
-        command:"aws cloudformation create-stack --template-body file://tmp/template.json --stack-name <%= stackName %> --capabilities CAPABILITY_IAM"
+        command:[
+                    "aws cloudformation create-stack",
+                    "--template-body file://tmp/template.json",
+                    "--stack-name <%= stackName %>",
+                    "--capabilities CAPABILITY_IAM",
+                    "--disable-rollback",
+                    "--parameters",
+                    "ParameterKey=ArtifactsBucket,ParameterValue=<%= ArtifactsBucket %> ",
+                    "ParameterKey=DBName,ParameterValue=<%=  DBName%> ",
+                    "ParameterKey=DBUserWrite,ParameterValue=<%=  DBUserWrite%> ",
+                    "ParameterKey=DBUserRead,ParameterValue=<%=  DBUserRead%> ",
+                    "ParameterKey=DBUser,ParameterValue=<%=  DBUser%> ",
+                    "ParameterKey=DBPassword,ParameterValue=<%=  DBPassword%> ",
+                    "ParameterKey=DBPasswordWrite,ParameterValue=<%=  DBPasswordWrite%> ",
+                    "ParameterKey=DBPasswordRead,ParameterValue=<%= DBPasswordRead %> ",
+                    "ParameterKey=LogBucket,ParameterValue=<%= LogBucket %> ",
+                    "ParameterKey=Cert,ParameterValue=<%= Cert %> ",
+                    "ParameterKey=DNSZone,ParameterValue=<%= DNSZone %> ",
+                    "ParameterKey=DNSName,ParameterValue=<%= DNSName %> ",
+                    "ParameterKey=GitCloneUrl,ParameterValue=<%= GitCloneUrl %> ",
+                    "--capabilities CAPABILITY_IAM"
+                ].join(' ')
     },
     updateStack:{
-        command:"aws cloudformation update-stack --template-body file://tmp/template.json --stack-name <%= stackName %> --capabilities CAPABILITY_IAM"
+         command:[
+                    "aws cloudformation update-stack",
+                    "--template-body file://tmp/template.json",
+                    "--stack-name <%= stackName %>",
+                    "--capabilities CAPABILITY_IAM",
+                    "--disable-rollback",
+                    "--parameters",
+                    "ParameterKey=ArtifactsBucket,ParameterValue=<%= ArtifactsBucket %> ",
+                    "ParameterKey=DBName,ParameterValue=<%=  DBName%> ",
+                    "ParameterKey=DBUserWrite,ParameterValue=<%=  DBUserWrite%> ",
+                    "ParameterKey=DBUserRead,ParameterValue=<%=  DBUserRead%> ",
+                    "ParameterKey=DBUser,ParameterValue=<%=  DBUser%> ",
+                    "ParameterKey=DBPassword,ParameterValue=<%=  DBPassword%> ",
+                    "ParameterKey=DBPasswordWrite,ParameterValue=<%=  DBPasswordWrite%> ",
+                    "ParameterKey=DBPasswordRead,ParameterValue=<%= DBPasswordRead %> ",
+                    "--capabilities CAPABILITY_IAM"
+                ].join(' ')
     },
     deleteStack:{
         command:"aws cloudformation delete-stack --stack-name <%= stackName %>"
@@ -23,8 +63,8 @@ module.exports={
     validate:{
         command:"aws cloudformation validate-template --template-body file://tmp/template.json "
     },
-    config:{
-        command:"cd ./scripts; node ./getConfig.js"
+    uploadWebsite:{
+        command:"aws s3 sync ./website/build <%= WebsiteBucket %>"
     },
     getSdk:{
         command:[
@@ -54,20 +94,5 @@ module.exports={
                         "cd ../..",
                     "wget http://momentjs.com/downloads/moment.min.js -O tmp/moment.js"
                 ].join(';')
-    },
-    cleanAMI:{
-        command:'cd ./server; ./clean-images.sh'
-    },
-    bakeAMI:{
-        command:'cd ./server; ./packer build ./config.json | tee ./build.log'
-    },
-    updateAMI:{
-        command:'cd ./server; ./update-mappings.sh'
-    },
-    genPass:{
-        command:"cd ./scripts; node ./genPass.js"
-    },
-    clearPass:{
-        command:"cd ./scripts; node ./clearPass.js"
     }
 }

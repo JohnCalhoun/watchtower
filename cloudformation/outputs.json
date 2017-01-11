@@ -1,8 +1,5 @@
 "Outputs":{
     "WebsiteBucket":{
         "Value":{"Ref":"HostingBucket"}
-    },
-    "ApiId":{
-        "Value":{"Ref":"Api"}
     }
 }

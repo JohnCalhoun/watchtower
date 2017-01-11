@@ -8,11 +8,7 @@
         "WebsiteConfiguration" :{
             "ErrorDocument":"error.html",
             "IndexDocument":"index.html"
-        },
-        "BucketName":{"Fn::Join":[".",[
-            {"Ref":"AWS::StackName"},
-            {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
-        ]]}
+        }    
     }
 },
 "HostingPolicy":{

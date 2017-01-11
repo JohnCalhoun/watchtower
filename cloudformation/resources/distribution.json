@@ -5,38 +5,64 @@
 */
 "distribution":{
     "Type" : "AWS::CloudFront::Distribution",
+    "Condition" : "CreateProdResources",
     "Properties" : {
         "DistributionConfig" :{
             "Aliases" : [
                 {"Fn::Join":["",[ 
                     {"Ref":"AWS::StackName"},
                     ".",
-                    {"Fn::FindInMap":["DNS","HostingBaseDomain","Name"]}
-                ]]}
+                    {"Ref":"DNSName"}
+                ]]},
+                {"Ref":"DNSName"}
             ],
-            "DefaultCacheBehavior" : 
-            {
+            "CacheBehaviors":[
+                {
+                    "Compress" : true,
+                    "ForwardedValues" : {
+                        "QueryString" : false
+                    },
+                    "DefaultTTL":"0",
+                    "PathPattern":"/api",
+                    "TargetOriginId" : "api",
+                    "ViewerProtocolPolicy" : "redirect-to-https"
+                }
+            ],
+            "DefaultCacheBehavior" : {
                 "Compress" : true,
                 "ForwardedValues" : {
                     "QueryString" : false
                 },
                 "TargetOriginId" : "bucket",
                 "ViewerProtocolPolicy" : "redirect-to-https"
-            } 
-            ,
+            } ,
             "DefaultRootObject" : "/index.html",
             "Enabled" : true,
             "Origins" : [ 
                 {
-                "DomainName" : {"Fn::GetAtt":["HostingBucket","DomainName"]},
-                "Id" : "bucket",
-                "S3OriginConfig" : {
-                    "OriginAccessIdentity" : ""
-                }
+                    "Id" : "bucket",
+                    "DomainName" : {"Fn::GetAtt":["HostingBucket","DomainName"]},
+                    "S3OriginConfig" : {
+                        "OriginAccessIdentity" : ""
+                    }
+                },
+                {
+                    "Id" : "api",
+                    "DomainName" : { "Fn::Join" : ["",[
+                        "https://",
+                        {"Ref":"Api"},
+                        ".execute-api.",
+                        {"Ref":"AWS::Region"},
+                        ".amazonaws.com"
+                    ]]},
+                    "CustomOriginConfig":{
+                        "HTTPSPort" : 443,
+                        "OriginProtocolPolicy" : "https-only"
+                    }
                 } 
             ],
             "ViewerCertificate":{
-                "AcmCertificateArn" : {"Fn::FindInMap":["Cert","ACM","ARN"]},
+                "AcmCertificateArn" :{"Ref":"Cert"} ,
                 "SslSupportMethod":"sni-only"
             },
             "PriceClass" : "PriceClass_100"
