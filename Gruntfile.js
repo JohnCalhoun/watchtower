@@ -1,5 +1,4 @@
 var crypto=require('crypto')
-var getConfig=require(__dirname+'/scripts/getConfig.js')
 var exec=require('child_process').execSync
 
 module.exports=function(grunt){
@@ -18,16 +17,12 @@ module.exports=function(grunt){
         grunt.config.set("DBPasswordRead",  DBPassword=crypto.randomBytes(20).toString('hex'))
         grunt.config.set("DBPasswordWrite", DBPassword=crypto.randomBytes(20).toString('hex'))
     })
-    grunt.registerTask('getConfig',function(){
-        getConfig(grunt.config) 
-    })
     grunt.registerTask('getGitClone',function(){
         var url=exec("git remote get-url origin | sed 's/ssh/https/'").toString()
         grunt.config.set('GitCloneUrl',url)
     })
 
     grunt.registerTask('upload',[
-        'getConfig',
         "shell:uploadLambda"
     ])
     grunt.registerTask('sdk',[
