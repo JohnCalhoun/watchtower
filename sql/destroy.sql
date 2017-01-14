@@ -1,11 +1,10 @@
---Create nessasery tables and users
 USE :database;
 
-DROP TABLE edgelist;
-DROP TABLE edgeattributes;
-DROP TABLE nodelist;
-DROP TABLE edgeAttributes;
+DROP TABLE IF EXISTS edgelist;
+DROP TABLE IF EXISTS edgeattributes;
+DROP TABLE IF EXISTS nodelist;
+DROP TABLE IF EXISTS nodeattributes;
 
-DROP USER 'write'
-DROP USER 'read'
+DROP USER IF EXISTS 'write';
+DROP USER IF EXISTS 'read';
 

@@ -1,4 +1,3 @@
---Create nessasery tables and users
 USE :database;
 
 CREATE TABLE 
@@ -31,20 +30,19 @@ CREATE TABLE
         PRIMARY KEY (id)
     );
 
---write user
-CREATE USER 'write'@'%' IDENTIFIED BY 'write';
+
+CREATE USER IF NOT EXISTS 'write'@'%' IDENTIFIED BY 'write';
 
 GRANT 
     SELECT,
     INSERT,
     DELETE
 ON :database.*
-TO user 'write';
+TO 'write';
 
---read user
-CREATE USER 'read'@'%' IDENTIFIED BY 'read';
+CREATE USER IF NOT EXISTS 'read'@'%' IDENTIFIED BY 'read';
 
 GRANT 
     SELECT
 ON :database.*
-TO user 'read'; 
+TO 'read';
