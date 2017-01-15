@@ -36,6 +36,7 @@ module.exports=function(grunt){
         'uglify:createcognitoidentity',
         'uglify:createhealthcheck',
         'uglify:rdsproxy',
+        'shell:copyInitSql',
         'uglify:initdatabase',
         'lambda_package:createcognitopool',
         'lambda_package:createcognitoidentity',
@@ -59,6 +60,7 @@ module.exports=function(grunt){
     ])
 
     grunt.registerTask('cloudformation',[
+        'getGitClone',
         'concat:resources',
         'concat:cloudformation'
     ])

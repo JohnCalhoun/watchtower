@@ -339,14 +339,63 @@
                 {
                   "Effect": "Allow",
                   "Principal": {
-                    "Federated": "codebuild.amazonaws.com"
+                    "Service": "codebuild.amazonaws.com"
                   },
-                  "Action": "sts:AssumeRole",
+                  "Action": "sts:AssumeRole"
                 }
               ]
             },
         "Path": "/",
-        "Policies": [ 
-        ]
+        "Policies": [{
+            "PolicyName":"CreateCognitoPool",
+            "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "CloudWatchLogsPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "logs:CreateLogGroup",
+                            "logs:CreateLogStream",
+                            "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                            "arn:aws:logs:us-east-1:677241476911:log-group:/aws/codebuild/websiteBuild"
+                        ]
+                    },
+                    {
+                        "Sid": "CodeCommitPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "codecommit:GitPull"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    },
+                    {
+                        "Sid": "S3GetObjectPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:GetObjectVersion"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    },
+                    {
+                        "Sid": "S3PutObjectPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:PutObject"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
+                ]
+            } 
+		}]
     }
 }

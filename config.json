@@ -1,6 +1,6 @@
 {
     "ArtifactsBucket": "jmc-artifacts",
-    "stackName": "watchtower-2",
+    "stackName": "watchtower-5",
     "DBName" :"graphdatabase",
     "DBUserWrite" : "Write",
     "DBUserRead" : "Read",

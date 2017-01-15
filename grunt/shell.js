@@ -34,8 +34,7 @@ module.exports={
                     "ParameterKey=Cert,ParameterValue=<%= Cert %> ",
                     "ParameterKey=DNSZone,ParameterValue=<%= DNSZone %> ",
                     "ParameterKey=DNSName,ParameterValue=<%= DNSName %> ",
-                    "ParameterKey=GitCloneUrl,ParameterValue=<%= GitCloneUrl %> ",
-                    "--capabilities CAPABILITY_IAM"
+                    "ParameterKey=GitCloneUrl,ParameterValue=<%= GitCloneUrl %> "
                 ].join(' ')
     },
     updateStack:{
@@ -94,5 +93,11 @@ module.exports={
                         "cd ../..",
                     "wget http://momentjs.com/downloads/moment.min.js -O tmp/moment.js"
                 ].join(';')
+    },
+    copyInitSql:{
+        command:[
+            'cp sql/create.sql lambda/InitDataBase/build',
+            'cp sql/destroy.sql lambda/InitDataBase/build'
+        ].join(';')
     }
 }

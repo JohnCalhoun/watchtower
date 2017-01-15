@@ -1,7 +1,6 @@
 var sql=require('mysql')
 var fs=require('fs')
 
-
 function run(name,resolve,reject){
     user=process.env.DBUSER
     password=process.env.DBPASSWORD
@@ -15,24 +14,17 @@ function run(name,resolve,reject){
         host     : endpoint,
         user     : user,
         password : password,
-        database : database
+        database : database,
+        ssl      : "Amazon RDS",
+        multipleStatements: true
     });
-
     connection.connect();
-
-    connection.config.queryFormat = function (query, values) {
-        if (!values) return query;
-        return query.replace(/\:(\w+)/g, function (txt, key) {
-            if (values.hasOwnProperty(key)) {
-                return this.escape(values[key]);
-            }
-            return txt;
-        }.bind(this));
-    };
-
+    
     connection.query(
-        script, 
-        {"database":database},
+        script.replace(
+            'database', 
+            connection.escapeId(database)         
+        ),
         function(err, result) {
             if (err) reject(err);
             resolve() 
