@@ -1,10 +1,5 @@
 #! /bin/env python
 import unittest
-from subprocess import call
-from subprocess import check_output
-from subprocess import check_call
-from random import randint
-import socket
 import MySQLdb as mysql
 
 def get_script(file_name):
@@ -13,6 +8,7 @@ def get_script(file_name):
     script=script.replace(':database','test')
     
     return(script)
+
 def run_script(script,cursor):
     for command in script.split(';'):
         command=command.rstrip('\n')
@@ -20,29 +16,12 @@ def run_script(script,cursor):
             cursor.execute(command)
 
 class TestSQLScripts(unittest.TestCase):
-    @classmethod 
-    def setUpClass(self):
-        try:
-            check_call('docker ps | grep MYSQLTEST > /dev/null',shell=True)
-        except:
-            print('startingDocker')
-            call(dockerStart,shell=True)
-        else:
-            print('UsingExistingDocker')
-            self.start=False
-    
-    @classmethod 
-    def tearDownClass(self):
-        if(self.start):
-            print('StopingDocker')
-            call(dockerStop,shell=True)
-
     def setUp(self):
         self.server=mysql.connect(
             host='127.0.0.1', 
-            port=3306, 
+            port=PORT, 
             user='root', 
-            passwd='password'
+            passwd=PASSWORD
         )
         self.cursor=self.server.cursor()
         self.cursor.execute('CREATE DATABASE IF NOT EXISTS test;')
@@ -52,7 +31,7 @@ class TestSQLScripts(unittest.TestCase):
         self.cursor.close()
 
     def test_create(self):
-        script=get_script('../create.sql')
+        script=get_script('./create.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute("SHOW tables;")
@@ -68,10 +47,10 @@ class TestSQLScripts(unittest.TestCase):
         self.assertTrue('write' in users)
 
     def test_destroy(self):
-        script=get_script('../create.sql')
+        script=get_script('./create.sql')
         run_script(script,self.cursor)
 
-        script=get_script('../destroy.sql')
+        script=get_script('./destroy.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute("SHOW tables;")
@@ -88,15 +67,9 @@ class TestSQLScripts(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    PORT=3306
-    print("Got port:"+str(PORT))
+    import os
 
-    dockerStart="docker run --name MYSQLTEST -p {0}:3306 -e MYSQL_ROOT_PASSWORD=password -d mysql:8.0;sleep 20".format(PORT)
-    dockerStop="docker kill MYSQLTEST; docker rm MYSQLTEST"
-
-    print('Start CMD:')
-    print(dockerStart)
-    print('Stop CMD:')
-    print(dockerStop)
-
+    PORT=int(os.environ['MYSQL_PORT'])
+    PASSWORD=os.environ['MYSQL_PASSWORD']
+    
     unittest.main()

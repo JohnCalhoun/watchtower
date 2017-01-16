@@ -99,5 +99,20 @@ module.exports={
             'cp sql/create.sql lambda/InitDataBase/build',
             'cp sql/destroy.sql lambda/InitDataBase/build'
         ].join(';')
+    },
+    startMySQL:{
+        command:[
+                "$(docker ps | grep MYSQLTEST >/dev/null)",
+                "||",
+                'echo "$(docker run --name MYSQLTEST -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d mysql:8.0;sleep 20;)"'
+                ].join(' ')
+    },
+    stopMySQL:{
+        command:"docker kill MYSQLTEST;docker rm MYSQLTEST"
+    },
+    testSQL:{
+        command:"export MYSQL_PORT=3306;export MYSQL_PASSWORD=password;cd sql; ./test.py"
     }
 }
+
+

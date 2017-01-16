@@ -120,6 +120,11 @@ module.exports=function(grunt){
         "js",
         "style"
     ])
+
+    grunt.registerTask('sql',[
+        "shell:startMySQL",
+        "shell:testSQL"
+    ])
 }
 
 
