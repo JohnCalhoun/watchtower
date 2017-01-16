@@ -1,0 +1,369 @@
+{"Conditions" : {
+    "CreateProdResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "prod"]},
+    "CreateDevResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "dev"]},
+    "CreateTestResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "test"]}
+},
+
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "Users Pools and Identity providers",
+
+"Mappings":{
+
+},
+
+"Outputs":{
+     "AdminPoolId":{
+        "Description":"The Administrator Cognito Pool ID",
+        "Value":{"Fn::GetAtt":["adminUserPool","Id"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "AdminPoolId"
+            ]]}
+        }
+    },  
+    "RequesterPoolId":{
+        "Description":"The Requester Cognito Pool ID",
+        "Value":{"Fn::GetAtt":["requesterUserPool","Id"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "RequesterPoolId"
+            ]]}
+        }
+    },
+    "ObserverPoolId":{
+        "Description":"The Observer Cognito Pool ID",
+        "Value":{"Fn::GetAtt":["observerUserPool","Id"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "ObserverPoolId"
+            ]]}
+        }
+    }
+},
+
+"Parameters":{
+    "EnvType" : {
+        "Description" : "Environment type.",
+        "Default" : "test",
+        "Type" : "String",
+        "AllowedValues" : ["prod", "test","dev"],
+        "ConstraintDescription" : "must specify prod,test,or dev"
+    },
+    "ArtifactsBucket":{
+        "Description" : "Bucket That contains the lambda zip files",
+        "Type" : "String"
+    },
+},
+
+"Resources":{ 
+"adminUserPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoPool", "Arn"] },
+        "PoolName":{"Fn::Join":["-",[
+            "admin",
+            {"Ref":"AWS::StackName"}
+        ]]}
+    }
+},
+"adminIdentityPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoIdentity", "Arn"] },
+        "IdentityPoolName":"adminPool",
+        "authenticatedRole":{"Fn::GetAtt":["AdminRole","Arn"]},
+        "unauthenticatedRole":{"Fn::GetAtt":["unauthenticatedRole","Arn"]},
+        "Providers":[
+            {
+                "ClientId":{"Fn::GetAtt":["adminUserPool","clientID"]},
+                "ProviderName":{"Fn::GetAtt":["adminUserPool","Id"]}
+            }
+        ]    
+    }
+},
+"requesterUserPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "DependsOn":"CreateCognitoPool",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" :["CreateCognitoPool", "Arn"] },
+        "PoolName":{"Fn::Join":["-",[
+            "requester",
+            {"Ref":"AWS::StackName"}
+        ]]}
+    }
+},
+"requesterIdentityPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoIdentity", "Arn"] },
+        "IdentityPoolName":"requesterPool",
+        "authenticatedRole":{"Fn::GetAtt":["AdminRole","Arn"]},
+        "unauthenticatedRole":{"Fn::GetAtt":["unauthenticatedRole","Arn"]},
+        "Providers":[
+            {
+                "ClientId":{"Fn::GetAtt":["requesterUserPool","clientID"]},
+                "ProviderName":{"Fn::GetAtt":["requesterUserPool","Id"]}
+            }
+        ]    
+    }
+},
+"observerUserPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "DependsOn":"CreateCognitoPool",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateCognitoPool", "Arn"] },
+        "PoolName":{"Fn::Join":["-",[
+            "observer",
+            {"Ref":"AWS::StackName"}
+        ]]}
+    }
+},
+"observerIdentityPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoIdentity", "Arn"] },
+        "IdentityPoolName":"observerPool",
+        "authenticatedRole":{"Fn::GetAtt":["AdminRole","Arn"]},
+        "unauthenticatedRole":{"Fn::GetAtt":["unauthenticatedRole","Arn"]},
+        "Providers":[
+            {
+                "ClientId":{"Fn::GetAtt":["observerUserPool","clientID"]},
+                "ProviderName":{"Fn::GetAtt":["observerUserPool","Id"]}
+            }
+        ]    
+    }
+}
+
+,
+"CreateCognitoPool":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Ref":"ArtifactsBucket"},
+            "S3Key":"disclosure/lambda/lambda-createcognitopool.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "CreateCognitoPool", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["CreateCognitoPoolRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100"
+      }
+},
+"CreateCognitoIdentity":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Ref":"ArtifactsBucket"},
+            "S3Key":"disclosure/lambda/lambda-createcognitoidentity.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "CreateCognitoIdentity", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["CreateCognitoIdentityRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100"
+      }
+}
+,
+"CreateCognitoPoolRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "cognito-idp:CreateUserPool",  
+                            "cognito-idp:CreateUserPoolClient", 
+                            "cognito-idp:DeleteUserPool",  
+                            "cognito-idp:DeleteUserPoolClient" 
+                        ],
+                        "Resource":"*"
+                    }
+                    ]
+              }
+            }
+
+        ]
+    }
+},
+"CreateCognitoIdentityRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"CreateCognitoPool",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "Stmt1482095556000",
+                            "Effect": "Allow",
+                            "Action": [
+                                "cognito-identity:CreateIdentityPool",
+                                "cognito-identity:DeleteIdentityPool",
+                                "cognito-identity:SetIdentityPoolRoles",
+                                "iam:PassRole"
+                            ],
+                            "Resource": [
+                                "*"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+},
+"AdminRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"RequesterRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"OberserverRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+        ]
+    }
+},
+"unauthenticatedRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "cognito-identity.amazonaws.com:aud": "test"
+                    }
+                  }
+                }
+              ]
+            },
+        "Path": "/",
+        "Policies": [ 
+        ]
+    }
+}
+}}

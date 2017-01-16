@@ -1,0 +1,6 @@
+{
+    "ProjectName":"WatchTower", 
+    "StackName":"network",
+    "ArtifactsBucket":"artifacts",
+    "EnvType":"dev"
+}

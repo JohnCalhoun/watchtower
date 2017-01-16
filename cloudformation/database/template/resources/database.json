@@ -1,0 +1,45 @@
+"DB" : {
+    "Type" : "AWS::RDS::DBInstance",
+    "Properties" : {
+        "AllocatedStorage" : "5",
+        "DBInstanceClass" : "db.t2.micro",
+        "Engine" : "MySQL",
+        "MultiAZ":{"Fn::If" : [
+            "CreateProdResources",
+            "true",
+            "false"
+            ]
+        },
+        "DBSnapshotIdentifier":{"Fn::If" : [
+            "CreateFromBackup",
+            {"Ref":"SnapshotIdentifier"},
+            {"Ref":"AWS::NoValue"}
+            ]
+        },
+        "MasterUsername" :      { "Ref" : "DBMasterUser" },
+        "MasterUserPassword" :  { "Ref" : "DBMasterPassword" },
+        "DBName":               { "Ref" : "DBName" },
+        "VPCSecurityGroups":[{"Ref":"DBSG"}],
+        "DBSubnetGroupName":{"Ref":"DBsubnet"},
+        "PubliclyAccessible":"false"
+    }
+},
+"DBsubnet":{
+    "Type" : "AWS::RDS::DBSubnetGroup",
+    "Properties" : {
+        "DBSubnetGroupDescription" : "DB subnet",
+        "SubnetIds" : [ 
+            {"Fn::Join":["",[
+                {"Fn::ImportValue":
+                    {"Fn::Sub":"${NetworkStackName}-subnet1"}
+                }
+            ]]}
+        ,
+            {"Fn::Join":["",[
+                {"Fn::ImportValue":
+                    {"Fn::Sub":"${NetworkStackName}-subnet2"}
+                }
+            ]]}
+        ]
+    }
+}

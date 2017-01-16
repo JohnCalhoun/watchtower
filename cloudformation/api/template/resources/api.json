@@ -1,0 +1,342 @@
+/* api
+*/
+"Api":{
+    "Type" : "AWS::ApiGateway::RestApi",
+    "Properties" : {
+        "Name" : {"Ref":"AWS::StackName"}
+    }
+},
+"ApiDeployment":{
+    "Type" : "AWS::ApiGateway::Deployment",
+    "Properties" : {
+        "RestApiId" : {"Ref":"Api"}
+    },
+    "DependsOn":[
+        "ReadMethod",
+        "WriteMethod",
+        "HealthCheckMethod"
+    ]
+},
+"ApiStage":{
+    "Type" : "AWS::ApiGateway::Stage",
+    "Properties" : {
+        "DeploymentId" : {"Ref":"ApiDeployment"},
+        "RestApiId" : {"Ref":"Api"},
+        "StageName" : "production",
+        "Variables":{
+            "server":{"Fn::ImportValue":{"Fn::Sub":"${DatabaseStackName}-DBEndpoint"}}
+        }
+    }
+},
+"WriteResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
+        "PathPart" : "write",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"WriteScriptResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{ "Ref":"WriteResource"} ,
+        "PathPart" : "{script}",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"ReadResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
+        "PathPart" : "read",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"ReadScriptResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{ "Ref":"ReadResource"} ,
+        "PathPart" : "{script}",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"HealthCheckResource":{
+    "Type" : "AWS::ApiGateway::Resource",
+    "Properties" : {
+        "ParentId" :{ "Fn::GetAtt": ["Api", "RootResourceId"] } ,
+        "PathPart" : "healthcheck",
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"IAMAuthorizor":{
+    "Type" : "AWS::ApiGateway::Authorizer",
+    "Properties" : {
+        "AuthorizerResultTtlInSeconds" : "0",
+        "IdentitySource" : "method.request.header.Authorization",
+        "Name" : "Admin",
+        "ProviderARNs" : [{"Fn::Join":["",[
+            "arn:aws:cognito-idp:",
+            {"Ref":"AWS::Region"},
+            ":",
+            {"Ref":"AWS::AccountId"},           
+            ":userpool/",
+            {"Fn::ImportValue":{"Fn::Sub":"${UserStackName}-AdminPoolId"}}
+        ]]}],
+        "RestApiId" : {"Ref":"Api"},
+        "Type" : "COGNITO_USER_POOLS"
+    }
+},
+"ScriptModel":{
+    "Type" : "AWS::ApiGateway::Model",
+    "Properties" : {
+        "ContentType" : "application/json",
+        "Name" : "ScriptSubmit",
+        "RestApiId" : {"Ref":"Api"},
+        "Schema" : {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Script",
+            "type": "object",
+            "properties": {
+                "script":{
+                    "type":"string"
+                },
+                "bindings":{
+                    "type":"object"
+                }
+            }
+        }
+    }
+},
+"ResponseModel":{
+    "Type" : "AWS::ApiGateway::Model",
+    "Properties" : {
+        "ContentType" : "application/json",
+        "Name" : "response",
+        "RestApiId" : {"Ref":"Api"},
+        "Schema" : {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "title": "Script",
+            "type": "object",
+            "properties": {
+                "output":{
+                    "type":"string"
+                }
+            }
+        }
+    }
+},
+"ReadMethod":{
+    "Type" : "AWS::ApiGateway::Method",
+    "Properties" : {
+        "AuthorizationType" : "COGNITO_USER_POOLS",
+        "AuthorizerId" : {"Ref":"IAMAuthorizor"},
+        "HttpMethod" : "POST",
+        "Integration" : {
+            "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
+            "IntegrationHttpMethod" : "POST",
+            "PassthroughBehavior":"NEVER", 
+            "RequestTemplates":{
+                "application/json":{"Fn::Join":["",[
+                    "{",
+                        "\"script\": \"method.request.path.script\",", 
+                        "\"bindings\": \"method.request.body\",",
+                    "}"
+                    ]]}
+            },
+            "IntegrationResponses" : [
+                {
+                    "ResponseTemplates": {
+                        "application/json": {"Fn::Join":["",[
+                            "{",
+                                "\"output\": \"$input.json($.result.data)\"", 
+                            "}"
+                        ]]}
+                     },
+                    "StatusCode" : "200"
+                },
+                {
+                    "SelectionPattern": "^ERROR.*",
+                    "ResponseTemplates": {
+                        "application/json":{"Fn::Join":["",[
+                            "{",
+                                "\"message\": \"$input.json($.status.message)\"", 
+                            "}"
+                        ]]}
+                     },
+                    "StatusCode": 404
+                }
+            ],
+            "Type" : "AWS",
+            "Uri": {
+                "Fn::Join": ["",[
+                    "arn:aws:apigateway:",
+                    {"Ref": "AWS::Region"},
+                    ":lambda:path/2015-03-31/functions/",
+                    {"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
+                    "/invocations"
+                  ]
+                ]
+              }
+        },
+        "MethodResponses" : [
+            {
+                "ResponseModels":{
+                    "application/json":{"Ref":"ResponseModel"}
+                },
+                "StatusCode" : "200"
+            },
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "404"
+            }
+        ],
+        "RequestModels":{
+            "application/json":{"Ref":"ScriptModel"}
+        },
+        "RequestParameters" : {},
+        "ResourceId" : {"Ref":"ReadScriptResource"},
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"WriteMethod":{
+    "Type" : "AWS::ApiGateway::Method",
+    "Properties" : {
+        "AuthorizationType" : "COGNITO_USER_POOLS",
+        "AuthorizerId" : {"Ref":"IAMAuthorizor"},
+        "HttpMethod" : "POST",
+        "Integration" : {
+            "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
+            "IntegrationHttpMethod" : "POST",
+            "PassthroughBehavior":"NEVER", 
+            "RequestTemplates":{
+                "application/json":{"Fn::Join":["",[
+                    "{",
+                        "\"script\": \"method.request.path.script\",", 
+                        "\"bindings\": \"method.request.body\",",
+                    "}"
+                    ]]}
+            },
+            "IntegrationResponses" : [
+                {
+                    "ResponseTemplates": {
+                        "application/json": {"Fn::Join":["",[
+                            "{",
+                                "\"output\": \"$input.json($.result.data)\"", 
+                            "}"
+                        ]]}
+                     },
+                    "StatusCode" : "200"
+                },
+                {
+                    "SelectionPattern": "^ERROR.*",
+                    "ResponseTemplates": {
+                        "application/json":{"Fn::Join":["",[
+                            "{",
+                                "\"message\": \"$input.json($.status.message)\"", 
+                            "}"
+                        ]]}
+                     },
+                    "StatusCode": 404
+                }
+            ],
+            "Type" : "AWS",
+            "Uri": {
+                "Fn::Join": ["",[
+                    "arn:aws:apigateway:",
+                    {"Ref": "AWS::Region"},
+                    ":lambda:path/2015-03-31/functions/",
+                    {"Fn::GetAtt": ["RDSProxyWrite", "Arn"]},
+                    "/invocations"
+                  ]
+                ]
+              }
+        },
+        "MethodResponses" : [
+            {
+                "ResponseModels":{
+                    "application/json":{"Ref":"ResponseModel"}
+                },
+                "StatusCode" : "200"
+            },
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "404"
+            }
+        ],
+        "RequestModels":{
+            "application/json":{"Ref":"ScriptModel"}
+        },
+        "RequestParameters" : {},
+        "ResourceId" : {"Ref":"WriteScriptResource"},
+        "RestApiId" : {"Ref":"Api"}
+    }
+},
+"HealthCheckMethod":{
+    "Type" : "AWS::ApiGateway::Method",
+    "Properties" : {
+        "AuthorizationType" : "NONE",
+        "HttpMethod" : "GET",
+        "Integration" : {
+            "Credentials" : {"Fn::GetAtt":["ApiGatewayRole","Arn"]},
+            "IntegrationHttpMethod" : "POST",
+            "PassthroughBehavior":"NEVER", 
+            "RequestTemplates":{
+                "application/json":{"Fn::Join":["",[
+                    "{",
+                        "\"script\": \"healthcheck\",", 
+                        "\"bindings\": {},",
+                    "}"
+                ]]}
+            },
+            "IntegrationResponses" : [
+                {
+                    "ResponseTemplates": {
+                        "application/json": "Empty"
+                     },
+                    "StatusCode" : "200"
+                },
+                {
+                    "SelectionPattern": "^ERROR.*",
+                    "ResponseTemplates": {
+                        "application/json": "Empty"
+                    },
+                    "StatusCode": 404
+                }
+            ],
+            "Type" : "AWS",
+            "Uri": {
+                "Fn::Join": ["",[
+                    "arn:aws:apigateway:",
+                    {"Ref": "AWS::Region"},
+                    ":lambda:path/2015-03-31/functions/",
+                    {"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
+                    "/invocations"
+                  ]
+                ]
+              }
+        },
+        "MethodResponses" : [
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "200"
+            },
+            {
+                "ResponseModels":{
+                    "application/json":"Empty"
+                },
+                "StatusCode" : "404"
+            }
+        ],
+        "RequestParameters" : {},
+        "ResourceId" : {"Ref":"HealthCheckResource"},
+        "RestApiId" : {"Ref":"Api"}
+    }
+}
+
+

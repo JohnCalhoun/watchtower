@@ -1,0 +1,12 @@
+"Outputs":{
+    "DBEndPoint":{
+        "Description":"The Database endpoint URL",
+        "Value":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "DBEndpoint"
+            ]]}
+        }
+    }
+},

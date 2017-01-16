@@ -1,5 +1,0 @@
-"Outputs":{
-    "WebsiteBucket":{
-        "Value":{"Ref":"HostingBucket"}
-    }
-}

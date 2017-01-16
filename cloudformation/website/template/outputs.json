@@ -1,0 +1,37 @@
+"Outputs":{
+    "WebsiteBucket":{
+        "Description":"Bucket Hosting the website",
+        "Value":{"Ref":"HostingBucket"},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WebsiteBucket"
+            ]]}
+        }
+    }, 
+    "WebsiteDomain":{
+        "Description":"Bucket Domain Hosting the website",
+        "Value":{"Fn::GetAtt":["HostingBucket","DomainName"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WebsiteDomain"
+            ]]}
+        }
+    },
+    "WebsiteUrl":{
+        "Description":"Bucket Hosting the website",
+        "Value":{"Fn::Join":["",[
+                {"Ref":"HostingBucket"},
+                ".s3-website-",
+                {"Ref":"AWS::Region"},
+                ".amazonaws.com"
+            ]]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WebsiteUrl"
+            ]]}
+        }
+    }
+},

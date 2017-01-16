@@ -1,0 +1,17 @@
+"Outputs":{
+    "DomainName":{
+        "Description":"DomainName endpoint for the api",
+        "Value":{ "Fn::Join" : ["",[
+            {"Ref":"Api"},
+            ".execute-api.",
+            {"Ref":"AWS::Region"},
+            ".amazonaws.com"
+        ]]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "API-URL"
+            ]]}
+        }
+    }
+},

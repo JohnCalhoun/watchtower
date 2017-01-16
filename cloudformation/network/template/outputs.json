@@ -1,0 +1,32 @@
+"Outputs":{
+    "VPC":{
+        "Description":"VPC id",
+        "Value":{"Ref":"VPC"},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "VPC"
+            ]]}
+        }
+    },
+    "subnetID1":{
+        "Description":"subnet-1 id",
+        "Value":{"Ref":"subnet1"},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "subnet1"
+            ]]}
+        }
+    },
+    "subnetID2":{
+        "Description":"subnet-2 id",
+        "Value":{"Ref":"subnet2"},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "subnet2"
+            ]]}
+        }
+    }
+},

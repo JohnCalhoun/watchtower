@@ -1,0 +1,13 @@
+"Parameters":{
+    "EnvType" : {
+        "Description" : "Environment type.",
+        "Default" : "test",
+        "Type" : "String",
+        "AllowedValues" : ["prod", "test","dev"],
+        "ConstraintDescription" : "must specify prod,test,or dev"
+    },
+    "ArtifactsBucket":{
+        "Description" : "Bucket That contains the lambda zip files",
+        "Type" : "String"
+    },
+},

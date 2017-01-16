@@ -1,0 +1,145 @@
+"Resources":{ 
+"DB" : {
+    "Type" : "AWS::RDS::DBInstance",
+    "Properties" : {
+        "AllocatedStorage" : "5",
+        "DBInstanceClass" : "db.t2.micro",
+        "Engine" : "MySQL",
+        "MultiAZ":{"Fn::If" : [
+            "CreateProdResources",
+            "true",
+            "false"
+            ]
+        },
+        "DBSnapshotIdentifier":{"Fn::If" : [
+            "CreateFromBackup",
+            {"Ref":"SnapshotIdentifier"},
+            {"Ref":"AWS::NoValue"}
+            ]
+        },
+        "MasterUsername" :      { "Ref" : "DBMasterUser" },
+        "MasterUserPassword" :  { "Ref" : "DBMasterPassword" },
+        "DBName":               { "Ref" : "DBName" },
+        "VPCSecurityGroups":[{"Ref":"DBSG"}],
+        "DBSubnetGroupName":{"Ref":"DBsubnet"},
+        "PubliclyAccessible":"false"
+    }
+},
+"DBsubnet":{
+    "Type" : "AWS::RDS::DBSubnetGroup",
+    "Properties" : {
+        "DBSubnetGroupDescription" : "DB subnet",
+        "SubnetIds" : [ 
+            {"Fn::Join":["",[
+                {"Fn::ImportValue":
+                    {"Fn::Sub":"${NetworkStackName}-subnet1"}
+                }
+            ]]}
+        ,
+            {"Fn::Join":["",[
+                {"Fn::ImportValue":
+                    {"Fn::Sub":"${NetworkStackName}-subnet2"}
+                }
+            ]]}
+        ]
+    }
+}
+,
+"InitDataBase":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Ref":"ArtifactsBucket"},
+            "S3Key":"disclosure/lambda/lambda-initdatabase.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "initdatabase", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100",
+        "VpcConfig":{
+            "SecurityGroupIds":[
+                {"Ref":"RDSlambdaSG"} 
+            ],
+            "SubnetIds":[
+                {"Fn::Join":["",[
+                    {"Fn::ImportValue":
+                        {"Fn::Sub":"${NetworkStackName}-subnet1"}
+                    }
+                ]]}
+                ,
+                {"Fn::Join":["",[
+                    {"Fn::ImportValue":
+                        {"Fn::Sub":"${NetworkStackName}-subnet2"}
+                    }
+                ]]}
+            ]
+        },
+        "Environment":{
+            "Variables":{
+                "DBNAME":{ "Ref" : "DBName" }, 
+                "DBUSER":{ "Ref" : "DBMasterUser" },
+                "DBPASSWORD":{ "Ref" : "DBMasterPassword" },
+                "DBENDPOINT":{ "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+            }
+        }
+    }
+}
+,
+"DBSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"Allows traffic through load balancer",
+        "SecurityGroupIngress" : [
+            {
+                "SourceSecurityGroupId":{"Ref":"RDSlambdaSG"}, 
+                "FromPort" : "3306",
+                "ToPort" : "3306",
+                "IpProtocol" : "tcp"
+            }
+        ],
+        "VpcId" :{"Fn::Join":["",[
+                {"Fn::ImportValue":
+                    {"Fn::Sub":"${NetworkStackName}-VPC"}
+                }
+            ]]}
+    }
+},
+"RDSProxyRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        ]
+    }
+},
+"RDSlambdaSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"na",
+        "SecurityGroupIngress" : [],
+        "VpcId" :{"Fn::Join":["",[
+            {"Fn::ImportValue":
+                {"Fn::Sub":"${NetworkStackName}-VPC"}
+            }
+        ]]}
+    }
+}
+
+}

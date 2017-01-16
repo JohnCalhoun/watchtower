@@ -1,0 +1,17 @@
+{
+    "ProjectName":"watchtower", 
+    "StackName":"api",
+
+    "EnvType":"dev",
+    "ArtifactsBucket":"jmc-artifacts",
+    "NetworkStackName":"WatchTower-network",
+    "UserStackName":"watchtower-users",
+    "DatabaseStackName" : "watchtower-database",
+    
+    "DBName" : "graph",
+    
+    "DBUserWrite" : "write",
+    "DBPasswordWrite" : "1243275-134715-",
+    "DBUserRead" : "read",
+    "DBPasswordRead" : "45374-57-238457-3"
+}

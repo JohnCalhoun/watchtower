@@ -1,0 +1,59 @@
+"distribution":{
+    "Type" : "AWS::CloudFront::Distribution",
+    "Properties" : {
+        "DistributionConfig" :{
+            "Aliases" : [
+                {"Fn::Join":["",[ 
+                    {"Ref":"AWS::StackName"},
+                    ".",
+                    {"Ref":"DNSName"}
+                ]]}
+            ],
+            "CacheBehaviors":[
+                {
+                    "Compress" : true,
+                    "ForwardedValues" : {
+                        "QueryString" : false
+                    },
+                    "DefaultTTL":"0",
+                    "PathPattern":"/api",
+                    "TargetOriginId" : "api",
+                    "ViewerProtocolPolicy" : "redirect-to-https"
+                }
+            ],
+            "DefaultCacheBehavior" : {
+                "Compress" : true,
+                "ForwardedValues" : {
+                    "QueryString" : false
+                },
+                "TargetOriginId" : "bucket",
+                "ViewerProtocolPolicy" : "redirect-to-https"
+            } ,
+            "DefaultRootObject" : "/index.html",
+            "Enabled" : true,
+            "Origins" : [ 
+                {
+                    "Id" : "bucket",
+                    "DomainName" : {"Fn::ImportValue":{"Fn::Sub":"${WebsiteStackName}-WebsiteDomain"}},
+                    "S3OriginConfig" : {
+                        "OriginAccessIdentity" : ""
+                    }
+                },
+                {
+                    "Id" : "api",
+                    "DomainName" : {"Fn::ImportValue":{"Fn::Sub":"${ApiStackName}-API-URL"}},
+                    "CustomOriginConfig":{
+                        "HTTPSPort" : 443,
+                        "OriginProtocolPolicy" : "https-only"
+                    }
+                } 
+            ],
+            "ViewerCertificate":{
+                "AcmCertificateArn" :{"Ref":"Cert"} ,
+                "SslSupportMethod":"sni-only"
+            },
+            "PriceClass" : "PriceClass_100"
+        }
+    }
+}
+

@@ -1,0 +1,18 @@
+"DNSRecord" : {
+    "Type" : "AWS::Route53::RecordSet",
+    "Condition" : "CreateProdResources",
+    "Properties" : {
+        "HostedZoneId" : {"Ref":"DNSZone"},
+        "Name":{"Fn::Join":["",[ 
+                    {"Ref":"AWS::StackName"},
+                    ".",
+                    {"Ref":"DNSName"},
+                    "."
+        ]]},
+        "Type" : "CNAME",
+        "TTL" : "30",
+        "ResourceRecords" : [
+            { "Fn::GetAtt" : [ "distribution", "DomainName" ] }
+        ]
+    }
+}

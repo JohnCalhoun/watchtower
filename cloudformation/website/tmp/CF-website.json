@@ -1,0 +1,309 @@
+{"Conditions" : {
+    "CreateProdResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "prod"]},
+    "CreateDevResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "dev"]},
+    "CreateTestResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "test"]}
+},
+
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "Static Website Hosting",
+
+"Mappings":{
+
+},
+
+"Outputs":{
+    "WebsiteBucket":{
+        "Description":"Bucket Hosting the website",
+        "Value":{"Ref":"HostingBucket"},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WebsiteBucket"
+            ]]}
+        }
+    }, 
+    "WebsiteDomain":{
+        "Description":"Bucket Domain Hosting the website",
+        "Value":{"Fn::GetAtt":["HostingBucket","DomainName"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WebsiteDomain"
+            ]]}
+        }
+    },
+    "WebsiteUrl":{
+        "Description":"Bucket Hosting the website",
+        "Value":{"Fn::Join":["",[
+                {"Ref":"HostingBucket"},
+                ".s3-website-",
+                {"Ref":"AWS::Region"},
+                ".amazonaws.com"
+            ]]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WebsiteUrl"
+            ]]}
+        }
+    }
+},
+
+"Parameters":{
+    "EnvType" : {
+        "Description" : "Environment type.",
+        "Default" : "test",
+        "Type" : "String",
+        "AllowedValues" : ["prod", "test","dev"],
+        "ConstraintDescription" : "must specify prod,test,or dev"
+    },
+    "GitCloneUrl":{
+        "Type":"String",
+        "Description" : "The Git url of the package that builds the website"
+    },
+    "ArtifactsBucket":{
+        "Description" : "Bucket That contains the lambda zip files",
+        "Type" : "String"
+    }
+},
+
+"Resources":{ 
+"WebsiteBuild":{
+    "Type" : "AWS::CodeBuild::Project",
+    "Properties" : {
+        "Artifacts" : {
+            "Location" : {"Ref":"HostingBucket"},
+            "Name" : "website",
+            "Packaging" : "NONE",
+            "Path" : "/",
+            "Type" : "S3"
+        },
+        "Environment" : {
+            "ComputeType" : "BUILD_GENERAL1_SMALL",
+            "Image" : "aws/codebuild/eb-nodejs-4.4.6-amazonlinux-64:2.1.3",
+            "Type" : "LINUX_CONTAINER"
+        },
+        "Name" : "WebsiteBuild",
+        "ServiceRole" :{"Fn::GetAtt":["BuildRole","Arn"]} ,
+        "Source" : {
+            "Location" : {"Ref":"GitCloneUrl"},
+            "Type" : "CODECOMMIT"
+        }
+    }
+}
+,
+"CreateHealthCheck":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Ref":"ArtifactsBucket"},
+            "S3Key":"disclosure/lambda/lambda-createhealthcheck.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "CreateHealthCheck", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["CreateHealthCheckRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100"
+      }
+}
+,
+"Websitehealthcheck":{
+    "Type" : "AWS::Route53::HealthCheck",
+    "Properties" : {
+        "HealthCheckConfig" : {
+            "FailureThreshold" : 3,
+            "FullyQualifiedDomainName" :{"Fn::Join":["",[
+                {"Ref":"HostingBucket"},
+                ".s3-website-",
+                {"Ref":"AWS::Region"},
+                ".amazonaws.com"
+            ]]},
+            "Port" : 80,
+            "ResourcePath" : "/healthcheck.html",
+            "Type" : "HTTP"
+        }
+    }
+},
+"Websitehealthalarm":{
+    "Type" : "AWS::CloudWatch::Alarm",
+    "Properties" : {
+        "ComparisonOperator" : "LessThanThreshold",
+        "Period" : "240",
+        "EvaluationPeriods" : "2",
+        "Namespace" : "AWS/Route53",
+        "MetricName" : "HealthCheckPercentageHealthy",
+        "Dimensions" : [ 
+            {"Name":"HealthCheckId",
+            "Value":{"Ref":"Websitehealthcheck"}
+            }
+        ],
+        "Unit":"Percent", 
+        "Statistic" : "Minimum",
+        "Threshold" : "100"
+    }
+}
+,
+"CreateHealthCheckRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"S3PutGet",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:DeleteObject",
+                            "s3:PutObject",
+                            "s3:ListObjects"
+                        ],
+                        "Resource":[
+                            { "Fn::Join" : ["", [
+                            "arn:aws:s3:::", 
+                            { "Ref" : "HostingBucket" },
+                            "/*" ]]},
+                            { "Fn::Join" : ["", [
+                            "arn:aws:s3:::", 
+                            { "Ref" : "HostingBucket" } 
+                            ]]}
+                        ]
+                    }
+                    ]
+              }
+            }
+        ]
+    }
+},
+"BuildRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "codebuild.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            },
+        "Path": "/",
+        "Policies": [{
+            "PolicyName":"CreateCognitoPool",
+            "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "CloudWatchLogsPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "logs:CreateLogGroup",
+                            "logs:CreateLogStream",
+                            "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                            "arn:aws:logs:us-east-1:677241476911:log-group:/aws/codebuild/websiteBuild"
+                        ]
+                    },
+                    {
+                        "Sid": "CodeCommitPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "codecommit:GitPull"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    },
+                    {
+                        "Sid": "S3GetObjectPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:GetObjectVersion"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    },
+                    {
+                        "Sid": "S3PutObjectPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:PutObject"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
+                ]
+            } 
+		}]
+    }
+}
+,
+"HostingBucket":{
+    "Type" : "AWS::S3::Bucket",
+    "Properties" : {
+        "WebsiteConfiguration" :{
+            "ErrorDocument":"error.html",
+            "IndexDocument":"index.html"
+        }    
+    }
+},
+"HostingPolicy":{
+    "Type" : "AWS::S3::BucketPolicy",
+    "Properties" : {
+        "Bucket" : {"Ref":"HostingBucket"},
+        "PolicyDocument" : {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": [{ "Fn::Join" : ["", [
+                       "arn:aws:s3:::", 
+                        { "Ref" : "HostingBucket" } 
+                        , "/*" ]]},
+                        { "Fn::Join" : ["", [
+                       "arn:aws:s3:::", 
+                        { "Ref" : "HostingBucket" } 
+                        ]]}
+                    ]
+                }
+            ]
+        } 
+    }
+},
+"HealthCheckFile":{
+    "Type": "Custom::HealthCheckFile",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateHealthCheck", "Arn"] },
+        "bucket":{"Ref":"HostingBucket"},
+        "key":"healthcheck.html"
+    }
+}
+}}

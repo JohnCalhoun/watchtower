@@ -1,0 +1,11 @@
+{
+    "ProjectName":"watchtower", 
+    "StackName":"distribution",
+    "ArtifactsBucket":"artifacts",
+    "EnvType":"dev",
+    "ApiStackName":"watchtower-api", 
+    "WebsiteStackName" : "watchtower-website",
+    "Cert":"arn:aws:acm:us-east-1:677241476911:certificate/abfb646e-88a4-4a7e-aef6-fffceb06ebec",
+    "DNSZone":"Z2TRO3VQM1Z8P5",
+    "DNSName":"jmc.ninja"
+}

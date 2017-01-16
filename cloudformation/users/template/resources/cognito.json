@@ -1,0 +1,78 @@
+"adminUserPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoPool", "Arn"] },
+        "PoolName":{"Fn::Join":["-",[
+            "admin",
+            {"Ref":"AWS::StackName"}
+        ]]}
+    }
+},
+"adminIdentityPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoIdentity", "Arn"] },
+        "IdentityPoolName":"adminPool",
+        "authenticatedRole":{"Fn::GetAtt":["AdminRole","Arn"]},
+        "unauthenticatedRole":{"Fn::GetAtt":["unauthenticatedRole","Arn"]},
+        "Providers":[
+            {
+                "ClientId":{"Fn::GetAtt":["adminUserPool","clientID"]},
+                "ProviderName":{"Fn::GetAtt":["adminUserPool","Id"]}
+            }
+        ]    
+    }
+},
+"requesterUserPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "DependsOn":"CreateCognitoPool",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" :["CreateCognitoPool", "Arn"] },
+        "PoolName":{"Fn::Join":["-",[
+            "requester",
+            {"Ref":"AWS::StackName"}
+        ]]}
+    }
+},
+"requesterIdentityPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoIdentity", "Arn"] },
+        "IdentityPoolName":"requesterPool",
+        "authenticatedRole":{"Fn::GetAtt":["AdminRole","Arn"]},
+        "unauthenticatedRole":{"Fn::GetAtt":["unauthenticatedRole","Arn"]},
+        "Providers":[
+            {
+                "ClientId":{"Fn::GetAtt":["requesterUserPool","clientID"]},
+                "ProviderName":{"Fn::GetAtt":["requesterUserPool","Id"]}
+            }
+        ]    
+    }
+},
+"observerUserPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "DependsOn":"CreateCognitoPool",
+    "Properties":{
+        "ServiceToken": { "Fn::GetAtt" : ["CreateCognitoPool", "Arn"] },
+        "PoolName":{"Fn::Join":["-",[
+            "observer",
+            {"Ref":"AWS::StackName"}
+        ]]}
+    }
+},
+"observerIdentityPool":{
+    "Type": "AWS::CloudFormation::CustomResource",
+    "Properties":{
+        "ServiceToken": {"Fn::GetAtt" :["CreateCognitoIdentity", "Arn"] },
+        "IdentityPoolName":"observerPool",
+        "authenticatedRole":{"Fn::GetAtt":["AdminRole","Arn"]},
+        "unauthenticatedRole":{"Fn::GetAtt":["unauthenticatedRole","Arn"]},
+        "Providers":[
+            {
+                "ClientId":{"Fn::GetAtt":["observerUserPool","clientID"]},
+                "ProviderName":{"Fn::GetAtt":["observerUserPool","Id"]}
+            }
+        ]    
+    }
+}
+

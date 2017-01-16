@@ -1,0 +1,116 @@
+"CreateHealthCheckRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+        ],
+        "Policies": [ 
+            {
+                "PolicyName":"S3PutGet",
+                "PolicyDocument":{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:DeleteObject",
+                            "s3:PutObject",
+                            "s3:ListObjects"
+                        ],
+                        "Resource":[
+                            { "Fn::Join" : ["", [
+                            "arn:aws:s3:::", 
+                            { "Ref" : "HostingBucket" },
+                            "/*" ]]},
+                            { "Fn::Join" : ["", [
+                            "arn:aws:s3:::", 
+                            { "Ref" : "HostingBucket" } 
+                            ]]}
+                        ]
+                    }
+                    ]
+              }
+            }
+        ]
+    }
+},
+"BuildRole":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "codebuild.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            },
+        "Path": "/",
+        "Policies": [{
+            "PolicyName":"CreateCognitoPool",
+            "PolicyDocument":{
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "CloudWatchLogsPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "logs:CreateLogGroup",
+                            "logs:CreateLogStream",
+                            "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                            "arn:aws:logs:us-east-1:677241476911:log-group:/aws/codebuild/websiteBuild"
+                        ]
+                    },
+                    {
+                        "Sid": "CodeCommitPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "codecommit:GitPull"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    },
+                    {
+                        "Sid": "S3GetObjectPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:GetObject",
+                            "s3:GetObjectVersion"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    },
+                    {
+                        "Sid": "S3PutObjectPolicy",
+                        "Effect": "Allow",
+                        "Action": [
+                            "s3:PutObject"
+                        ],
+                        "Resource": [
+                            "*"
+                        ]
+                    }
+                ]
+            } 
+		}]
+    }
+}
