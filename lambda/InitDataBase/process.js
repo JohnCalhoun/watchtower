@@ -8,7 +8,7 @@ function run(name,resolve,reject){
     database=process.env.DBNAME
 
     //load in script
-    script=fs.readFileSync(__dirname+'/'+name+'.sql').toString()
+    script=fs.readFileSync(__dirname+'/init-'+name+'.sql').toString()
 
     var connection = sql.createConnection({
         host     : endpoint,

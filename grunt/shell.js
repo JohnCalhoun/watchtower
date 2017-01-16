@@ -96,8 +96,9 @@ module.exports={
     },
     copyInitSql:{
         command:[
-            'cp sql/create.sql lambda/InitDataBase/build',
-            'cp sql/destroy.sql lambda/InitDataBase/build'
+            'cp sql/init-*.sql lambda/InitDataBase/build',
+            'cp sql/read-*.sql lambda/RDSProxy/build',
+            'cp sql/write-*.sql lambda/RDSProxy/build'
         ].join(';')
     },
     startMySQL:{

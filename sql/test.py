@@ -15,7 +15,7 @@ def run_script(script,cursor):
         if command != '':
             cursor.execute(command)
 
-class TestSQLScripts(unittest.TestCase):
+class TestSQLCreateScripts(unittest.TestCase):
     def setUp(self):
         self.server=mysql.connect(
             host='127.0.0.1', 
@@ -31,7 +31,7 @@ class TestSQLScripts(unittest.TestCase):
         self.cursor.close()
 
     def test_create(self):
-        script=get_script('./create.sql')
+        script=get_script('./init-create.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute("SHOW tables;")
@@ -47,10 +47,10 @@ class TestSQLScripts(unittest.TestCase):
         self.assertTrue('write' in users)
 
     def test_destroy(self):
-        script=get_script('./create.sql')
+        script=get_script('./init-create.sql')
         run_script(script,self.cursor)
 
-        script=get_script('./destroy.sql')
+        script=get_script('./init-destroy.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute("SHOW tables;")
@@ -64,6 +64,38 @@ class TestSQLScripts(unittest.TestCase):
         users=[x[0] for x in self.cursor.fetchall()] 
         self.assertFalse('read' in users)
         self.assertFalse('write' in users)
+
+class TestSQLReadWriteScripts(unittest.TestCase):
+    def setUp(self):
+        self.server=mysql.connect(
+            host='127.0.0.1', 
+            port=PORT, 
+            user='root', 
+            passwd=PASSWORD
+        )
+        self.cursor=self.server.cursor()
+        self.cursor.execute('CREATE DATABASE IF NOT EXISTS test;')
+        script=get_script('./init-create.sql')
+        run_script(script,self.cursor)
+
+
+    def tearDown(self):
+        script=get_script('./init-destroy.sql')
+        run_script(script,self.cursor)
+
+        self.cursor.execute('DROP DATABASE test;')
+        self.cursor.close()
+
+    def test_getDocument(self):
+        script=get_script('./read-getDocument.sql')
+        run_script(script,self.cursor)
+        pass
+    
+    def test_addDocument(self):
+        script=get_script('./write-addDocument.sql')
+        run_script(script,self.cursor)
+        pass
+
 
 
 if __name__ == '__main__':

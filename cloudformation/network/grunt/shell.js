@@ -25,7 +25,11 @@ module.exports={
     },
     validateStack:{
         command:"aws cloudformation validate-template --template-body file://tmp/CF-<%= StackName %>.json"
+    },
+    Status:{
+        command:'aws cloudformation describe-stacks --stack-name <%= ProjectName %>-<%= StackName %> | jq ".Stacks[0].StackStatus"'
     }
+
 }
 
 
