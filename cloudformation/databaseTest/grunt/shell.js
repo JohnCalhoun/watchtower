@@ -7,7 +7,9 @@ module.exports={
                     "--capabilities CAPABILITY_IAM",
                     "--disable-rollback",
                     "--parameters",
-                    "ParameterKey=EnvType,ParameterValue=<%= EnvType %>"
+                    "ParameterKey=EnvType,ParameterValue=<%= EnvType %>",
+                    "ParameterKey=ArtifactsBucket,ParameterValue=<%= ArtifactsBucket %>",
+                    "ParameterKey=DBpassword,ParameterValue=<%= DBpassword %>"
                 ].join(' ')
     },
     updateStack:{

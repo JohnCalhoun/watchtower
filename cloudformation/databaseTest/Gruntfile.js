@@ -1,3 +1,5 @@
+var crypto=require('crypto')
+
 module.exports=function(grunt){
     require('time-grunt')(grunt);
     require('load-grunt-tasks')(grunt);
@@ -6,12 +8,17 @@ module.exports=function(grunt){
         data:grunt.file.readJSON('config.json')
     });
     
+    grunt.registerTask('keygen',function(){
+        grunt.config.set("DBpassword",      DBPassword=crypto.randomBytes(20).toString('hex'))
+    })
+
     grunt.registerTask('cloudformation',[
         'concat:resources',
         'concat:cloudformation'
     ])
     
     grunt.registerTask('stack',[
+        'keygen',
         'cloudformation', 
         'shell:createStack'])
 

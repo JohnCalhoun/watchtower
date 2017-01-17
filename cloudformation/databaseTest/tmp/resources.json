@@ -1,0 +1,45 @@
+"Resources":{ 
+"VPC":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"} 
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-network.json"
+    ]]}
+  }
+},
+"DB":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "NetworkStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"VPC"}
+            ]}
+        ]},
+        "DBName" : "test",
+        "DBMasterUser" : "root",
+        "DBMasterPassword" : {"Ref":"DBpassword"},
+        "SnapshotIdentifier":"",
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "DBUserWrite" : "write",
+        "DBPasswordWrite" : {"Ref":"DBpassword"},
+        "DBUserRead" : "read",
+        "DBPasswordRead" : {"Ref":"DBpassword"}
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-database.json"
+    ]]}
+  }
+}
+}

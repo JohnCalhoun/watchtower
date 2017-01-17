@@ -1,0 +1,135 @@
+"VPC":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"} 
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-network.json"
+    ]]}
+  }
+},
+"DB":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "NetworkStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"VPC"}
+            ]}
+        ]},
+        "DBName" : {"Ref":"DBName"},
+        "DBMasterUser" : {"Ref":"DBMasterUser"},
+        "DBMasterPassword" : {"Ref":"DBMasterPassword"},
+        "SnapshotIdentifier":{"Ref":"SnapshotIdentifier"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "DBUserWrite" : {"Ref":"DBUserWrite"},
+        "DBPasswordWrite" : {"Ref":"DBPasswordWrite"},
+        "DBUserRead" : {"Ref":"DBUserRead"},
+        "DBPasswordRead" : {"Ref":"DBPasswordRead"}
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-database.json"
+    ]]}
+  }
+},
+"Users":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"}
+     },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-users.json"
+    ]]}
+  }
+},
+"Api":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "UserStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"VPC"}
+            ]}
+        ]},
+        "DatabaseStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"DB"}
+            ]}
+        ]}
+
+     },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-api.json"
+    ]]}
+  }
+},
+"Website":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "GitCloneUrl" : {"Ref":"GitCloneUrl"},
+     },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-website.json"
+    ]]}
+  }
+},
+"distribution":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ApiStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"Api"}
+            ]}
+        ]},
+        "WebsiteStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"Website"}
+            ]}
+        ]},
+        "Cert":{"Ref":"Cert"},
+        "DNSZone":{"Ref":"DNSZone"},
+        "DNSName":{"Ref":"DNSName"}
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-distribution.json"
+    ]]}
+  }
+}

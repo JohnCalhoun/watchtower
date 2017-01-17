@@ -1,0 +1,13 @@
+{
+    "ProjectName":"watchtower", 
+    "StackName":"deployment",
+
+    "ArtifactsBucket":"jmc-artifacts",
+    "EnvType":"dev",
+    "DBName" : "graph",
+    "DBMasterUser" : "root",
+    "SnapshotIdentifier":"false",
+    "DBUserWrite" : "write",
+    "DBUserRead" : "read",
+    "Cert":""
+}

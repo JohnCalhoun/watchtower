@@ -1,0 +1,226 @@
+{"Conditions" : {
+    "CreateProdResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "prod"]},
+    "CreateDevResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "dev"]},
+    "CreateTestResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "test"]}
+},
+
+"AWSTemplateFormatVersion" : "2010-09-09",
+"Description" : "VPC and Database stack for testing",
+
+"Mappings":{
+
+},
+
+"Outputs":{
+    
+},
+
+"Parameters":{
+    "EnvType" : {
+        "Description" : "Environment type.",
+        "Default" : "test",
+        "Type" : "String",
+        "AllowedValues" : ["prod", "test","dev"],
+        "ConstraintDescription" : "must specify prod,test,or dev"
+    },
+    "ArtifactsBucket":{
+        "Description" : "Bucket That contains the lambda zip files",
+        "Type" : "String"
+    },
+    "DBName" : {
+        "Description" : "Name of Default database to create",
+        "Type" : "String"
+    },
+    "DBMasterUser" : {
+        "Description" : "Database's Master user name",
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBMasterPassword" : {
+        "Description" : "Database's Master user password",
+        "NoEcho":"true",
+        "Type" : "String"
+    },
+    "SnapshotIdentifier":{
+        "Description" : "To Restore from backup database",
+        "Type" : "String",
+        "Default":"false"
+    },
+    "ArtifactsBucket":{
+        "Description" : "Bucket That contains the lambda zip files",
+        "Type" : "String"
+    },
+    "DBUserWrite" : {
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBPasswordWrite" : {
+        "NoEcho":"true",
+        "Type" : "String"
+    },
+    "DBUserRead" : {
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBPasswordRead" : {
+        "NoEcho":"true",
+        "Type" : "String"
+    },
+    "GitCloneUrl":{
+        "Type":"String",
+        "Description" : "The Git url of the package that builds the website"
+    },
+    "Cert":{
+        "Description" : "Certificate for Distribution SSL",
+        "Type" : "String"
+    },
+    "DNSZone":{
+        "Description" : "Route53 DNS zone for the Distribution",
+        "Type" : "String"
+    },
+    "DNSName":{
+        "Description" : "DNS parent name for the distribution",
+        "Type" : "String"
+    }
+},
+
+"Resources":{ 
+"VPC":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"} 
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-network.json"
+    ]]}
+  }
+},
+"DB":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "NetworkStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"VPC"}
+            ]}
+        ]},
+        "DBName" : {"Ref":"DBName"},
+        "DBMasterUser" : {"Ref":"DBMasterUser"},
+        "DBMasterPassword" : {"Ref":"DBMasterPassword"},
+        "SnapshotIdentifier":{"Ref":"SnapshotIdentifier"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "DBUserWrite" : {"Ref":"DBUserWrite"},
+        "DBPasswordWrite" : {"Ref":"DBPasswordWrite"},
+        "DBUserRead" : {"Ref":"DBUserRead"},
+        "DBPasswordRead" : {"Ref":"DBPasswordRead"}
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-database.json"
+    ]]}
+  }
+},
+"Users":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"}
+     },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-users.json"
+    ]]}
+  }
+},
+"Api":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "UserStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"VPC"}
+            ]}
+        ]},
+        "DatabaseStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"DB"}
+            ]}
+        ]}
+
+     },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-api.json"
+    ]]}
+  }
+},
+"Website":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ArtifactsBucket":{"Ref":"ArtifactsBucket"},
+        "GitCloneUrl" : {"Ref":"GitCloneUrl"},
+     },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-website.json"
+    ]]}
+  }
+},
+"distribution":{
+  "Type" : "AWS::CloudFormation::Stack",
+  "Properties" : {
+    "Parameters" : { 
+        "EnvType":{"Ref":"EnvType"},
+        "ApiStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"Api"}
+            ]}
+        ]},
+        "WebsiteStackName":{"Fn::Select":
+        [
+            1,
+            {"Fn::Split":[
+                "/",
+                {"Ref":"Website"}
+            ]}
+        ]},
+        "Cert":{"Ref":"Cert"},
+        "DNSZone":{"Ref":"DNSZone"},
+        "DNSName":{"Ref":"DNSName"}
+    },
+    "TemplateURL" : {"Fn::Join":["",[
+        "https://s3.amazonaws.com/",
+        {"Ref":"ArtifactsBucket"},
+        "/watchtower/cloudformation/CF-distribution.json"
+    ]]}
+  }
+}
+}}

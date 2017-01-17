@@ -1,7 +1,0 @@
-{
-    "ProjectName":"lambda", 
-    "StackName":"watchtower-test",
-
-    "ArtifactsBucket":"jmc-artifacts",
-    "EnvType":"dev"
-}

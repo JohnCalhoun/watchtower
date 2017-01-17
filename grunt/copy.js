@@ -6,7 +6,11 @@ module.exports={
     },
     cloudformation:{
         files:[
-            {expand:true,src:["cloudformation/*/tmp/CF-*.json"],dest:"tmp"}
+            {
+                expand:true,
+                src:["cloudformation/*/tmp/CF-*.json"],
+                dest:"tmp",
+                flatten:true}
         ]
     }
 }

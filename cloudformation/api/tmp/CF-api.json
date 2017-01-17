@@ -48,10 +48,6 @@
     "DatabaseStackName" : {
         "Description" : "Database Stack Name",
         "Type" : "String"
-    },
-    "NetworkStackName":{
-        "Description" : "StackName of the VPC to Launch lambda in",
-        "Type" : "String"
     }
 },
 
