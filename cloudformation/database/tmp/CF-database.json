@@ -15,13 +15,23 @@
 },
 
 "Outputs":{
-    "DBEndPoint":{
-        "Description":"The Database endpoint URL",
-        "Value":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+    "ReadLambda":{
+        "Description":"The lambda to read from database",
+        "Value":{"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
         "Export":{
             "Name":{"Fn::Join":["-",[
                 {"Ref":"AWS::StackName"},
-                "DBEndpoint"
+                "ReadLambda"
+            ]]}
+        }
+    },
+    "WriteLambda":{
+        "Description":"The lambda to write to the database",
+        "Value":{"Fn::GetAtt": ["RDSProxyWrite", "Arn"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WriteLambda"
             ]]}
         }
     }
@@ -61,6 +71,24 @@
     },
     "ArtifactsBucket":{
         "Description" : "Bucket That contains the lambda zip files",
+        "Type" : "String"
+    },
+    "DBUserWrite" : {
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBPasswordWrite" : {
+        "NoEcho":"true",
+        "Type" : "String"
+    },
+    "DBUserRead" : {
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBPasswordRead" : {
+        "NoEcho":"true",
         "Type" : "String"
     }
 },
@@ -155,7 +183,79 @@
             }
         }
     }
+},
+"RDSProxyReadyOnly":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Ref":"ArtifactsBucket"},
+            "S3Key":"disclosure/lambda/lambda-rdsproxy.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "RDSProxyReadyOnly", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100",
+        "VpcConfig":{
+            "SecurityGroupIds":[
+                {"Ref":"RDSlambdaSG"} 
+            ],
+            "SubnetIds":[
+                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet1"}},
+                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet2"}}
+            ]
+        },
+        "Environment":{
+            "Variables":{
+                "DBNAME":{ "Ref" : "DBName" }, 
+                "DBUSER":{ "Ref" : "DBUserRead" },
+                "DBPASSWORD":{ "Ref" : "DBPasswordRead" },
+                "DBENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]}
+            }
+        }
+      }
+},
+"RDSProxyWrite":{
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+            "S3Bucket":{"Ref":"ArtifactsBucket"},
+            "S3Key":"disclosure/lambda/lambda-rdsproxy.zip"
+        },
+        "FunctionName":{"Fn::Join":["-",[
+                "RDSProxyWrite", 
+                {"Ref":"AWS::StackName"}
+            ]]},
+        "Handler" : "handler.handler",
+        "MemorySize" : "128",
+        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Runtime" : "nodejs4.3",
+        "Timeout" : "100",
+        "VpcConfig":{
+            "SecurityGroupIds":[
+                {"Ref":"RDSlambdaSG"} 
+            ],
+            "SubnetIds":[
+                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet1"}},
+                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet2"}}
+            ]
+        },
+        "Environment":{
+            "Variables":{
+                "DBNAME":{ "Ref" : "DBName" }, 
+                "DBUSER":{ "Ref" : "DBUserWrite" },
+                "DBPASSWORD":{ "Ref" : "DBPasswordWrite" },
+                "DBENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]}
+            }
+        }
+    }
 }
+
+        
 ,
 "DBSG":{
     "Type" : "AWS::EC2::SecurityGroup",

@@ -19,9 +19,12 @@ module.exports=function(grunt){
         'cloudformation', 
         'shell:updateStack']) 
 
+    grunt.registerTask('deletestack',[
+        'shell:deleteStack'])
+
     grunt.registerTask('stackrm',[
         'force:deletestack'])
-    
+ 
     grunt.registerTask('val',[
         'cloudformation',
         'shell:validateStack'])

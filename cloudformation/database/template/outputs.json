@@ -1,11 +1,21 @@
 "Outputs":{
-    "DBEndPoint":{
-        "Description":"The Database endpoint URL",
-        "Value":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+    "ReadLambda":{
+        "Description":"The lambda to read from database",
+        "Value":{"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
         "Export":{
             "Name":{"Fn::Join":["-",[
                 {"Ref":"AWS::StackName"},
-                "DBEndpoint"
+                "ReadLambda"
+            ]]}
+        }
+    },
+    "WriteLambda":{
+        "Description":"The lambda to write to the database",
+        "Value":{"Fn::GetAtt": ["RDSProxyWrite", "Arn"]},
+        "Export":{
+            "Name":{"Fn::Join":["-",[
+                {"Ref":"AWS::StackName"},
+                "WriteLambda"
             ]]}
         }
     }

@@ -2,12 +2,18 @@
     "ProjectName":"watchtower", 
     "StackName":"database",
     
-    "NetworkStackName":"WatchTower-network",
+    "NetworkStackName":"watchtower-network",
 
     "ArtifactsBucket":"jmc-artifacts",
     "EnvType":"dev",
     "DBName" :"graph",
     "DBMasterUser" :"root", 
     "DBMasterPassword" :"password", 
-    "SnapshotIdentifier":"false"
+    "SnapshotIdentifier":"false",
+ 
+    "DBUserWrite" : "write",
+    "DBPasswordWrite" : "1243275-134715-",
+    "DBUserRead" : "read",
+    "DBPasswordRead" : "45374-57-238457-3"
+
 }

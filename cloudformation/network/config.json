@@ -1,6 +1,6 @@
 {
-    "ProjectName":"WatchTower", 
+    "ProjectName":"watchtower", 
     "StackName":"network",
-    "ArtifactsBucket":"artifacts",
+    "ArtifactsBucket":"jmc-artifacts",
     "EnvType":"dev"
 }

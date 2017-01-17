@@ -33,5 +33,23 @@
     "ArtifactsBucket":{
         "Description" : "Bucket That contains the lambda zip files",
         "Type" : "String"
+    },
+    "DBUserWrite" : {
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBPasswordWrite" : {
+        "NoEcho":"true",
+        "Type" : "String"
+    },
+    "DBUserRead" : {
+        "NoEcho":"true",
+        "Default" : "test",
+        "Type" : "String"
+    },
+    "DBPasswordRead" : {
+        "NoEcho":"true",
+        "Type" : "String"
     }
 },

@@ -172,7 +172,7 @@
                     "arn:aws:apigateway:",
                     {"Ref": "AWS::Region"},
                     ":lambda:path/2015-03-31/functions/",
-                    {"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
+                    {"Fn::ImportValue":{"Fn::Sub":"${DatabaseStackName}-ReadLambda"}},
                     "/invocations"
                   ]
                 ]
@@ -247,7 +247,7 @@
                     "arn:aws:apigateway:",
                     {"Ref": "AWS::Region"},
                     ":lambda:path/2015-03-31/functions/",
-                    {"Fn::GetAtt": ["RDSProxyWrite", "Arn"]},
+                    {"Fn::ImportValue":{"Fn::Sub":"${DatabaseStackName}-WriteLambda"}},
                     "/invocations"
                   ]
                 ]
@@ -313,7 +313,7 @@
                     "arn:aws:apigateway:",
                     {"Ref": "AWS::Region"},
                     ":lambda:path/2015-03-31/functions/",
-                    {"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
+                    {"Fn::ImportValue":{"Fn::Sub":"${DatabaseStackName}-ReadLambda"}},
                     "/invocations"
                   ]
                 ]
