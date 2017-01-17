@@ -1,0 +1,14 @@
+module.exports={
+    dist:{
+        src:"js/main.js",
+        dest:"tmp/main.js"
+    },
+    testConstants:{
+        src:"js/constants/test.js",
+        dest:"js/constants/data/test.js"
+    },
+    testRoutes:{
+        src:"js/routes/test.js",
+        dest:"js/routes/data/test.js"
+    }
+}

@@ -2,6 +2,5 @@
     "ProjectName":"watchtower", 
     "StackName":"website",
     "ArtifactsBucket":"jmc-artifacts",
-    "EnvType":"dev",
-    "GitCloneUrl":"git-codecommit.us-east-1.amazonaws.com/v1/repos/disclosure"
+    "EnvType":"dev"
 }

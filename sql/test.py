@@ -31,7 +31,7 @@ class TestSQLCreateScripts(unittest.TestCase):
         self.cursor.close()
 
     def test_create(self):
-        script=get_script('./init-create.sql')
+        script=get_script('./scripts/init-create.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute("SHOW tables;")
@@ -47,10 +47,10 @@ class TestSQLCreateScripts(unittest.TestCase):
         self.assertTrue('write' in users)
 
     def test_destroy(self):
-        script=get_script('./init-create.sql')
+        script=get_script('./scripts/init-create.sql')
         run_script(script,self.cursor)
 
-        script=get_script('./init-destroy.sql')
+        script=get_script('./scripts/init-destroy.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute("SHOW tables;")
@@ -75,24 +75,24 @@ class TestSQLReadWriteScripts(unittest.TestCase):
         )
         self.cursor=self.server.cursor()
         self.cursor.execute('CREATE DATABASE IF NOT EXISTS test;')
-        script=get_script('./init-create.sql')
+        script=get_script('./scripts/init-create.sql')
         run_script(script,self.cursor)
 
 
     def tearDown(self):
-        script=get_script('./init-destroy.sql')
+        script=get_script('./scripts/init-destroy.sql')
         run_script(script,self.cursor)
 
         self.cursor.execute('DROP DATABASE test;')
         self.cursor.close()
 
     def test_getDocument(self):
-        script=get_script('./read-getDocument.sql')
+        script=get_script('./scripts/read-getDocument.sql')
         run_script(script,self.cursor)
         pass
     
     def test_addDocument(self):
-        script=get_script('./write-addDocument.sql')
+        script=get_script('./scripts/write-addDocument.sql')
         run_script(script,self.cursor)
         pass
 

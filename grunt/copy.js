@@ -1,14 +1,12 @@
 module.exports={
-    CryptoJS:{
-        src:'website/js/CryptoJS.js',
-        dest:'website/build/CryptoJS.js'
+    lambda:{
+        files:[
+            {expand:true,src:["lambda/*/tmp/*_latest.zip"],dest:"tmp"}
+        ]
     },
-    sdk:{
-        src:'website/js/sdk.js',
-        dest:'website/build/sdk.js'
-    },
-    cognitoSdk:{
-        src:'website/js/cognito.js',
-        dest:'website/build/cognito.js'
+    cloudformation:{
+        files:[
+            {expand:true,src:["cloudformation/*/tmp/CF-*.json"],dest:"tmp"}
+        ]
     }
 }

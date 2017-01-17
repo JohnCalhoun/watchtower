@@ -6,6 +6,11 @@ module.exports=function(grunt){
         data:grunt.file.readJSON('config.json')
     });
     
+    grunt.registerTask('getGitClone',function(){
+        var url=exec("git remote get-url origin | sed 's/ssh/https/'").toString()
+        grunt.config.set('GitCloneUrl',url)
+    })
+   
     grunt.registerTask('cloudformation',[
         'concat:resources',
         'concat:cloudformation'
