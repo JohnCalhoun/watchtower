@@ -1,5 +1,0 @@
-"Conditions" : {
-    "CreateProdResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "prod"]},
-    "CreateDevResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "dev"]},
-    "CreateTestResources" : {"Fn::Equals" : [{"Ref" : "EnvType"}, "test"]}
-},

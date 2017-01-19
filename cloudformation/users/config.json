@@ -1,7 +1,0 @@
-{
-    "ProjectName":"watchtower", 
-    "StackName":"users",
-
-    "ArtifactsBucket": "jmc-artifacts",
-    "EnvType":"dev"
-}

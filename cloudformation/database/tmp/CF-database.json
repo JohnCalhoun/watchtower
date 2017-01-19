@@ -138,6 +138,13 @@
             ]]}
         ]
     }
+},
+"DBTables":{
+    "Type": "Custom::DBInit",
+    "Properties": {
+        "ServiceToken":{"Fn::GetAtt":["InitDataBase","Arn"]},
+        "type":"data"
+    }
 }
 ,
 "InitDataBase":{

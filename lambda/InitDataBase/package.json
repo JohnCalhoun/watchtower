@@ -20,6 +20,9 @@
     "grunt-aws-lambda": "^0.13.0"
   },
   "dependencies": {
+    "cfn-lambda": "^0.8.3",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-nodeunit": "^1.0.0",
     "grunt-contrib-uglify": "^2.0.0"
   }
 }

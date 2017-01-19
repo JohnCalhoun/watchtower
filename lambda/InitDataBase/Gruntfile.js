@@ -11,8 +11,7 @@ module.exports=function(grunt){
     });
 
     grunt.registerTask('build',[
-        'uglify:lambda',
-        'shell:copyPackage',
+        'copy:build',
         'lambda_package:lambda'
     ])
 
@@ -20,6 +19,11 @@ module.exports=function(grunt){
         'build',
         'env:lambda',
         'lambda_invoke:lambda'
+    ])
+
+    grunt.registerTask('test',[
+        "shell:startMySQL",
+        'nodeunit:all'
     ])
 }
 
