@@ -54,7 +54,7 @@ var testCreateUser = function(test) {
         function(err,id,data){
             test.equal(id,params.UserName,"should create a user id as pyshical id") 
             test.ok(data.password,"should create a user password") 
-            
+            console.log(data.password.toString('hex')) 
             kms.decrypt(
                 {
                     CiphertextBlob:data.password,
