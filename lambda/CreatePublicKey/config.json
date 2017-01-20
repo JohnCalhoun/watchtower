@@ -1,0 +1,6 @@
+{
+    "containerName":"MYSQLtestInitDataBase",
+    "DBPassword":"0823hidsfn9ajasf",
+    "port":"3306",
+    "keyArn":"arn:aws:kms:us-east-1:677241476911:key/dcafbf20-df1b-4e5e-98aa-115694fd1965"
+}

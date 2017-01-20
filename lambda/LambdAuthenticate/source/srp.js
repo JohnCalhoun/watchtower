@@ -45,7 +45,7 @@ exports.getSharedKey = function(B,user) {
                     password:data.Plaintext,
                     database:process.env.DB_NAME
                 })
-
+                
                 var query=userTable
                 .select(userTable.salt,userTable.verifier,userTable.arn)
                 .from(userTable)
