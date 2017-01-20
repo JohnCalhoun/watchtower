@@ -8,13 +8,14 @@ var jsrp=require('jsrp')
 var role=require('./role.js')
 var srp=require('./srp.js')
 var handler=require('./handler')
+var keys=require('./testKeys.js') 
+var crypto=require('crypto')
 
 process.env.DB_ENDPOINT="127.0.0.1"
 process.env.DB_USER="auth"
 process.env.DB_PASSWORD=config.DBEncryptedPassword
 process.env.DB_NAME='test'
 process.env.KMS_KEY=config.keyArn
-
 var username='johndoe'
 var password='passowrd'
 
@@ -106,27 +107,47 @@ module.exports={
 
     testlambda:function(test){
         test.expect(2);
-        
-        var client=new jsrp.client()  
-        client.init({username:username,password:password},
-        function(){
-            var event={
-                body:JSON.stringify(
-                    {
-                        user:username,
-                        B:client.getPublicKey()
-                    }
-                )
-            }
-            var callback=function(err,data){
-                test.ifError(err)
-                test.ok(data)
-                test.done()
+        keys(config.keyArn)
+        .then(function(keypair){
+            var client=new jsrp.client()  
+            client.init({username:username,password:password},
+            function(){
+                payload=JSON.stringify({
+                            user:username,
+                            B:client.getPublicKey()
+                        })
+                //generate symetric key
+                var pass=crypto.randomBytes(20).toString('hex')
+                var algorithm='aes-256-ctr'
 
-            }
-            handler.handler(event,null,callback)
+                //encrypt payload with symetric key
+                var cipher = crypto.createCipher(algorithm,pass)
+                var ciphertext = cipher.update(payload,'utf8','hex')
+                ciphertext += cipher.final('hex');
 
-        })            
+                //encrypt symetric key with private key
+                var cipherKey=crypto.publicEncrypt(keypair.publicKey,new Buffer(pass)).toString('base64')
+
+                var event={
+                    body:JSON.stringify(
+                        {
+                            payload:ciphertext,
+                            key:cipherKey,
+                            algorithm:algorithm
+                        }
+                    )
+                }
+                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+                process.env.RSA_KMS_KEY=config.keyArn
+
+                var callback=function(err,data){
+                    test.ifError(err)
+                    test.ok(data)
+                    test.done()
+                }
+                handler.handler(event,null,callback)
+            })
+        })
     }
 }
 

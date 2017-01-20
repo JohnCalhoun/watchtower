@@ -25,6 +25,9 @@ module.exports=function(params,reply){
             reply(err)
         }else{
             priv=null
+            console.log(data.CiphertextBlob.toString('base64'))
+            console.log(pub)
+
             reply(
                 null,
                 fingerprint,
