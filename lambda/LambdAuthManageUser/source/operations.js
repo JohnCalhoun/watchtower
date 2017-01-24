@@ -70,9 +70,12 @@ exports.get=function(id){
 exports.create=function(id,salt,verifier,arn){
     return new Promise(function(resolve,reject){
         var query=users
-            .select(users.star())
-            .from(users)
-            .where(users.id.equals(id)).toQuery()
+            .insert(
+                users.id.value(id),
+                users.salt.value(salt),
+                users.verifier.value(verifier),
+                users.arn.value(arn)
+            ).toQuery()
 
         run_query(query)
         .then(
@@ -89,9 +92,13 @@ exports.create=function(id,salt,verifier,arn){
 exports.changePassword=function(id,salt,verifier){
     return new Promise(function(resolve,reject){
         var query=users
-            .select(users.star())
-            .from(users)
-            .where(users.id.equals(id)).toQuery()
+            .update({
+                salt:salt,
+                verifier:verifier
+            })
+            .where(
+                users.id.equals(id)
+            ).toQuery()
 
         run_query(query)
         .then(
@@ -108,9 +115,12 @@ exports.changePassword=function(id,salt,verifier){
 exports.changeId=function(oldId,newId){
     return new Promise(function(resolve,reject){
         var query=users
-            .select(users.star())
-            .from(users)
-            .where(users.id.equals(oldId)).toQuery()
+            .update({
+                id:newId,
+            })
+            .where(
+                users.id.equals(oldId)
+            ).toQuery()
 
         run_query(query)
         .then(
@@ -127,8 +137,7 @@ exports.changeId=function(oldId,newId){
 exports.remove=function(id){
     return new Promise(function(resolve,reject){
         var query=users
-            .select(users.star())
-            .from(users)
+            .delete()
             .where(users.id.equals(id)).toQuery()
 
         run_query(query)

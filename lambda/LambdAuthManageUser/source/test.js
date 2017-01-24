@@ -3,7 +3,6 @@ var aws=require('aws-sdk')
 
 var kms=new aws.KMS({region:process.env.REGION})
 
-
 var config=require('../config.json')
 var mysql=require('mysql')
 var jsrp=require('jsrp')
@@ -39,7 +38,7 @@ module.exports={
                         "CREATE DATABASE IF NOT EXISTS "+process.env.DB_NAME,
                         "CREATE USER IF NOT EXISTS `manage` IDENTIFIED BY '"+config.DBPassword+"'",
                         "CREATE TABLE IF NOT EXISTS `"+process.env.DB_NAME+"`.`users` (id text,salt text, verifier text,arn text)",
-                        "GRANT SELECT ON `"+process.env.DB_NAME+"`.`users` TO manage",
+                        "GRANT SELECT,INSERT,UPDATE,DELETE ON `"+process.env.DB_NAME+"`.`users` TO manage",
                         "USE `"+process.env.DB_NAME+"`",
                         "INSERT INTO users VALUES ('"+username+"','"+result.salt+"','"+result.verifier+"','"+config.roleArn+"')"
                     ].join(';'),
@@ -81,7 +80,7 @@ module.exports={
     testCreate:function(test){
         test.expect(1);
         
-        ops.create()
+        ops.create("1","1308180","asdfasdfasdf","arn:aws:12")
         .then(function(){
             test.ok(true)
             test.done()
@@ -91,7 +90,7 @@ module.exports={
     testRemove:function(test){
         test.expect(1);
         
-        ops.remove()
+        ops.remove(username)
         .then(function(){
             test.ok(true)
             test.done()
@@ -101,7 +100,7 @@ module.exports={
     testChangePassword:function(test){
         test.expect(1);
         
-        ops.changePassword()
+        ops.changePassword(username,"salt","verifier")
         .then(function(){
             test.ok(true)
             test.done()
@@ -111,7 +110,7 @@ module.exports={
     testChangeId:function(test){
         test.expect(1);
         
-        ops.changeId()
+        ops.changeId(username,"jerry")
         .then(function(){
             test.ok(true)
             test.done()
