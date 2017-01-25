@@ -1,7 +1,6 @@
 var aws=require('aws-sdk')
 var sts=new aws.STS({region:process.env.REGION})
 
-
 exports.getCredentials = function(arn,id) {
     return new Promise(function(resolve,reject){ 
         var params={

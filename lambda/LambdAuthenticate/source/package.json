@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "aws": "0.0.3-2",
+    "jsonschema": "^1.1.1",
     "jsrp": "^0.2.2",
     "mysql": "^2.12.0",
     "node-rsa": "^0.4.2",

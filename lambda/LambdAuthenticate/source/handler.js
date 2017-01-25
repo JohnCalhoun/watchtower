@@ -6,6 +6,8 @@ var algorithm='aes-256-ctr'
 var aws=require('aws-sdk')
 var kms=new aws.KMS({region:process.env.REGION})
 
+var validate=require('jsonschema').validate
+var schema=require(__dirname+'/assets/schema.json')
 
 var get_body=function(input){
     return new Promise(function(resolve,reject){
@@ -26,6 +28,7 @@ var get_body=function(input){
                         dec += decipher.final('utf8');
                         
                         var out=JSON.parse(dec)
+                        validate(out,schema,{throwError:true}) 
                         resolve(out)
                     }catch(err){
                         reject(err)

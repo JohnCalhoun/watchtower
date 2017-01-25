@@ -1,0 +1,32 @@
+{
+"anyOf":[
+    {
+        "type":"object",
+        "properties":{
+            "action":{
+                "type":"string",
+                "enum":["create","delete","changePassword","changeEmail","resetPassword","get"]
+            },
+            "id":{
+                "type":"string"
+            },
+            "email":{
+                "type":"string"
+            },
+            "arn":{
+                "type":"sting"
+            },
+            "salt":{
+                "type":"sting"
+            },
+            "verifier":{
+                "type":"sting"
+            }
+        },
+        "required":[
+            "action","id"
+        ],
+        "additionalProperties":false
+    }    
+]
+}

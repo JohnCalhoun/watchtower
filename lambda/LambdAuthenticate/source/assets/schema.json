@@ -1,0 +1,15 @@
+{
+    "type":"object",
+    "properties":{
+        "user":{
+            "type":"string"
+        },
+        "B":{
+            "type":"string"
+        }
+    },
+    "required":[
+        "user","B"
+    ],
+    "additionalProperties":false
+}    
