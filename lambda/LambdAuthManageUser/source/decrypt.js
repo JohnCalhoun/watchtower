@@ -1,5 +1,7 @@
 var crypto=require('crypto')
 var algorithm='aes-256-ctr'
+var validate=require('jsonschema').validate
+var schema=require(__dirname+'/assets/bodyschema.json')
 
 var aws=require('aws-sdk')
 var kms=new aws.KMS({region:process.env.REGION})
@@ -14,7 +16,7 @@ module.exports=function(input){
                 if(err){
                     reject(err)
                 }else{
-                    try{
+                    try{ 
                         var privateKey=data.Plaintext.toString()
                         var pass=crypto.privateDecrypt(privateKey,Buffer.from(input.key,'base64'))
                         
@@ -23,6 +25,7 @@ module.exports=function(input){
                         dec += decipher.final('utf8');
                         
                         var out=JSON.parse(dec)
+                        validate(out,schema,{throwError:true}) 
                         resolve(out)
                     }catch(err){
                         reject(err)

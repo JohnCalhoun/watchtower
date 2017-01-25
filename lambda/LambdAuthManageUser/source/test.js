@@ -18,8 +18,39 @@ process.env.DB_ENDPOINT="127.0.0.1"
 process.env.DB_USER="manage"
 process.env.DB_NAME='test'
 process.env.KMS_KEY=config.keyArn
+process.env.EMAIL_SOURCE="test@jmc.ninja"
 var username='johndoe'
 var password='passowrd'
+
+var encrypt_message=function(input){
+    return new Promise(function(resolve,reject){
+        keys(config.keyArn)
+        .then(function(keypair){
+            payload=JSON.stringify(input)
+        
+        //generate symetric key
+            var pass=crypto.randomBytes(20).toString('hex')
+            var algorithm='aes-256-ctr'
+        
+        //encrypt payload with symetric key
+            var cipher = crypto.createCipher(algorithm,pass)
+            var ciphertext = cipher.update(payload,'utf8','hex')
+            ciphertext += cipher.final('hex');
+        
+        //encrypt symetric key with private key
+            var cipherKey=crypto.publicEncrypt(keypair.publicKey,new Buffer(pass)).toString('base64')
+            var body={payload:ciphertext,
+                    key:cipherKey,
+                    algorithm:algorithm}
+            
+            process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+            process.env.RSA_KMS_KEY=config.keyArn
+
+            resolve(body)
+        },function(err){console.log(err)})
+    })
+}
+
 
 module.exports={
     setUp:function(callback){
@@ -37,12 +68,14 @@ module.exports={
                     [   
                         "CREATE DATABASE IF NOT EXISTS "+process.env.DB_NAME,
                         "CREATE USER IF NOT EXISTS `manage` IDENTIFIED BY '"+config.DBPassword+"'",
-                        "CREATE TABLE IF NOT EXISTS `"+process.env.DB_NAME+"`.`users` (id text,salt text, verifier text,arn text)",
+                        "CREATE TABLE IF NOT EXISTS `"+process.env.DB_NAME+
+                            "`.`users` (id text,email text,salt text, verifier text,arn text,reset bool)",
                         "GRANT SELECT,INSERT,UPDATE,DELETE ON `"+process.env.DB_NAME+"`.`users` TO manage",
                         "USE `"+process.env.DB_NAME+"`",
-                        "INSERT INTO users VALUES ('"+username+"','"+result.salt+"','"+result.verifier+"','"+config.roleArn+"')"
+                        "INSERT INTO users VALUES ('"+username+"','johnmcalhoun123@gmail.com','"+result.salt+"','"+result.verifier+"','"+config.roleArn+"','0')"
                     ].join(';'),
                     function(err){
+                        if(err)console.log(err)
                         kms.encrypt({
                             KeyId:process.env.KMS_KEY,
                             Plaintext:config.DBPassword,
@@ -76,7 +109,57 @@ module.exports={
         
         connection.end()
     },
+ 
+    testEmail:function(test){
+        test.expect(1);
+        
+        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
+        .then(function(){
+            test.ok(true)
+            test.done()
+        })
+    },
    
+    testLambdaGet:function(test){
+        encrypt_message({
+            action:"get",
+            id:username
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err,data){
+                test.ifError(err)
+                test.ok(data)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+    
+    testLambdaCreate:function(test){
+        encrypt_message({
+            action:"create",
+            id:"bill",
+            email:"johnmcalhoun123@gmail.com"
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err,data){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+
     testCreate:function(test){
         test.expect(1);
         
@@ -86,7 +169,26 @@ module.exports={
             test.done()
         })
     },
-   
+    
+    testLambdaRemove:function(test){
+        encrypt_message({
+            action:"delete",
+            id:username
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err,data){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+
     testRemove:function(test){
         test.expect(1);
         
@@ -96,21 +198,92 @@ module.exports={
             test.done()
         })
     },
+ 
+    testLambdaChangePassword:function(test){
+        encrypt_message({
+            action:"changePassword",
+            id:username,
+            salt:"salt",
+            verifier:"verifier"
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
 
-    testChangePassword:function(test){
-        test.expect(1);
-        
-        ops.changePassword(username,"salt","verifier")
-        .then(function(){
-            test.ok(true)
+            var callback=function(err,data){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
             test.done()
         })
     },
 
-    testChangeId:function(test){
+    testLambdaChangeEmail:function(test){
+        encrypt_message({
+            action:"changeEmail",
+            id:username,
+            email:username
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err,data){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+
+    testLambdaChangePassword:function(test){
+        encrypt_message({
+            action:"changePassword",
+            id:username,
+            salt:"salt",
+            verifier:"verfife"
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err,data){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+
+    testLambdaResetPassword:function(test){
+        encrypt_message({
+            action:"resetPassword",
+            id:username
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err,data){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+
+    testUpdate:function(test){
         test.expect(1);
         
-        ops.changeId(username,"jerry")
+        ops.update(username,{email:"jerry"})
         .then(function(){
             test.ok(true)
             test.done()
@@ -121,9 +294,8 @@ module.exports={
         
         ops.get(username)
         .then(function(results){
-            test.expect(3);
+            test.expect(2);
             test.ok(results)
-            test.ok(results.salt)
             test.equal(results.id,username)
             test.done()
         },
@@ -133,16 +305,6 @@ module.exports={
             test.done()
         }
         )
-    },
-
-    testEmail:function(test){
-        test.expect(1);
-        
-        email.send()
-        .then(function(){
-            test.ok(true)
-            test.done()
-        })
     },
     
     testConnect:function(test){
@@ -168,10 +330,11 @@ module.exports={
             var client=new jsrp.client()  
             client.init({username:username,password:password},
             function(){
-                payload_object=JSON.stringify({
-                            user:username,
-                            verifiver:client.getPublicKey()
-                        })
+                payload_object={
+                            action:"get",
+                            id:username,
+                            verifier:client.getPublicKey()
+                        }
                 payload=JSON.stringify(payload_object)
 
                 //generate symetric key
@@ -198,7 +361,7 @@ module.exports={
                 decrypt(body)
                 .then(function(data){
                     test.expect(2);
-                    test.equal(payload_object.user,data.user)
+                    test.equal(payload_object.id,data.id)
                     test.equal(payload_object.verifiver,data.verifiver)
                     test.done()
                 },

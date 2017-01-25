@@ -13,6 +13,10 @@ var users=sql.define({
             dataType:"text"
         },
         {
+            name:"email",
+            dataType:"text"
+        },
+        {
             name:"salt",
             dataType:"text"
         },
@@ -23,6 +27,10 @@ var users=sql.define({
         {
             name:"arn",
             dataType:"text"
+        },
+        {
+            name:"reset",
+            dataType:"bool"
         }
     ]
 })
@@ -74,7 +82,8 @@ exports.create=function(id,salt,verifier,arn){
                 users.id.value(id),
                 users.salt.value(salt),
                 users.verifier.value(verifier),
-                users.arn.value(arn)
+                users.arn.value(arn),
+                users.reset.value(1)
             ).toQuery()
 
         run_query(query)
@@ -89,37 +98,12 @@ exports.create=function(id,salt,verifier,arn){
     })
 }
 
-exports.changePassword=function(id,salt,verifier){
+exports.update=function(id,data){
     return new Promise(function(resolve,reject){
         var query=users
-            .update({
-                salt:salt,
-                verifier:verifier
-            })
+            .update(data)
             .where(
                 users.id.equals(id)
-            ).toQuery()
-
-        run_query(query)
-        .then(
-            function(result){
-                resolve()
-            },
-            function(err){
-                reject(err)
-            }
-        )
-    })
-}
-
-exports.changeId=function(oldId,newId){
-    return new Promise(function(resolve,reject){
-        var query=users
-            .update({
-                id:newId,
-            })
-            .where(
-                users.id.equals(oldId)
             ).toQuery()
 
         run_query(query)

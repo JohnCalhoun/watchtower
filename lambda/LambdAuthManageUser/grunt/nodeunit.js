@@ -1,5 +1,8 @@
 module.exports={
-    all:['source/test.js']
+    all:['source/test.js'],
+    options:{
+        reporter:'default'
+    }
 }
 
 
