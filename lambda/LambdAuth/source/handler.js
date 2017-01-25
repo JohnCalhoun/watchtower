@@ -7,6 +7,7 @@ var hb=require('handlebars')
 var fs=require('fs')
 var mfa=require('./mfa.js')
 var auth=require('./auth.js')
+var sign=require('./sign.js')
 
 exports.handler = function(event, context,callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
@@ -116,17 +117,17 @@ exports.handler = function(event, context,callback) {
                     ops.get(
                         message.id)
                     .then(function(result){
-                        callback(null,{
+                        sign({
                             id:result.id,
                             email:result.email
-                        }) 
+                        },callback) 
                     },Error)
                     break;
 
                 case "auth":
                     auth(message.id,message.B,message.token).then(
-                        function(results){
-                            callback(null,results)
+                        function(results){  
+                            sign(results,callback)
                         },Error)
                     break;
                 

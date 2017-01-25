@@ -21,6 +21,7 @@ var srp=require('./srp.js')
 var auth=require('./auth.js')
 var qr=require('qr-image')
 var db=ops.db
+var sign=require('./sign.js')
 
 process.env.DB_ENDPOINT="127.0.0.1"
 process.env.DB_USER="manage"
@@ -132,7 +133,26 @@ module.exports={
         
         connection.end()
     },
-    
+    testSign:function(test){
+        keys(config.keyArn)
+        .then(function(keypair){
+            process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+            var data={a:"b"}
+            var callback=function(err,out){
+                test.expect(2);
+                test.ifError(err)
+                
+                verify = crypto.createVerify(out.hash);
+                verify.update(out.result);
+
+                test.ok(verify.verify(keypair.publicKey, out.signature,'hex'));
+                test.done()
+            }
+            
+            sign(data,callback)
+        })
+    }, 
+
     testMfa:function(test){
         mfa.gen(username)
         .then(function(){
