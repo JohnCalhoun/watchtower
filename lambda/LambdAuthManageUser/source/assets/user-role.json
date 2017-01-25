@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "execute-api:Execution-operation"           
+      ],
+      "Resource": [
+        "arn:aws:execute-api:*:*:*/*/*/Manage/{{user}}",
+        "arn:aws:execute-api:*:*:*/*/*/proxy/*"
+      ]
+    }
+  ]
+}

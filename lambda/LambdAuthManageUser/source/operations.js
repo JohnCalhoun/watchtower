@@ -29,11 +29,28 @@ var users=sql.define({
             dataType:"text"
         },
         {
+            name:"policy",
+            dataType:"text"
+        },
+        {
             name:"reset",
+            dataType:"bool"
+        },
+        {
+            name:"mfaSecret",
+            dataType:"text"
+        },
+        {
+            name:"mfaQrcode",
+            dataType:"text"
+        },
+        {
+            name:"mfaEnabled",
             dataType:"bool"
         }
     ]
 })
+exports.db=users
 
 var run_query=function(query){
     return new Promise(function(resolve,reject){
@@ -59,7 +76,9 @@ var run_query=function(query){
 exports.get=function(id){
     return new Promise(function(resolve,reject){
         var query=users
-            .select(users.star())
+            .select(
+                users.star()
+            )
             .from(users)
             .where(users.id.equals(id)).toQuery()
 
@@ -75,15 +94,17 @@ exports.get=function(id){
     })
 }
 
-exports.create=function(id,salt,verifier,arn){
+exports.create=function(id,email,salt,verifier,arn,policy){
     return new Promise(function(resolve,reject){
         var query=users
             .insert(
                 users.id.value(id),
-                users.salt.value(salt),
-                users.verifier.value(verifier),
+                users.email.value(email),
                 users.arn.value(arn),
-                users.reset.value(1)
+                users.policy.value(policy),
+                users.reset.value(1),
+                users.salt.value(salt),
+                users.verifier.value(verifier)
             ).toQuery()
 
         run_query(query)
@@ -108,7 +129,7 @@ exports.update=function(id,data){
 
         run_query(query)
         .then(
-            function(result){
+            function(){
                 resolve()
             },
             function(err){

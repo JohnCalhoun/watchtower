@@ -3,6 +3,9 @@ var jsrp=require('jsrp')
 var crypto=require('crypto')
 var ops=require('./operations.js')
 var email=require('./email.js')
+var hb=require('handlebars')
+var fs=require('fs')
+var mfa=require('./mfa.js')
 
 exports.handler = function(event, context,callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
@@ -14,6 +17,8 @@ exports.handler = function(event, context,callback) {
                 case "create":
                     var pass=crypto.randomBytes(20).toString('hex')
                     var client=new jsrp.client()  
+                    var template=hb
+                        .compile(fs.readFileSync(__dirname+"/assets/user-role.json").toString())
                     
                     client.init({username:message.id,password:pass},
                     function(){client.createVerifier(function(err,result){
@@ -22,7 +27,11 @@ exports.handler = function(event, context,callback) {
                             message.email,
                             result.salt,
                             result.verifier,
-                            message.arn)
+                            message.arn,
+                            template({
+                                user:message.id
+                            })
+                        )
                         .then(function(){
                             email.send(message.email,{secret:pass},"invite")
                                 .then(function(){
@@ -30,6 +39,24 @@ exports.handler = function(event, context,callback) {
                                 },Error)
                         },Error)
                     })})
+                    break;
+                
+                case "createMFA":
+                    mfa.gen(message.id)
+                    .then(function(){
+                        ops.get(message.id)
+                        .then(function(results){
+                            email.send(results.email,{secret:results.mfaSecret,qr:results.mfsQrcode},"mfa")
+                                .then(function(){
+                                    callback(null)
+                                },Error)
+                        },Error)
+                    },Error)
+                    break;
+ 
+                case "valMFA":
+                    mfa.val(message.id,message.token)
+                    callback(null)
                     break;
 
                 case "delete":
@@ -70,7 +97,8 @@ exports.handler = function(event, context,callback) {
                             message.id,
                             {salt:result.salt,
                             verifier:result.verifier,
-                            reset:1})
+                            reset:1,
+                            mfaEnabled:false})
                         .then(function(){
                             ops.get(message.id)
                             .then(function(results){
@@ -87,7 +115,10 @@ exports.handler = function(event, context,callback) {
                     ops.get(
                         message.id)
                     .then(function(result){
-                        callback(null,result) 
+                        callback(null,{
+                            id:result.id,
+                            email:result.email
+                        }) 
                     },Error)
                     break;
 

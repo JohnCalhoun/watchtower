@@ -5,6 +5,7 @@ var kms=new aws.KMS({region:process.env.REGION})
 
 var config=require('../config.json')
 var mysql=require('mysql')
+var sql=require('sql')
 var jsrp=require('jsrp')
 var handler=require('./handler')
 var ops=require('./operations.js')
@@ -13,6 +14,8 @@ var connect=require('./connect.js')
 var decrypt=require('./decrypt.js')
 var keys=require('./testKeys.js')
 var crypto=require('crypto')
+var mfa=require('./mfa.js')
+var speakeasy=require('speakeasy')
 
 process.env.DB_ENDPOINT="127.0.0.1"
 process.env.DB_USER="manage"
@@ -68,11 +71,10 @@ module.exports={
                     [   
                         "CREATE DATABASE IF NOT EXISTS "+process.env.DB_NAME,
                         "CREATE USER IF NOT EXISTS `manage` IDENTIFIED BY '"+config.DBPassword+"'",
-                        "CREATE TABLE IF NOT EXISTS `"+process.env.DB_NAME+
-                            "`.`users` (id text,email text,salt text, verifier text,arn text,reset bool)",
-                        "GRANT SELECT,INSERT,UPDATE,DELETE ON `"+process.env.DB_NAME+"`.`users` TO manage",
                         "USE `"+process.env.DB_NAME+"`",
-                        "INSERT INTO users VALUES ('"+username+"','johnmcalhoun123@gmail.com','"+result.salt+"','"+result.verifier+"','"+config.roleArn+"','0')"
+                        ops.db.create().ifNotExists().toQuery().text,
+                        "GRANT SELECT,INSERT,UPDATE,DELETE ON `users` TO manage",
+                        "INSERT INTO users VALUES ('"+username+"','johnmcalhoun123@gmail.com','"+result.salt+"','"+result.verifier+"','"+config.roleArn+"','{}','0','none','none','0')"
                     ].join(';'),
                     function(err){
                         if(err)console.log(err)
@@ -103,19 +105,80 @@ module.exports={
                 "DROP USER IF EXISTS manage"
             ].join(';'),
             function(err){
+                if(err)console.log(err)
                 callback() 
             }
         )
         
         connection.end()
     },
+    
+    testMfa:function(test){
+        mfa.gen(username)
+        .then(function(){
+            return mfa.get(username)
+        })
+        .then(function(results){
+            var token=speakeasy.totp({
+                secret:results.secret,
+                encoding:'base32'
+            })
+            mfa.val(username,token)
+            .then(function(result){
+                test.expect(3);
+                test.ok(results.secret) 
+                test.ok(results.qr) 
+                test.ok(result)
+                test.done()
+            })
+        })
+    },
+  
+    testLambdaMFACreate:function(test){
+        encrypt_message({
+            action:"createMFA",
+            id:username
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
  
+    testLambdaMFAVal:function(test){
+        encrypt_message({
+            action:"valMFA",
+            id:username,
+            token:"111111"
+        })
+        .then(function(text){
+            var event={body:JSON.stringify(text)}
+
+            var callback=function(err){
+                test.ifError(err)
+                test.done()
+            }
+            handler.handler(event,null,callback)
+        },function(err){
+            console.log(err)
+            test.done()
+        })
+    },
+
     testEmail:function(test){
         test.expect(1);
         
         email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
-        .then(function(){
-            test.ok(true)
+        .then(function(err){
+            test.ifError(err)
             test.done()
         })
     },

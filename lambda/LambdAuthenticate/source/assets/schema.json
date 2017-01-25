@@ -6,6 +6,9 @@
         },
         "B":{
             "type":"string"
+        },
+        "tokenCode":{
+            "type":"string"
         }
     },
     "required":[

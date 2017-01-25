@@ -5,7 +5,7 @@
         "properties":{
             "action":{
                 "type":"string",
-                "enum":["create","delete","changePassword","changeEmail","resetPassword","get"]
+                "enum":["create","delete","changePassword","changeEmail","resetPassword","get","createMFA","valMFA"]
             },
             "id":{
                 "type":"string"
@@ -20,6 +20,9 @@
                 "type":"sting"
             },
             "verifier":{
+                "type":"sting"
+            },
+            "token":{
                 "type":"sting"
             }
         },

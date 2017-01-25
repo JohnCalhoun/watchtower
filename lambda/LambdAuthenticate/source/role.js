@@ -1,11 +1,12 @@
 var aws=require('aws-sdk')
 var sts=new aws.STS({region:process.env.REGION})
 
-exports.getCredentials = function(arn,id) {
+exports.getCredentials = function(arn,id,policy,token) {
     return new Promise(function(resolve,reject){ 
         var params={
             RoleArn: arn, 
-            RoleSessionName: id
+            RoleSessionName: id,
+            Policy:policy
         }
         sts.assumeRole(params,
             function(err,data){
