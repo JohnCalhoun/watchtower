@@ -16,6 +16,11 @@ var keys=require('./testKeys.js')
 var crypto=require('crypto')
 var mfa=require('./mfa.js')
 var speakeasy=require('speakeasy')
+var role=require('./role.js')
+var srp=require('./srp.js')
+var auth=require('./auth.js')
+var qr=require('qr-image')
+var db=ops.db
 
 process.env.DB_ENDPOINT="127.0.0.1"
 process.env.DB_USER="manage"
@@ -53,7 +58,7 @@ var encrypt_message=function(input){
         },function(err){console.log(err)})
     })
 }
-
+var qrsecret
 
 module.exports={
     setUp:function(callback){
@@ -67,6 +72,10 @@ module.exports={
         
         client.init({username:username,password:password},
             function(){client.createVerifier(function(err,result){
+                var secret=speakeasy.generateSecret();
+                var qrcode=qr.svgObject(secret.otpauth_url).path
+                qrsecret=secret.base32
+
                 connection.query(
                     [   
                         "CREATE DATABASE IF NOT EXISTS "+process.env.DB_NAME,
@@ -74,7 +83,18 @@ module.exports={
                         "USE `"+process.env.DB_NAME+"`",
                         ops.db.create().ifNotExists().toQuery().text,
                         "GRANT SELECT,INSERT,UPDATE,DELETE ON `users` TO manage",
-                        "INSERT INTO users VALUES ('"+username+"','johnmcalhoun123@gmail.com','"+result.salt+"','"+result.verifier+"','"+config.roleArn+"','{}','0','none','none','0')"
+                        ops.db.insert(
+                            db.id.value(username),
+                            db.email.value('johnmcalhoun123@gmail.com'),
+                            db.salt.value(result.salt),
+                            db.verifier.value(result.verifier),
+                            db.arn.value(config.roleArn),
+                            db.policy.value(JSON.stringify({})),
+                            db.reset.value(false),
+                            db.mfaSecret.value(secret.base32),
+                            db.mfaQrcode.value(qrcode),
+                            db.mfaEnabled.value(false)
+                        ).toString()
                     ].join(';'),
                     function(err){
                         if(err)console.log(err)
@@ -433,6 +453,99 @@ module.exports={
                     test.ifError(err);
                     test.done()
                 })
+            })
+        })
+    },
+ 
+    testsrp:function(test){
+        test.expect(2);
+       
+        var client=new jsrp.client()  
+        client.init({username:username,password:password},
+        function(){
+            var B = client.getPublicKey();
+            srp.getSharedKey(B,username)
+            .then(function(result){
+                client.setSalt(result.salt);
+                client.setServerPublicKey(result.publicKey);
+
+                test.equal(
+                    client.getSharedKey(),
+                    result.sharedKey,
+                    "Shared Key should be the same"
+                )
+                test.ok(result.arn)
+                test.done()
+            },function(err){console.log(err)})
+        })
+
+    },
+
+    testrole:function(test){
+        test.expect(3);
+        role.getCredentials(
+            config.roleArn,
+            username)
+        .then(function(result){
+            test.ok(result.AccessKeyId)
+            test.ok(result.SecretAccessKey)
+            test.ok(result.SessionToken)
+            test.done()
+        },function(err){
+            console.log(err) 
+        })
+    },
+
+    testAuth:function(test){
+        var client=new jsrp.client()  
+        client.init({username:username,password:password},
+        function(){
+            var token=speakeasy.totp({
+                secret:qrsecret,
+                encoding:'base32'
+            })
+            var B=client.getPublicKey()
+           
+
+            auth(username,B,token).then(
+                function(results){
+                    test.expect(4);
+                    test.ok(results.salt,"should return salt")
+                    test.ok(results.algorithm,"should return algorithm")
+                    test.ok(results.A,"should return A")
+                    test.ok(results.credentials,"should return credentials")
+                    test.done()
+                },
+                function(err){
+                    test.expect(1);
+                    test.ifError(err)
+                    test.done()
+                }
+            )
+        })
+    },
+
+    testLambdaAuth:function(test){
+        var client=new jsrp.client()  
+        client.init({username:username,password:password},
+            function(){
+            encrypt_message({
+                action:"auth",
+                id:username,
+                B:client.getPublicKey(),
+                token:null
+            })
+            .then(function(text){
+                var event={body:JSON.stringify(text)}
+
+                var callback=function(err,data){
+                    test.ifError(err)
+                    test.done()
+                }
+                handler.handler(event,null,callback)
+            },function(err){
+                console.log(err)
+                test.done()
             })
         })
     }

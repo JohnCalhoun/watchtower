@@ -6,6 +6,7 @@ var email=require('./email.js')
 var hb=require('handlebars')
 var fs=require('fs')
 var mfa=require('./mfa.js')
+var auth=require('./auth.js')
 
 exports.handler = function(event, context,callback) {
     //console.log('Received event:', JSON.stringify(event, null, 2));
@@ -122,6 +123,13 @@ exports.handler = function(event, context,callback) {
                     },Error)
                     break;
 
+                case "auth":
+                    auth(message.id,message.B,message.token).then(
+                        function(results){
+                            callback(null,results)
+                        },Error)
+                    break;
+                
                 default:
                     Error("Error: No action given") 
             }

@@ -1,8 +1,0 @@
-{
-    "containerName":"MYSQLtestInitDataBase",
-    "DBPassword":"0823hidsfn9ajasf",
-    "DBEncryptedPassword":"AQECAHhG9rNWz7qLjAGoxVSpYqHw1+oBtue0V5E55+rj9Y3gvAAAAG4wbAYJKoZIhvcNAQcGoF8wXQIBADBYBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDFxv2XOGsuBCv8+RXAIBEIArXWQY8B6ayX1bMIbhFg8bEbERAx0oku7aT27rin3uQWRsQCAewz+9wzvwNw==",
-    "port":"3306",
-    "keyArn":"arn:aws:kms:us-east-1:677241476911:key/dcafbf20-df1b-4e5e-98aa-115694fd1965",
-    "roleArn":"arn:aws:iam::677241476911:role/test"
-}
