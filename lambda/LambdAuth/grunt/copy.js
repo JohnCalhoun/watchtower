@@ -3,7 +3,7 @@ module.exports={
         files:[
             {expand:true,src:["source/*.js","!source/test*.js"],dest:"build",flatten:true},
             {expand:true,src:["source/package.json"],dest:"build",flatten:true},
-            {expand:true,src:["source/assets/*"],dest:"build/assets",flatten:true},
+            {expand:true,cwd:"source/assets",src:["*"],dest:"build/assets",flatten:false},
         ]
     },
     coverage:{

@@ -23,7 +23,7 @@ actions.create=function(message,callback){
             message.group
         )
         .then(function(){
-            email.send(message.email,{secret:pass,user:message.id},"invite","Welcome")
+            email.send(message.email,{secret:pass,user:message.id},"invite")
                 .then(function(){
                     callback(null)
                 },Error)
@@ -96,7 +96,7 @@ actions.resetPassword=function(message,callback){
         .then(function(){
             ops.get(message.id)
             .then(function(results){
-                email.send(results.email,{secret:pass},"reset","Password Reset")
+                email.send(results.email,{secret:pass},"reset")
                     .then(function(){
                         callback(null)
                     },Error)
