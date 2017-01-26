@@ -37,10 +37,6 @@ var users=sql.define({
             dataType:"text"
         },
         {
-            name:"mfaQrcode",
-            dataType:"text"
-        },
-        {
             name:"mfaEnabled",
             dataType:"bool"
         }

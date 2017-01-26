@@ -76,7 +76,6 @@ module.exports={
         client.init({username:username,password:password},
             function(){client.createVerifier(function(err,result){
                 var secret=speakeasy.generateSecret();
-                var qrcode=qr.svgObject(secret.otpauth_url).path
                 qrsecret=secret.base32
 
                 connection.query(
@@ -94,7 +93,6 @@ module.exports={
                             db.type.value('admin'),
                             db.reset.value(false),
                             db.mfaSecret.value(secret.base32),
-                            db.mfaQrcode.value(qrcode),
                             db.mfaEnabled.value(false)
                         ).toString()
                     ].join(';'),
@@ -219,22 +217,25 @@ module.exports={
     },
  
     testLambdaMFAVal:function(test){
-        encrypt_message({
-            action:"valMFA",
-            id:username,
-            token:"111111"
-        })
-        .then(function(text){
-            var event={body:JSON.stringify(text)}
+        mfa.gen(username)
+        .then(function(){
+            encrypt_message({
+                action:"valMFA",
+                id:username,
+                token:"111111"
+            })
+            .then(function(text){
+                var event={body:JSON.stringify(text)}
 
-            var callback=function(err){
-                test.ifError(err)
+                var callback=function(err){
+                    test.ifError(err)
+                    test.done()
+                }
+                handler.handler(event,null,callback)
+            },function(err){
+                console.log(err)
                 test.done()
-            }
-            handler.handler(event,null,callback)
-        },function(err){
-            console.log(err)
-            test.done()
+            })
         })
     },
 
@@ -519,28 +520,34 @@ module.exports={
         var client=new jsrp.client()  
         client.init({username:username,password:password},
         function(){
-            var token=speakeasy.totp({
-                secret:qrsecret,
-                encoding:'base32'
+            mfa.gen(username)
+            .then(function(){
+                return mfa.get(username)
             })
-            var B=client.getPublicKey()
-           
+            .then(function(results){
+                var token=speakeasy.totp({
+                    secret:results.secret,
+                    encoding:'base32'
+                })
+                var B=client.getPublicKey()
+               
 
-            auth(username,B,token).then(
-                function(results){
-                    test.expect(4);
-                    test.ok(results.salt,"should return salt")
-                    test.ok(results.algorithm,"should return algorithm")
-                    test.ok(results.A,"should return A")
-                    test.ok(results.credentials,"should return credentials")
-                    test.done()
-                },
-                function(err){
-                    test.expect(1);
-                    test.ifError(err)
-                    test.done()
-                }
-            )
+                auth(username,B,token).then(
+                    function(results){
+                        test.expect(4);
+                        test.ok(results.salt,"should return salt")
+                        test.ok(results.algorithm,"should return algorithm")
+                        test.ok(results.A,"should return A")
+                        test.ok(results.credentials,"should return credentials")
+                        test.done()
+                    },
+                    function(err){
+                        test.expect(1);
+                        test.ifError(err)
+                        test.done()
+                    }
+                )
+            })
         })
     },
 
@@ -548,24 +555,35 @@ module.exports={
         var client=new jsrp.client()  
         client.init({username:username,password:password},
             function(){
-            encrypt_message({
-                action:"auth",
-                id:username,
-                B:client.getPublicKey(),
-                token:null
-            })
-            .then(function(text){
-                var event={body:JSON.stringify(text)}
+                mfa.gen(username)
+                .then(function(){
+                    return mfa.get(username)
+                })
+                .then(function(results){
+                    var token=speakeasy.totp({
+                        secret:results.secret,
+                        encoding:'base32'
+                    })
 
-                var callback=function(err,data){
-                    test.ifError(err)
-                    test.done()
-                }
-                handler.handler(event,null,callback)
-            },function(err){
-                console.log(err)
-                test.done()
-            })
+                    encrypt_message({
+                        action:"auth",
+                        id:username,
+                        B:client.getPublicKey(),
+                        token:token
+                    })
+                    .then(function(text){
+                        var event={body:JSON.stringify(text)}
+
+                        var callback=function(err,data){
+                            test.ifError(err)
+                            test.done()
+                        }
+                        handler.handler(event,null,callback)
+                    },function(err){
+                        console.log(err)
+                        test.done()
+                    })
+                })
         })
     }
 }

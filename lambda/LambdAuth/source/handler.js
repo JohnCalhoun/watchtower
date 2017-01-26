@@ -51,7 +51,9 @@ exports.handler = function(event, context,callback) {
  
                 case "valMFA":
                     mfa.val(message.id,message.token)
-                    callback(null)
+                    .then(function(){
+                        callback(null)
+                    },function(err){callback(err)})
                     break;
 
                 case "delete":
