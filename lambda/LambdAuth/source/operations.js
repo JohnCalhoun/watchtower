@@ -25,11 +25,7 @@ var users=sql.define({
             dataType:"text"
         },
         {
-            name:"arn",
-            dataType:"text"
-        },
-        {
-            name:"policy",
+            name:"type",
             dataType:"text"
         },
         {
@@ -94,16 +90,16 @@ exports.get=function(id){
     })
 }
 
-exports.create=function(id,email,salt,verifier,arn,policy){
+exports.create=function(id,email,salt,verifier,group){
+    
     return new Promise(function(resolve,reject){
         var query=users
             .insert(
                 users.id.value(id),
                 users.email.value(email),
-                users.arn.value(arn),
-                users.policy.value(policy),
                 users.reset.value(1),
                 users.salt.value(salt),
+                users.type.value(group),
                 users.verifier.value(verifier)
             ).toQuery()
 

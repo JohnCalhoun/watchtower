@@ -11,7 +11,7 @@ module.exports=function(user,B,token){
             if(val){
                 srp.getSharedKey(B,user)
                 .then(function(result){
-                    role.getCredentials(result.arn,user)
+                    role.getCredentials(user,result.groupId)
                     .then(function(credentials){
                         var cipher=crypto.createCipher(algorithm,result.sharedKey)
                         var ciphertext=cipher.update(JSON.stringify(credentials),'utf8','hex')

@@ -1,7 +1,7 @@
 module.exports={
     lambda:{
         files:[
-            {expand:true,src:["lambda/*/tmp/*_latest.zip"],dest:"tmp"}
+            {expand:true,src:["lambda/*/tmp/*_latest.zip"],dest:"tmp",flatten:true}
         ]
     },
     cloudformation:{

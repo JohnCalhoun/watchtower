@@ -11,5 +11,18 @@
         "arn:aws:execute-api:*:*:*/*/*/proxy/*"
       ]
     }
+    {{#if admin}}
+        ,{
+          "Effect": "Allow",
+          "Action": [
+            "execute-api:Execution-operation"           
+          ],
+          "Resource": [
+            "arn:aws:execute-api:*:*:*/*/*/Manage/*",
+            "arn:aws:execute-api:*:*:*/*/*/admin/*",
+            "arn:aws:execute-api:*:*:*/*/*/proxy/*"
+          ]
+        }
+    {{/if}}
   ]
 }

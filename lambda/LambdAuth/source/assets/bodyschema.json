@@ -13,9 +13,6 @@
             "email":{
                 "type":"string"
             },
-            "arn":{
-                "type":"sting"
-            },
             "salt":{
                 "type":"sting"
             },
@@ -27,6 +24,10 @@
             },
             "B":{
                 "type":"sting"
+            },
+            "group":{
+                "type":"sting",
+                "enum":["admin","user"]
             }
         },
         "required":[

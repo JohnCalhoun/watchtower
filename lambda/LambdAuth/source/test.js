@@ -28,6 +28,8 @@ process.env.DB_USER="manage"
 process.env.DB_NAME='test'
 process.env.KMS_KEY=config.keyArn
 process.env.EMAIL_SOURCE="test@jmc.ninja"
+process.env.ROLE_ARN=config.roleArn
+
 var username='johndoe'
 var password='passowrd'
 
@@ -89,8 +91,7 @@ module.exports={
                             db.email.value('johnmcalhoun123@gmail.com'),
                             db.salt.value(result.salt),
                             db.verifier.value(result.verifier),
-                            db.arn.value(config.roleArn),
-                            db.policy.value(JSON.stringify({})),
+                            db.type.value('admin'),
                             db.reset.value(false),
                             db.mfaSecret.value(secret.base32),
                             db.mfaQrcode.value(qrcode),
@@ -98,7 +99,7 @@ module.exports={
                         ).toString()
                     ].join(';'),
                     function(err){
-                        if(err)console.log(err)
+                        if(err)console.log('start error',err)
                         kms.encrypt({
                             KeyId:process.env.KMS_KEY,
                             Plaintext:config.DBPassword,
@@ -133,6 +134,30 @@ module.exports={
         
         connection.end()
     },
+ 
+    testsrp:function(test){
+        test.expect(1);
+       
+        var client=new jsrp.client()  
+        client.init({username:username,password:password},
+        function(){
+            var B = client.getPublicKey();
+            srp.getSharedKey(B,username)
+            .then(function(result){
+                client.setSalt(result.salt);
+                client.setServerPublicKey(result.publicKey);
+
+                test.equal(
+                    client.getSharedKey(),
+                    result.sharedKey,
+                    "Shared Key should be the same"
+                )
+                test.done()
+            },function(err){console.log(err)})
+        })
+
+    },
+
     testSign:function(test){
         keys(config.keyArn)
         .then(function(keypair){
@@ -266,7 +291,7 @@ module.exports={
     testCreate:function(test){
         test.expect(1);
         
-        ops.create("1","1308180","asdfasdfasdf","arn:aws:12")
+        ops.create("1","1308180","asdfasdfasdf","admin")
         .then(function(){
             test.ok(true)
             test.done()
@@ -476,36 +501,10 @@ module.exports={
             })
         })
     },
- 
-    testsrp:function(test){
-        test.expect(2);
-       
-        var client=new jsrp.client()  
-        client.init({username:username,password:password},
-        function(){
-            var B = client.getPublicKey();
-            srp.getSharedKey(B,username)
-            .then(function(result){
-                client.setSalt(result.salt);
-                client.setServerPublicKey(result.publicKey);
-
-                test.equal(
-                    client.getSharedKey(),
-                    result.sharedKey,
-                    "Shared Key should be the same"
-                )
-                test.ok(result.arn)
-                test.done()
-            },function(err){console.log(err)})
-        })
-
-    },
 
     testrole:function(test){
         test.expect(3);
-        role.getCredentials(
-            config.roleArn,
-            username)
+        role.getCredentials(username,"admin")
         .then(function(result){
             test.ok(result.AccessKeyId)
             test.ok(result.SecretAccessKey)

@@ -7,6 +7,9 @@ module.exports={
     },
     uploadWebsite:{
         command:'aws s3 sync website/build s3://<%= WebsiteBucket %> '
+    },
+    buildLambda:{
+        command:'for dir in lambda/*; do cd lambda/RDSProxy; grunt build;cd ../..; done'
     }
 }
 

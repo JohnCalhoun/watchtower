@@ -18,6 +18,7 @@ module.exports=function(grunt){
         grunt.config.set("DBPasswordWrite", DBPassword=crypto.randomBytes(20).toString('hex'))
     })
     grunt .registerTask('lambda',[
+        "shell:buildLambda", 
         "copy:lambda",
         "shell:uploadLambda"
         ])

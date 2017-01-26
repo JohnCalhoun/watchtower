@@ -3,8 +3,6 @@ var jsrp=require('jsrp')
 var crypto=require('crypto')
 var ops=require('./operations.js')
 var email=require('./email.js')
-var hb=require('handlebars')
-var fs=require('fs')
 var mfa=require('./mfa.js')
 var auth=require('./auth.js')
 var sign=require('./sign.js')
@@ -19,8 +17,6 @@ exports.handler = function(event, context,callback) {
                 case "create":
                     var pass=crypto.randomBytes(20).toString('hex')
                     var client=new jsrp.client()  
-                    var template=hb
-                        .compile(fs.readFileSync(__dirname+"/assets/user-role.json").toString())
                     
                     client.init({username:message.id,password:pass},
                     function(){client.createVerifier(function(err,result){
@@ -29,10 +25,7 @@ exports.handler = function(event, context,callback) {
                             message.email,
                             result.salt,
                             result.verifier,
-                            message.arn,
-                            template({
-                                user:message.id
-                            })
+                            message.group
                         )
                         .then(function(){
                             email.send(message.email,{secret:pass},"invite")
