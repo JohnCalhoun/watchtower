@@ -33,8 +33,7 @@ exports.getSharedKey = function(B,user) {
                         out={
                             salt:results.salt,
                             publicKey:server.getPublicKey(),
-                            sharedKey:server.getSharedKey(),
-                            arn:results.arn
+                            sharedKey:server.getSharedKey()
                         }
                         resolve(out)
                     })

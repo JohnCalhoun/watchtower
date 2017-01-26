@@ -44,8 +44,9 @@ exports.get=function(id){
                         reject(err)
                     }else{
                         var secret=data.Plaintext.toString()
-                        var qrcode=qr.svgObject("otpauth://totp/SecretKey?secret="+secret).path
+                        var qrcode=qr.imageSync("otpauth://totp/SecretKey?secret="+secret).toString('base64')
                         resolve({
+                            email:results.email,
                             secret:secret,
                             qr:qrcode
                         })

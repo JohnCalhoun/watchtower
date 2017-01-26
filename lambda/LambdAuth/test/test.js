@@ -23,7 +23,7 @@ var decrypt=require_helper('decrypt.js')
 var mfa=require_helper('mfa.js')
 var role=require_helper('role.js')
 var srp=require_helper('srp.js')
-var auth=require_helper('auth.js')
+var session=require_helper('session.js')
 var sign=require_helper('sign.js')
 
 var db=ops.db
@@ -169,6 +169,7 @@ module.exports={
         .then(function(keypair){
             process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
             var data={a:"b"}
+             
             var callback=function(err,out){
                 test.expect(2);
                 test.ifError(err)
@@ -180,7 +181,7 @@ module.exports={
                 test.done()
             }
             
-            sign(data,callback)
+            sign(data,callback,{id:username,B:"ad"})
         })
     }, 
 
@@ -208,7 +209,8 @@ module.exports={
     testLambdaMFACreate:function(test){
         encrypt_message({
             action:"createMFA",
-            id:username
+            id:username,
+            B:"ad"
         })
         .then(function(text){
             var event={body:JSON.stringify(text)}
@@ -250,7 +252,7 @@ module.exports={
     testEmail:function(test){
         test.expect(1);
         
-        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
+        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset","Test email")
         .then(function(err){
             test.ifError(err)
             test.done()
@@ -260,7 +262,8 @@ module.exports={
     testLambdaGet:function(test){
         encrypt_message({
             action:"get",
-            id:username
+            id:username,
+            B:"ad"
         })
         .then(function(text){
             var event={body:JSON.stringify(text)}
@@ -524,7 +527,7 @@ module.exports={
         })
     },
 
-    testAuth:function(test){
+    testSession:function(test){
         var client=new jsrp.client()  
         client.init({username:username,password:password},
         function(){
@@ -539,13 +542,10 @@ module.exports={
                 })
                 var B=client.getPublicKey()
 
-                auth(username,B,token).then(
+                session(username,B,token).then(
                     function(results){
-                        test.expect(4);
-                        test.ok(results.salt,"should return salt")
-                        test.ok(results.algorithm,"should return algorithm")
-                        test.ok(results.A,"should return A")
-                        test.ok(results.credentials,"should return credentials")
+                        test.expect(1);
+                        test.ok(results)
                         test.done()
                     },
                     function(err){
@@ -558,7 +558,7 @@ module.exports={
         })
     },
 
-    testLambdaAuth:function(test){
+    testLambdaSession:function(test){
         var client=new jsrp.client()  
         client.init({username:username,password:password},
             function(){
@@ -573,7 +573,7 @@ module.exports={
                     })
 
                     encrypt_message({
-                        action:"auth",
+                        action:"session",
                         id:username,
                         B:client.getPublicKey(),
                         token:token

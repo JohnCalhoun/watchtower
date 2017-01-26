@@ -3,10 +3,9 @@ var ses=new aws.SES({region:process.env.REGION})
 var hb=require('handlebars')
 var fs=require('fs')
 
-exports.send=function(address,data,temp){
+exports.send=function(address,data,temp,subject){
     var template=hb
-            .compile(fs.readFileSync(__dirname+"/assets/"+temp+".hb").toString())
-    
+            .compile(fs.readFileSync(__dirname+"/assets/"+temp+".hb").toString('ascii'))
     var params={
         Destination: { 
             ToAddresses: [address]
@@ -14,11 +13,12 @@ exports.send=function(address,data,temp){
         Message: { 
             Body: { 
                 Html: {
-                    Data:template(data)
+                    Data:template(data),
+                    Charset:"UTF-8"
                 }
             },
             Subject: { 
-                Data: 'Password Reset' 
+                Data: subject
             }
         },
         Source: process.env.EMAIL_SOURCE, 
