@@ -25,7 +25,20 @@ module.exports=function(grunt){
         "shell:startMySQL",
         'nodeunit:all'
     ])
+
+    grunt.registerTask('coverage',[
+        'env:coverage',
+        'instrument',
+        'copy:coverage',
+        'test',
+        "storeCoverage",
+        "makeReport"
+    ])
 }
+
+
+
+
 
 
 

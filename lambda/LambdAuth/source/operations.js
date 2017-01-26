@@ -52,6 +52,7 @@ var run_query=function(query){
                     query.text,
                     query.values,
                     function(err,results){
+                        conn.end()
                         if(err){reject(err)}else{
                             resolve(results)
                         }
@@ -59,6 +60,7 @@ var run_query=function(query){
                 )
             },
             function(err){
+                conn.end()
                 reject(err)
             }
         )

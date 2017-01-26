@@ -1,28 +1,32 @@
 process.env.REGION='us-east-1'
+
 var aws=require('aws-sdk')
 
 var kms=new aws.KMS({region:process.env.REGION})
 
-var config=require('../config.json')
 var mysql=require('mysql')
 var sql=require('sql')
 var jsrp=require('jsrp')
-var handler=require('./handler')
-var ops=require('./operations.js')
-var email=require('./email.js')
-var connect=require('./connect.js')
-var decrypt=require('./decrypt.js')
-var keys=require('./testKeys.js')
 var crypto=require('crypto')
-var mfa=require('./mfa.js')
 var speakeasy=require('speakeasy')
-var role=require('./role.js')
-var srp=require('./srp.js')
-var auth=require('./auth.js')
 var qr=require('qr-image')
-var db=ops.db
-var sign=require('./sign.js')
+var keys=require('./testKeys.js')
 
+var require_helper=require('./require_helper.js')
+var config=require('./config.json')
+
+var handler=require_helper('handler.js')
+var ops=require_helper('operations.js')
+var email=require_helper('email.js')
+var connect=require_helper('connect.js')
+var decrypt=require_helper('decrypt.js')
+var mfa=require_helper('mfa.js')
+var role=require_helper('role.js')
+var srp=require_helper('srp.js')
+var auth=require_helper('auth.js')
+var sign=require_helper('sign.js')
+
+var db=ops.db
 process.env.DB_ENDPOINT="127.0.0.1"
 process.env.DB_USER="manage"
 process.env.DB_NAME='test'
@@ -106,6 +110,7 @@ module.exports={
                             }
                         },function(err,data){
                             process.env.DB_PASSWORD=data.CiphertextBlob.toString('base64')
+                            connection.end()
                             callback() 
                         })
                     }
@@ -126,13 +131,16 @@ module.exports={
             ].join(';'),
             function(err){
                 if(err)console.log(err)
+                connection.end()
                 callback() 
             }
         )
-        
-        connection.end()
     },
- 
+    testEmpty:function(test){
+        test.expect(1);
+        test.ok(true);
+        test.done()
+    },
     testsrp:function(test){
         test.expect(1);
        
@@ -530,7 +538,6 @@ module.exports={
                     encoding:'base32'
                 })
                 var B=client.getPublicKey()
-               
 
                 auth(username,B,token).then(
                     function(results){

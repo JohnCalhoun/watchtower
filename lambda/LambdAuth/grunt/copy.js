@@ -5,5 +5,10 @@ module.exports={
             {expand:true,src:["source/package.json"],dest:"build",flatten:true},
             {expand:true,src:["source/assets/*"],dest:"build/assets",flatten:true},
         ]
+    },
+    coverage:{
+        files:[
+            {expand:true,src:["source/assets/*"],dest:"test/coverage/instrument/source/assets",flatten:true}
+        ]
     }
 }
