@@ -44,9 +44,9 @@ exports.get=function(id){
                         reject(err)
                     }else{
                         var secret=data.Plaintext.toString()
-                        var qrcode=qr.svgObject("otpauth://totp/SecretKey?secret="+results.mfaSecret).path
+                        var qrcode=qr.svgObject("otpauth://totp/SecretKey?secret="+secret).path
                         resolve({
-                            secret:results.mfaSecret,
+                            secret:secret,
                             qr:qrcode
                         })
                     }
@@ -58,15 +58,19 @@ exports.get=function(id){
 
 exports.auth=function(id,token){
     return new Promise(function(resolve,reject){
-        exports.get(id).
+        ops.get(id).
         then(function(results){
             if(results.mfaEnabled){
-                var val=speakeasy.totp.verify({
-                        secret:results.secret,
-                        encoding:'base32',
-                        token:token
-                    })
-                resolve(val)
+                exports.get(id)
+                .then(function(secret){
+                    var val=speakeasy.totp.verify({
+                            secret:secret.secret,
+                            encoding:'base32',
+                            token:token
+                        })
+                    resolve(val)
+                },
+                function(err){reject(err)})
             }else{
                 resolve(true)
             }

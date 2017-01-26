@@ -5,6 +5,7 @@ var fs=require('fs')
 
 exports.getCredentials = function(id,group) {
     var template=hb.compile(fs.readFileSync(__dirname+"/assets/user-role.json").toString())
+
     if(group==="admin"){
         var tempdata={user:id,admin:true}
     }else{
