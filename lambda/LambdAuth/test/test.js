@@ -205,7 +205,38 @@ module.exports={
             })
         })
     },
-  
+ 
+    testMfa2:function(test){
+        mfa.gen(username)
+        .then(function(){
+            return mfa.get(username)
+        })
+        .then(function(results){
+            var token=speakeasy.totp({
+                secret:results.secret,
+                encoding:'base32'
+            })
+            mfa.val(username,token)
+            .then(function(result){
+                 var token=speakeasy.totp({
+                    secret:results.secret,
+                    encoding:'base32'
+                })
+                mfa.auth(username,token)
+                .then(function(result){
+                    test.expect(1)
+                    test.ok(result)
+                    test.done()
+                
+                },function(err){
+                    test.expect(1)
+                    test.ifError(err)
+                    test.done()
+                })
+            })
+        })
+    },
+ 
     testLambdaMFACreate:function(test){
         encrypt_message({
             action:"createMFA",
