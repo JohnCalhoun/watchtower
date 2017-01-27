@@ -3,19 +3,26 @@ var algorithm='aes-256-ctr'
 var validate=require('jsonschema').validate
 var schema=require(__dirname+'/assets/returnschema.json')
 var srp=require('./srp.js')
+var log=require('./log.js')
 
 var aws=require('aws-sdk')
 var kms=new aws.KMS({region:process.env.REGION})
 var hash='RSA-SHA512'
+var algorithm="aes-256-cbc-hmac-sha256"
 
 module.exports=function(output,callback,message){
+    var Error=function(err){
+        log(err,100)
+        callback(true)
+    }
+
     kms.decrypt(
         {
             CiphertextBlob:Buffer.from(process.env.RSA_PRIVATE_KEY,'base64')
         },
         function(err,data){
             if(err){
-                reject(err)
+                Error(err)
             }else{
                 try{ 
                     validate(output,schema,{throwError:true}) 
@@ -23,7 +30,7 @@ module.exports=function(output,callback,message){
                     srp.getSharedKey(message.B,message.id)
                     .then(function(keys){
                         
-                        const cipher = crypto.createCipher('aes192',keys.sharedKey);
+                        const cipher = crypto.createCipher(algorithm,keys.sharedKey);
 
                         var result = cipher.update(JSON.stringify(output), 'utf8', 'hex');
                         result += cipher.final('hex');
@@ -37,13 +44,13 @@ module.exports=function(output,callback,message){
                             hash:hash,
                             signature:sign.sign(privateKey, 'hex'),
                             salt:keys.salt,
-                            publicKey:keys.publicKey
+                            publicKey:keys.publicKey,
+                            algorithm:algorithm
                         }
                         callback(null,out)
-                    },
-                    function(err){callback(err)})
+                    },Error)
                 }catch(err){
-                    callback(err)
+                    Error(err)
                 }
             } 
         }

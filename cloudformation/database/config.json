@@ -9,11 +9,5 @@
     "DBName" :"graph",
     "DBMasterUser" :"root", 
     "DBMasterPassword" :"password", 
-    "SnapshotIdentifier":"false",
- 
-    "DBUserWrite" : "write",
-    "DBPasswordWrite" : "1243275-134715-",
-    "DBUserRead" : "read",
-    "DBPasswordRead" : "45374-57-238457-3"
-
+    "SnapshotIdentifier":"false"
 }

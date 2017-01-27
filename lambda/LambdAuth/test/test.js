@@ -33,6 +33,7 @@ process.env.DB_NAME='test'
 process.env.KMS_KEY=config.keyArn
 process.env.EMAIL_SOURCE="test@jmc.ninja"
 process.env.ROLE_ARN=config.roleArn
+process.env.LOG_LEVEL=0
 
 var username='johndoe'
 var password='passowrd'
@@ -136,6 +137,76 @@ module.exports={
             }
         )
     },
+    testValidate:function(test){
+        var validate=require('jsonschema').validate
+        var schema=require(__dirname+'/../source/assets/messageschema.json')
+        
+        test.ok(!validate({},schema).valid,"reject empty body")
+        
+        test.ok(validate({
+            action:"create",
+            id:"john"
+        },schema).valid,"accept proper action and id")
+     
+        test.ok(!validate({
+            action:"Create",
+            id:"john"
+        },schema).valid,"reject improper action")
+    
+        test.ok(validate({
+            action:"create",
+            id:"john",
+            email:"johnm@john.com"
+        },schema).valid,"accept valid email")
+     
+        test.ok(!validate({
+            action:"create",
+            id:"john",
+            email:"johnm"
+        },schema).valid,"reject invalid email")
+ 
+        test.ok(!validate({
+            action:"create",
+            id:"john",
+            token:"1"
+        },schema).valid,"reject invalid token")
+ 
+        test.ok(validate({
+            action:"create",
+            id:"john",
+            token:"111111",
+            B:"1"
+        },schema).valid,"aceept valid token")
+
+        test.ok(!validate({
+            action:"create",
+            id:"!1john",
+        },schema).valid,"reject invalid username")
+ 
+        test.ok(validate({
+            action:"create",
+            id:"john"
+        },schema).valid,"aceept valid username")
+        
+        try{
+        var schema2=require(__dirname+'/../source/assets/bodyschema.json')
+        }catch(err){console.log(err)} 
+        test.ok(validate({
+            key:"create",
+            algorithm:"aes-256-cbc-hmac-sha256",
+            payload:"a"
+        },schema2).valid,"aceept valid message")
+ 
+        test.ok(!validate({
+            key:"create",
+            algorithm:"john",
+            payload:""
+        },schema2).valid,"reject invalid message")
+
+
+        test.done()
+    },
+
     testEmpty:function(test){
         test.expect(1);
         test.ok(true);
@@ -241,6 +312,7 @@ module.exports={
         encrypt_message({
             action:"createMFA",
             id:username,
+            token:"111111",
             B:"ad"
         })
         .then(function(text){
@@ -395,7 +467,7 @@ module.exports={
         encrypt_message({
             action:"changeEmail",
             id:username,
-            email:username
+            email:"test@test.com"
         })
         .then(function(text){
             var event={body:JSON.stringify(text)}
@@ -504,13 +576,14 @@ module.exports={
                 payload_object={
                             action:"get",
                             id:username,
-                            verifier:client.getPublicKey()
+                            verifier:client.getPublicKey(),
+                            salt:"test"
                         }
                 payload=JSON.stringify(payload_object)
 
                 //generate symetric key
                 var pass=crypto.randomBytes(20).toString('hex')
-                var algorithm='aes-256-ctr'
+                var algorithm='aes-256-cbc-hmac-sha256'
 
                 //encrypt payload with symetric key
                 var cipher = crypto.createCipher(algorithm,pass)

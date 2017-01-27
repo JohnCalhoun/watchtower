@@ -1,39 +1,21 @@
 {
-"anyOf":[
-    {
-        "type":"object",
-        "properties":{
-            "action":{
-                "type":"string",
-                "enum":["create","delete","changePassword","changeEmail","resetPassword","get","createMFA","valMFA","session"]
-            },
-            "id":{
-                "type":"string"
-            },
-            "email":{
-                "type":"string"
-            },
-            "salt":{
-                "type":"sting"
-            },
-            "verifier":{
-                "type":"sting"
-            },
-            "token":{
-                "type":"sting"
-            },
-            "B":{
-                "type":"sting"
-            },
-            "group":{
-                "type":"sting",
-                "enum":["admin","user"]
-            }
+    "type":"object",
+    "properties":{
+        "key":{
+            "type":"string",
+            "minLength":1
         },
-        "required":[
-            "action","id"
-        ],
-        "additionalProperties":false
-    }    
-]
-}
+        "algorithm":{
+            "type":"string",
+            "enum":["aes-256-cbc-hmac-sha256"]
+        },
+        "payload":{
+            "type":"string",
+            "minLength":1
+        }
+    },
+    "required":[
+        "key","algorithm","payload"
+    ],    
+    "additionalProperties":false
+}    

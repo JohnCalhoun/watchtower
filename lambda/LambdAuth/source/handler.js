@@ -6,7 +6,7 @@ var email=require('./email.js')
 var mfa=require('./mfa.js')
 var session=require('./session.js')
 var sign=require('./sign.js')
-
+var log=require('./log.js')
 actions={}
 
 actions.create=function(message,callback){
@@ -48,7 +48,7 @@ actions.valMFA=function(message,callback){
     mfa.val(message.id,message.token)
     .then(function(){
         callback(null)
-    },function(err){callback(err)})
+    },Error)
 }
 
 actions.delete=function(message,callback){
@@ -125,7 +125,10 @@ actions.session=function(message,callback){
 } 
 
 exports.handler = function(event, context,callback) {
-    var Error=function(err){callback(err)}
+    var Error=function(err){
+        log(err,100)
+        callback(true)
+    }
     
     decrypt(JSON.parse(event.body)).then(
         function(message){

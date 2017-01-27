@@ -3,7 +3,7 @@
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Ref":"ArtifactsBucket"},
-            "S3Key":"disclosure/lambda/lambda-initdatabase.zip"
+            "S3Key":"watchtower/lambda/lambda-initdatabase_latest.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
                 "initdatabase", 
@@ -11,7 +11,7 @@
             ]]},
         "Handler" : "handler.handler",
         "MemorySize" : "128",
-        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Role" : {"Fn::GetAtt":["LambdaEncrypt","Arn"]},
         "Runtime" : "nodejs4.3",
         "Timeout" : "100",
         "VpcConfig":{
@@ -34,11 +34,11 @@
         },
         "Environment":{
             "Variables":{
-                "DB_ENDPOINT":"",
-                "DB_USER":"",
-                "DB_PASSWORD":"",
-                "DB_NAME":"",
-                "KMS_KEY":""
+                "DB_ENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+                "DB_USER":{ "Ref" : "DBMasterUser" },
+                "DB_PASSWORD":{ "Ref" : "DBMasterPassword" },
+                "DB_NAME":{ "Ref" : "DBName" },
+                "KMS_KEY":{"Fn::GetAtt":["key","Arn"]}
             }
         }
     }

@@ -13,12 +13,7 @@ module.exports={
                     "ParameterKey=DBName,ParameterValue=<%= DBName %>",
                     "ParameterKey=DBMasterPassword,ParameterValue=<%= DBMasterPassword %>",
                     "ParameterKey=DBMasterUser,ParameterValue=<%= DBMasterUser %>",
-                    "ParameterKey=SnapshotIdentifier,ParameterValue=<%= SnapshotIdentifier %>",
-                    "ParameterKey=DBUserWrite,ParameterValue=<%= DBUserWrite %>" ,
-                    "ParameterKey=DBPasswordWrite,ParameterValue=<%= DBPasswordWrite %>" ,
-                    "ParameterKey=DBUserRead,ParameterValue=<%= DBUserRead %>" ,
-                    "ParameterKey=DBPasswordRead,ParameterValue=<%= DBPasswordRead %>" 
-
+                    "ParameterKey=SnapshotIdentifier,ParameterValue=<%= SnapshotIdentifier %>"
                 ].join(' ')
     },
     updateStack:{
@@ -34,11 +29,7 @@ module.exports={
                     "ParameterKey=DBName,ParameterValue=<%= DBName %>",
                     "ParameterKey=DBMasterPassword,ParameterValue=<%= DBMasterPassword %>",
                     "ParameterKey=DBMasterUser,ParameterValue=<%= DBMasterUser %>",
-                    "ParameterKey=SnapshotIdentifier,ParameterValue=<%= SnapshotIdentifier %>",
-                    "ParameterKey=DBUserWrite,ParameterValue=<%= DBUserWrite %>" ,
-                    "ParameterKey=DBPasswordWrite,ParameterValue=<%= DBPasswordWrite %>" ,
-                    "ParameterKey=DBUserRead,ParameterValue=<%= DBUserRead %>" ,
-                    "ParameterKey=DBPasswordRead,ParameterValue=<%= DBPasswordRead %>" 
+                    "ParameterKey=SnapshotIdentifier,ParameterValue=<%= SnapshotIdentifier %>"
                 ].join(' ')
     },
     deleteStack:{

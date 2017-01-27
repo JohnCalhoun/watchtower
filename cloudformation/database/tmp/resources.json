@@ -43,21 +43,66 @@
             ]]}
         ]
     }
-},
-"DBTables":{
-    "Type": "Custom::DBInit",
-    "Properties": {
-        "ServiceToken":{"Fn::GetAtt":["InitDataBase","Arn"]},
-        "type":"data"
+}
+,
+"key":{
+    "Type" : "AWS::KMS::Key",
+    "Properties" : {
+        "Description" : "Encryption key",
+        "Enabled" : true,
+        "EnableKeyRotation" : false,
+        "KeyPolicy" : {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Principal": {"AWS":[
+                    {"Fn::GetAtt":["LambdaEncrypt","Arn"]} 
+                ]},
+                "Action": [
+                    "kms:Encrypt",
+                ],
+                "Resource": "*"
+            },
+            {
+                "Sid": "Enable IAM User Permissions",
+                "Effect": "Allow",
+                "Principal": {"AWS": 
+                    {"Fn::Join":["",[
+                        "arn:aws:iam::",
+                        {"Ref":"AWS::AccountId"},
+                        ":root"
+                    ]]}
+                },
+                "Action": "kms:*",
+                "Resource": "*"
+            },
+            {
+                "Sid": "Enable IAM User Permissions",
+                "Effect": "Deny",
+                "Principal": {"AWS": 
+                    {"Fn::Join":["",[
+                        "arn:aws:iam::",
+                        {"Ref":"AWS::AccountId"},
+                        ":root"
+                    ]]}
+                },
+                "Action": "kms:Decrypt",
+                "Resource": "*"
+            }
+            ]
+        }
     }
 }
+
+
+
 ,
 "InitDataBase":{
       "Type" : "AWS::Lambda::Function",
       "Properties" : {
         "Code" : {
             "S3Bucket":{"Ref":"ArtifactsBucket"},
-            "S3Key":"disclosure/lambda/lambda-initdatabase.zip"
+            "S3Key":"watchtower/lambda/lambda-initdatabase_latest.zip"
         },
         "FunctionName":{"Fn::Join":["-",[
                 "initdatabase", 
@@ -65,7 +110,7 @@
             ]]},
         "Handler" : "handler.handler",
         "MemorySize" : "128",
-        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
+        "Role" : {"Fn::GetAtt":["LambdaEncrypt","Arn"]},
         "Runtime" : "nodejs4.3",
         "Timeout" : "100",
         "VpcConfig":{
@@ -88,86 +133,36 @@
         },
         "Environment":{
             "Variables":{
-                "DBNAME":{ "Ref" : "DBName" }, 
-                "DBUSER":{ "Ref" : "DBMasterUser" },
-                "DBPASSWORD":{ "Ref" : "DBMasterPassword" },
-                "DBENDPOINT":{ "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+                "DB_ENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+                "DB_USER":{ "Ref" : "DBMasterUser" },
+                "DB_PASSWORD":{ "Ref" : "DBMasterPassword" },
+                "DB_NAME":{ "Ref" : "DBName" },
+                "KMS_KEY":{"Fn::GetAtt":["key","Arn"]}
             }
         }
     }
-},
-"RDSProxyReadyOnly":{
-      "Type" : "AWS::Lambda::Function",
-      "Properties" : {
-        "Code" : {
-            "S3Bucket":{"Ref":"ArtifactsBucket"},
-            "S3Key":"disclosure/lambda/lambda-rdsproxy.zip"
+}        
+,
+"LambdaEncrypt":{
+    "Type": "AWS::IAM::Role",
+    "Properties": {
+         "AssumeRolePolicyDocument": { 
+            "Version" : "2012-10-17",
+            "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": [ "lambda.amazonaws.com" ]
+                },
+                "Action": [ "sts:AssumeRole" ]
+            }]
         },
-        "FunctionName":{"Fn::Join":["-",[
-                "RDSProxyReadyOnly", 
-                {"Ref":"AWS::StackName"}
-            ]]},
-        "Handler" : "handler.handler",
-        "MemorySize" : "128",
-        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
-        "Runtime" : "nodejs4.3",
-        "Timeout" : "100",
-        "VpcConfig":{
-            "SecurityGroupIds":[
-                {"Ref":"RDSlambdaSG"} 
-            ],
-            "SubnetIds":[
-                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet1"}},
-                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet2"}}
-            ]
-        },
-        "Environment":{
-            "Variables":{
-                "DBNAME":{ "Ref" : "DBName" }, 
-                "DBUSER":{ "Ref" : "DBUserRead" },
-                "DBPASSWORD":{ "Ref" : "DBPasswordRead" },
-                "DBENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]}
-            }
-        }
-      }
-},
-"RDSProxyWrite":{
-      "Type" : "AWS::Lambda::Function",
-      "Properties" : {
-        "Code" : {
-            "S3Bucket":{"Ref":"ArtifactsBucket"},
-            "S3Key":"disclosure/lambda/lambda-rdsproxy.zip"
-        },
-        "FunctionName":{"Fn::Join":["-",[
-                "RDSProxyWrite", 
-                {"Ref":"AWS::StackName"}
-            ]]},
-        "Handler" : "handler.handler",
-        "MemorySize" : "128",
-        "Role" : {"Fn::GetAtt":["RDSProxyRole","Arn"]},
-        "Runtime" : "nodejs4.3",
-        "Timeout" : "100",
-        "VpcConfig":{
-            "SecurityGroupIds":[
-                {"Ref":"RDSlambdaSG"} 
-            ],
-            "SubnetIds":[
-                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet1"}},
-                {"Fn::ImportValue":{"Fn::Sub":"${NetworkStackName}-subnet2"}}
-            ]
-        },
-        "Environment":{
-            "Variables":{
-                "DBNAME":{ "Ref" : "DBName" }, 
-                "DBUSER":{ "Ref" : "DBUserWrite" },
-                "DBPASSWORD":{ "Ref" : "DBPasswordWrite" },
-                "DBENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]}
-            }
-        }
+        "Path": "/",
+        "ManagedPolicyArns":[
+            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
+            "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        ]
     }
 }
-
-        
 ,
 "DBSG":{
     "Type" : "AWS::EC2::SecurityGroup",
@@ -186,26 +181,6 @@
                     {"Fn::Sub":"${NetworkStackName}-VPC"}
                 }
             ]]}
-    }
-},
-"RDSProxyRole":{
-    "Type": "AWS::IAM::Role",
-    "Properties": {
-         "AssumeRolePolicyDocument": { 
-            "Version" : "2012-10-17",
-            "Statement": [ {
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": [ "lambda.amazonaws.com" ]
-                },
-                "Action": [ "sts:AssumeRole" ]
-            }]
-        },
-        "Path": "/",
-        "ManagedPolicyArns":[
-            "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-        ]
     }
 },
 "RDSlambdaSG":{

@@ -1,7 +1,7 @@
 var crypto=require('crypto')
 var algorithm='aes-256-ctr'
 var validate=require('jsonschema').validate
-var schema=require(__dirname+'/assets/bodyschema.json')
+var schema=require(__dirname+'/assets/messageschema.json')
 
 var aws=require('aws-sdk')
 var kms=new aws.KMS({region:process.env.REGION})

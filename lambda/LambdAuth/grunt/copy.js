@@ -8,7 +8,7 @@ module.exports={
     },
     coverage:{
         files:[
-            {expand:true,src:["source/assets/*"],dest:"test/coverage/instrument/source/assets",flatten:true}
+            {expand:true,cwd:"source/assets",src:["**/*"],dest:"test/coverage/instrument/source/assets",flatten:false}
         ]
     }
 }

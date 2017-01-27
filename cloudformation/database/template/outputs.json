@@ -1,22 +1,2 @@
 "Outputs":{
-    "ReadLambda":{
-        "Description":"The lambda to read from database",
-        "Value":{"Fn::GetAtt": ["RDSProxyReadyOnly", "Arn"]},
-        "Export":{
-            "Name":{"Fn::Join":["-",[
-                {"Ref":"AWS::StackName"},
-                "ReadLambda"
-            ]]}
-        }
-    },
-    "WriteLambda":{
-        "Description":"The lambda to write to the database",
-        "Value":{"Fn::GetAtt": ["RDSProxyWrite", "Arn"]},
-        "Export":{
-            "Name":{"Fn::Join":["-",[
-                {"Ref":"AWS::StackName"},
-                "WriteLambda"
-            ]]}
-        }
-    }
 },

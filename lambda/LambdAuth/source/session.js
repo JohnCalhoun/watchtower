@@ -19,7 +19,7 @@ module.exports=function(user,B,token){
                     },Error)
                 },Error)
             }else{
-             resolve(false)
+                resolve(false)
             }
         },Error)
     })
