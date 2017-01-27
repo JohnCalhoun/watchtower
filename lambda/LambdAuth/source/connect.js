@@ -3,7 +3,7 @@ var aws=require('aws-sdk')
 
 var kms=new aws.KMS({region:process.env.REGION})
 
-module.exports=function(){
+var get_password=function(){
     return new Promise(function(resolve,reject){
          kms.decrypt(
             {
@@ -16,21 +16,38 @@ module.exports=function(){
                 if(err){
                     reject(err)
                 }else{
-                    var connection=mysql.createConnection({
-                        host:process.env.DB_ENDPOINT,
-                        user:process.env.DB_USER,
-                        password:data.Plaintext,
-                        database:process.env.DB_NAME
-                    })
-                    connection.connect(function(err){
-                        if(err){reject(err)}else{
-                            resolve(connection)
-                        }
-                    })
+                    resolve(data.Plaintext)
                 }
             }
         )
     })
+}
+
+var connect=function(password){
+    return new Promise(function(resolve,reject){
+        var connection=mysql.createConnection({
+            host:process.env.DB_ENDPOINT,
+            user:process.env.DB_USER,
+            password:password,
+            database:process.env.DB_NAME
+        })
+        connection.connect(function(err){
+            if(err){
+                reject(err)
+            }else{
+                resolve(connection)
+            }
+        })
+    })
+}
+
+module.exports=function(){
+    var out=get_password()
+    .then(function(password){
+        return(connect(password)) 
+    })
+    
+    return out
 }
 
 

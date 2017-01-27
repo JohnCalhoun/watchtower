@@ -9,6 +9,21 @@ var sign=require('./sign.js')
 var log=require('./log.js')
 actions={}
 
+var Error=function(callback){
+    return function(err){
+        console.log(err)
+        callback(true)
+    }
+}
+exports.Error=Error
+
+var Success=function(callback){
+    return function(){
+        callback(null)
+    }
+}
+exports.Success=Success
+
 actions.create=function(message,callback){
     var pass=crypto.randomBytes(20).toString('hex')
     var client=new jsrp.client()  
@@ -23,49 +38,45 @@ actions.create=function(message,callback){
             message.group
         )
         .then(function(){
-            email.send(message.email,{secret:pass,user:message.id},"invite")
-                .then(function(){
-                    callback(null)
-                },Error)
-        },Error)
+            return email.send(message.email,{secret:pass,user:message.id},"invite")
+        })
+        .then(Success(callback))
+        .then(null,Error(callback))
     })})
 }
 
 actions.createMFA=function(message,callback){
     mfa.gen(message.id)
     .then(function(){
-        mfa.get(message.id)
-        .then(function(results){
-            sign({
-                secret:results.secret,
-                qr:results.qr
-            },callback,message) 
-        },Error)
-    },Error)
+        return mfa.get(message.id)
+    })
+    .then(function(results){
+        sign({
+            secret:results.secret,
+            qr:results.qr
+        },callback,message) 
+    })
+    .then(null,Error(callback))
 }
 
 actions.valMFA=function(message,callback){
     mfa.val(message.id,message.token)
-    .then(function(){
-        callback(null)
-    },Error)
+    .then(Success(callback))
+    .then(null,Error(callback))
 }
 
 actions.delete=function(message,callback){
-    ops.remove(
-        message.id)
-    .then(function(){
-        callback(null) 
-    },Error)
+    ops.remove(message.id)
+    .then(Success(callback))
+    .then(null,Error(callback))
 }
 
 actions.changeEmail=function(message,callback){
     ops.update(
         message.id,
         {email:message.email})
-    .then(function(){
-        callback(null) 
-    },Error)
+    .then(Success(callback))
+    .then(null,Error(callback))
 } 
     
 
@@ -75,9 +86,8 @@ actions.changePassword=function(message,callback){
         {salt:message.salt,
         verifier:message.verifier,
         reset:0})
-    .then(function(){
-        callback(null) 
-    },Error)
+    .then(Success(callback))
+    .then(null,Error(callback))
 } 
     
 
@@ -94,50 +104,44 @@ actions.resetPassword=function(message,callback){
             reset:1,
             mfaEnabled:false})
         .then(function(){
-            ops.get(message.id)
-            .then(function(results){
-                email.send(results.email,{secret:pass},"reset")
-                    .then(function(){
-                        callback(null)
-                    },Error)
-            },Error)
-        },Error)
+            return ops.get(message.id)
+        })
+        .then(function(results){
+            return email.send(results.email,{secret:pass},"reset")
+        })
+        .then(Success(callback))
+        .then(null,Error(callback))
     })})
 } 
     
 
 actions.get=function(message,callback){
-    ops.get(
-        message.id)
+    ops.get(message.id)
     .then(function(result){
         sign({
             id:result.id,
             email:result.email
         },callback,message) 
-    },Error)
+    })
+    .then(null,Error(callback))
 } 
 
 actions.session=function(message,callback){
-    session(message.id,message.B,message.token).then(
-        function(results){  
-            sign(results,callback,message)
-        },Error)
+    session(message.id,message.B,message.token)
+    .then(function(results){  
+        sign(results,callback,message)
+    })
+    .then(null,Error(callback))
 } 
 
+exports.actions=actions
+
 exports.handler = function(event, context,callback) {
-    var Error=function(err){
-        log(err,100)
-        callback(true)
-    }
-    
-    decrypt(JSON.parse(event.body)).then(
-        function(message){
-            try{
-                actions[message.action](message,callback) 
-            }catch(err){
-                callback(err)
-            }
-        },Error)
+    decrypt(JSON.parse(event.body))
+    .then(function(message){
+        actions[message.action](message,callback) 
+    })
+    .then(null,Error(callback))
 }
 
 

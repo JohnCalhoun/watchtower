@@ -1,7 +1,4 @@
 var jsrp=require('jsrp')
-var sql=require('sql')
-sql.setDialect('mysql')
-var mysql=require('mysql')
 var ops=require('./operations.js')
 
 var aws=require('aws-sdk')

@@ -5,11 +5,11 @@ var ops=require('./operations')
 var aws=require('aws-sdk')
 var kms=new aws.KMS({region:process.env.REGION})
 
-exports.gen=function(id){
-    return new Promise(function(resolve,reject){ 
+var kms_encrypt=function(input,id){
+    return new Promise(function(resolve,reject){
         kms.encrypt({
             KeyId:process.env.KMS_KEY,
-            Plaintext:speakeasy.generateSecret().base32,
+            Plaintext:input,
             EncryptionContext:{
                 id:id,
                 type:"MFA_Secret"
@@ -18,86 +18,101 @@ exports.gen=function(id){
             if(err){
                 reject(err)
             }else{
-                ops.update(id,{
-                    mfaSecret:data.CiphertextBlob.toString('base64'),
-                    mfaEnabled:false
-                }).then(function(){resolve()},function(err){reject(err)})
+                resolve(data.CiphertextBlob.toString('base64'))
             }
         })
+    })
+}
+
+exports.gen=function(id){
+    var out=kms_encrypt(speakeasy.generateSecret().base32,id)
+    .then(function(ciphertext){
+        return ops.update(id,{
+            mfaSecret:ciphertext,
+            mfaEnabled:false
+        })
+    })
+
+    return(out)
+}
+
+var kms_decrypt=function(text,id){
+    return new Promise(function(resolve,reject){
+        kms.decrypt(
+            {
+                CiphertextBlob:Buffer.from(text,'base64'),
+                EncryptionContext:{
+                    id:id,
+                    type:"MFA_Secret"
+                }
+            },
+            function(err,data){
+                if(err){
+                    reject(err)
+                }else{
+                    resolve(data.Plaintext.toString())
+                }
+            }
+        )
     })
 }
 
 exports.get=function(id){
+    var out=ops.get(id)
+    .then(function(results){
+        return kms_decrypt(results.mfaSecret,id)
+    })
+    .then(function(secret){
+        return({
+            secret:secret,
+            qr:qr.imageSync("otpauth://totp/SecretKey?secret="+secret).toString('base64')
+        })
+    })
+    return(out)
+}
+
+var check=function(id,enabled,token){
     return new Promise(function(resolve,reject){
-        ops.get(id).then(
-        function(results){
-            kms.decrypt(
-                {
-                    CiphertextBlob:Buffer.from(results.mfaSecret,'base64'),
-                    EncryptionContext:{
-                        id:id,
-                        type:"MFA_Secret"
-                    }
-                },
-                function(err,data){
-                    if(err){
-                        reject(err)
-                    }else{
-                        var secret=data.Plaintext.toString()
-                        var qrcode=qr.imageSync("otpauth://totp/SecretKey?secret="+secret).toString('base64')
-                        resolve({
-                            email:results.email,
-                            secret:secret,
-                            qr:qrcode
-                        })
-                    }
+        if(enabled){
+            exports.get(id)
+            .then(function(secret){
+                var val=speakeasy.totp.verify({
+                        secret:secret.secret,
+                        encoding:'base32',
+                        token:token
+                    })
+                if(val){
+                    resolve(true)
+                }else{
+                    reject("Authenication Failed")
                 }
-            )
-        },function(err){reject(err)})
+            },
+            reject)
+        }else{
+            resolve(true)
+        }
     })
 }
 
 exports.auth=function(id,token){
-    return new Promise(function(resolve,reject){
-        ops.get(id).
-        then(function(results){
-            if(results.mfaEnabled){
-                exports.get(id)
-                .then(function(secret){
-                    var val=speakeasy.totp.verify({
-                            secret:secret.secret,
-                            encoding:'base32',
-                            token:token
-                        })
-                    resolve(val)
-                },
-                function(err){reject(err)})
-            }else{
-                resolve(true)
-            }
-        },function(err){
-            reject(err)
-        })
+    var out=ops.get(id).
+    then(function(results){
+        return(check(id,results.mfaEnabled,token)) 
     })
+
+    return(out)
 }
 
 exports.val=function(id,token){
-    return new Promise(function(resolve,reject){
-        exports.auth(id,token).
-        then(function(results){
-            if(results){
-                ops.update(id,{mfaEnabled:true}).
-                then(function(){
-                    resolve(true)
-                },function(err){
-                    reject(err) 
-                })
-            }else{
-                resolve(false)
-            }
-        },function(err){
-            reject(err)
+     
+    var out=exports.auth(id,token)
+        .then(function(results){
+            return(ops.update(id,{mfaEnabled:true}))
         })
-    })
+        .then(function(){
+            return(true)
+        })
+
+    return(out)
 }
 
