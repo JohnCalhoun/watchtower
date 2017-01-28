@@ -32,7 +32,7 @@ process.env.KMS_KEY=config.keyArn
 process.env.RSA_KMS_KEY=config.keyArn
 process.env.ROLE_ARN=config.roleArn
 process.env.EMAIL_SOURCE="test@jmc.ninja"
-process.env.LOG_LEVEL=0
+process.env.LOG_LEVEL='warn'
 
 var username='johndoe'
 var password='passowrd'
@@ -72,61 +72,63 @@ var verifier_promise=new Promise(function(resolve,reject){
     )
 })
 module.exports={
-    testEncrypt:function(test){
-        test.expect(1)
-        KMS.encrypt("test")
-        .then(function(cipher){
-            test.ok(cipher.toString("base32"))
-            test.done()
-        })
-    },
-    
-    testEncryptFail:function(test){
-        test.expect(1)
-        process.env.KMS_KEY="adf"
-        KMS.encrypt("test")
-        .then(null,function(err){
-            process.env.KMS_KEY=config.keyArn
-            test.ok(err)
-            test.done()
-        })
-    },
-    
-    testDecrypt:function(test){
-        test.expect(1)
-        var test="test"
-
-        KMS.encrypt(test)
-        .then(function(cipher){
-            KMS.decrypt(cipher)
-            .then(function(result){
-                test.equal(test,result)
+    testKMS:{
+        testEncrypt:function(test){
+            test.expect(1)
+            KMS.encrypt("test")
+            .then(function(cipher){
+                test.ok(cipher.toString("base32"))
                 test.done()
             })
-        })
-   },
-
-    testHandlerError:function(test){ 
-        var callback=function(err){
+        },
+        
+        testEncryptFail:function(test){
             test.expect(1)
-            test.ok(err)
-            test.done()
-        }
-        handler.Error(callback)("you should see this")
-    },
-    testHandlerSuccess:function(test){ 
-        var callback=function(err){
+            process.env.KMS_KEY="adf"
+            KMS.encrypt("test")
+            .then(null,function(err){
+                process.env.KMS_KEY=config.keyArn
+                test.ok(err)
+                test.done()
+            })
+        },
+        
+        testDecrypt:function(test){
             test.expect(1)
-            test.ifError(err)
-            test.done()
-        }
-        handler.Success(callback)("you should not see this")
-    },
+            var text="test"
 
+            KMS.encrypt(text)
+            .then(function(cipher){
+                KMS.decrypt(cipher)
+                .then(function(result){
+                    test.equal(text,result)
+                    test.done()
+                })
+            })
+        }
+    },
+    testHandler:{
+        testError:function(test){ 
+            var callback=function(err){
+                test.expect(1)
+                test.ok(err)
+                test.done()
+            }
+            handler.Error(callback)("you should see this")
+        },
+        testSuccess:function(test){ 
+            var callback=function(err){
+                test.expect(1)
+                test.ifError(err)
+                test.done()
+            }
+            handler.Success(callback)("you should not see this")
+        }
+    },
     testlog:function(test){
         var log=require_helper('log.js')
-        log("you should see this",process.env.LOG_LEVEL+1)  
-        log("you should not see this",process.env.LOG_LEVEL-1)  
+        log.log("you should see this",log.levels.error)  
+        log.log("you should not see this",log.levels.info)  
         test.done()
     },
     testrole:function(test){
@@ -141,83 +143,102 @@ module.exports={
             console.log(err) 
         })
     },
+    testDecrypt:{
+        testSkip:function(test){
+           var message={
+                id:'john',
+                token:'111111',
+                B:"11"
+            }
+            decrypt(message)
+            .then(function(data){
+                test.expect(2);
+                test.ok(data)
+                test.equal(data.action,'session')
+                test.done()
+            },
+            function(err){
+                test.expect(1);
+                test.ifError(err);
+                test.done()
+            })
+        },
+        testSuccess:function(test){
+            key_promise.then(function(keypair){
+                var client=new jsrp.client()  
+                client.init({username:username,password:password},
+                function(){
+                    payload_object={
+                                action:"get",
+                                id:username,
+                                verifier:client.getPublicKey(),
+                                salt:"test"
+                            }
+                    payload=JSON.stringify(payload_object)
 
-    testDecrypt:function(test){
-        key_promise.then(function(keypair){
-            var client=new jsrp.client()  
-            client.init({username:username,password:password},
-            function(){
-                payload_object={
-                            action:"get",
-                            id:username,
-                            verifier:client.getPublicKey(),
-                            salt:"test"
+                    //generate symetric key
+                    var pass=crypto.randomBytes(20).toString('hex')
+                    var algorithm='aes-256-cbc-hmac-sha256'
+
+                    //encrypt payload with symetric key
+                    var cipher = crypto.createCipher(algorithm,pass)
+                    var ciphertext = cipher.update(payload,'utf8','hex')
+                    ciphertext += cipher.final('hex');
+
+                    //encrypt symetric key with private key
+                    var cipherKey=crypto.publicEncrypt(keypair.publicKey,new Buffer(pass)).toString('base64')
+
+                    var body={
+                            payload:ciphertext,
+                            key:cipherKey,
+                            algorithm:algorithm
                         }
-                payload=JSON.stringify(payload_object)
-
-                //generate symetric key
-                var pass=crypto.randomBytes(20).toString('hex')
-                var algorithm='aes-256-cbc-hmac-sha256'
-
-                //encrypt payload with symetric key
-                var cipher = crypto.createCipher(algorithm,pass)
-                var ciphertext = cipher.update(payload,'utf8','hex')
-                ciphertext += cipher.final('hex');
-
-                //encrypt symetric key with private key
-                var cipherKey=crypto.publicEncrypt(keypair.publicKey,new Buffer(pass)).toString('base64')
-
-                var body={
-                        payload:ciphertext,
-                        key:cipherKey,
-                        algorithm:algorithm
-                    }
-                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
-                process.env.RSA_KMS_KEY=config.keyArn
-                
-                decrypt(body)
-                .then(function(data){
-                    test.expect(2);
-                    test.equal(payload_object.id,data.id)
-                    test.equal(payload_object.verifiver,data.verifiver)
-                    test.done()
-                },
-                function(err){
-                    test.expect(1);
-                    test.ifError(err);
-                    test.done()
+                    process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+                    process.env.RSA_KMS_KEY=config.keyArn
+                    
+                    decrypt(body)
+                    .then(function(data){
+                        test.expect(2);
+                        test.equal(payload_object.id,data.id)
+                        test.equal(payload_object.verifiver,data.verifiver)
+                        test.done()
+                    },
+                    function(err){
+                        test.expect(1);
+                        test.ifError(err);
+                        test.done()
+                    })
                 })
             })
-        })
-    },
-    testDecryptFail1:function(test){
-        test.expect(1);
-        process.env.RSA_PRIVATE_KEY=""
-        
-        decrypt("")
-        .then(null,
-        function(err){
-            test.ok(err);
-            test.done()
-        })
-    },
-    testDecryptFail2:function(test){
-        key_promise.then(function(keypair){
-            var client=new jsrp.client()  
-            client.init({username:username,password:password},
-            function(){
-                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
-         
-                decrypt("")
-                .then(null,
-                function(err){
-                    test.ok(err);
-                    test.done()
+        },
+        testFail1:function(test){
+            test.expect(1);
+            process.env.RSA_PRIVATE_KEY=""
+            
+            decrypt("")
+            .then(null,
+            function(err){
+                test.ok(err);
+                test.done()
+            })
+        },
+        testFail2:function(test){
+            key_promise.then(function(keypair){
+                var client=new jsrp.client()  
+                client.init({username:username,password:password},
+                function(){
+                    process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+             
+                    decrypt("")
+                    .then(null,
+                    function(err){
+                        test.ok(err);
+                        test.done()
+                    })
                 })
             })
-        })
+        }
     },
-
     testEmail:function(test){
         test.expect(1);
         
@@ -559,51 +580,52 @@ module.exports={
                 test.done()
             })
         },
+        testSession:{ 
+            testSuccess:function(test){
+                var client=new jsrp.client()  
+                client.init({username:username,password:password},
+                function(){
+                    mfa.gen(username)
+                    .then(function(){
+                        return mfa.get(username)
+                    })
+                    .then(function(results){
+                        var token=speakeasy.totp({
+                            secret:results.secret,
+                            encoding:'base32'
+                        })
+                        var B=client.getPublicKey()
 
-        testSession:function(test){
-            var client=new jsrp.client()  
-            client.init({username:username,password:password},
-            function(){
+                        session(username,B,token).then(
+                            function(results){
+                                test.expect(1);
+                                test.ok(results)
+                                test.done()
+                            },
+                            function(err){
+                                test.expect(1);
+                                test.ifError(err)
+                                test.done()
+                            }
+                        )
+                    })
+                })
+            },
+            testFail:function(test){
                 mfa.gen(username)
                 .then(function(){
-                    return mfa.get(username)
+                    return(ops.update(username,{mfaEnabled:true}))
                 })
+                .then(function(){
+                    return(session(username,"1","111111"))
+                })     
                 .then(function(results){
-                    var token=speakeasy.totp({
-                        secret:results.secret,
-                        encoding:'base32'
-                    })
-                    var B=client.getPublicKey()
-
-                    session(username,B,token).then(
-                        function(results){
-                            test.expect(1);
-                            test.ok(results)
-                            test.done()
-                        },
-                        function(err){
-                            test.expect(1);
-                            test.ifError(err)
-                            test.done()
-                        }
-                    )
-                })
-            })
-        },
-        testSessionFail:function(test){
-            mfa.gen(username)
-            .then(function(){
-                return(ops.update(username,{mfaEnabled:true}))
-            })
-            .then(function(){
-                return(session(username,"1","111111"))
-            })     
-            .then(function(results){
-                    test.expect(1);
-                    test.ok(!results)
-                    test.done()
-                }
-            )  
+                        test.expect(1);
+                        test.ok(!results)
+                        test.done()
+                    }
+                )  
+            }
         },
         testLambda:{
             setUp:function(callback){

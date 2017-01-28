@@ -11,7 +11,7 @@ actions={}
 
 var Error=function(callback){
     return function(err){
-        console.log(err)
+        log.log(err,log.levels.error)
         callback(true)
     }
 }

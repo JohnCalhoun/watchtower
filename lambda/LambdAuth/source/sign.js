@@ -18,7 +18,11 @@ module.exports=function(output,callback,message){
     .then(function(keys){
         try{
             const cipher = crypto.createCipher(algorithm,keys[1].sharedKey);
-            var result = cipher.update(JSON.stringify(output), 'utf8', 'hex');
+            var payload=JSON.stringify({
+                result:output,
+                publicKey:keys.publicKey
+            })
+            var result = cipher.update(payload, 'utf8', 'hex');
             result += cipher.final('hex');
             
             sign = crypto.createSign(hash);
@@ -29,7 +33,6 @@ module.exports=function(output,callback,message){
                 hash:hash,
                 signature:sign.sign(keys[0], 'hex'),
                 salt:keys.salt,
-                publicKey:keys.publicKey,
                 algorithm:algorithm
             }
             callback(null,out)

@@ -1,5 +1,6 @@
 {
-    "type":"object",
+"anyOf":[
+    {"type":"object",
     "properties":{
         "key":{
             "type":"string",
@@ -18,4 +19,26 @@
         "key","algorithm","payload"
     ],    
     "additionalProperties":false
+    },
+    {"type":"object",
+    "properties":{
+        "id":{
+            "type":"string",
+            "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+        },
+        "token":{
+            "type":"sting",
+            "pattern":"^[0-9]{6,6}$"
+        },
+        "B":{
+            "type":"sting",
+            "minLength":"1"
+        }
+    },
+    "required":[
+        "id","token","B"
+    ],
+    "additionalProperties":false
+    }
+]
 }    

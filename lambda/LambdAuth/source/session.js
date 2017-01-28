@@ -1,6 +1,7 @@
 var role=require('./role.js')
 var mfa=require('./mfa.js')
 var ops=require('./operations.js')
+var log=require('./log.js')
 
 module.exports=function(user,B,token){
     
@@ -12,7 +13,7 @@ module.exports=function(user,B,token){
         return(role.getCredentials(user,result.groupId))
     })
     .then(null,function(err){
-        console.log(err)
+        log.log(err,log.levels.error)
         return(false)
     })
     
