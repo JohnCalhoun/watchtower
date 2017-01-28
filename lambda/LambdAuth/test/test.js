@@ -81,6 +81,17 @@ module.exports={
         })
     },
     
+    testEncryptFail:function(test){
+        test.expect(1)
+        process.env.KMS_KEY="adf"
+        KMS.encrypt("test")
+        .then(null,function(err){
+            process.env.KMS_KEY=config.keyArn
+            test.ok(err)
+            test.done()
+        })
+    },
+    
     testDecrypt:function(test){
         test.expect(1)
         var test="test"
@@ -93,8 +104,7 @@ module.exports={
                 test.done()
             })
         })
-    },
-
+   },
 
     testHandlerError:function(test){ 
         var callback=function(err){
