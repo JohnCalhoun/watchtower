@@ -25,15 +25,13 @@ var role=require_helper('role.js')
 var srp=require_helper('srp.js')
 var session=require_helper('session.js')
 var sign=require_helper('sign.js')
+var KMS=require_helper('KMS.js')
 
 var db=ops.db
-process.env.DB_ENDPOINT="127.0.0.1"
-process.env.DB_USER="manage"
-process.env.DB_NAME='test'
 process.env.KMS_KEY=config.keyArn
 process.env.RSA_KMS_KEY=config.keyArn
-process.env.EMAIL_SOURCE="test@jmc.ninja"
 process.env.ROLE_ARN=config.roleArn
+process.env.EMAIL_SOURCE="test@jmc.ninja"
 process.env.LOG_LEVEL=0
 
 var username='johndoe'
@@ -74,6 +72,30 @@ var verifier_promise=new Promise(function(resolve,reject){
     )
 })
 module.exports={
+    testEncrypt:function(test){
+        test.expect(1)
+        KMS.encrypt("test")
+        .then(function(cipher){
+            test.ok(cipher.toString("base32"))
+            test.done()
+        })
+    },
+    
+    testDecrypt:function(test){
+        test.expect(1)
+        var test="test"
+
+        KMS.encrypt(test)
+        .then(function(cipher){
+            KMS.decrypt(cipher)
+            .then(function(result){
+                test.equal(test,result)
+                test.done()
+            })
+        })
+    },
+
+
     testHandlerError:function(test){ 
         var callback=function(err){
             test.expect(1)
@@ -158,16 +180,69 @@ module.exports={
             })
         })
     },
+    testDecryptFail1:function(test){
+        test.expect(1);
+        process.env.RSA_PRIVATE_KEY=""
+        
+        decrypt("")
+        .then(null,
+        function(err){
+            test.ok(err);
+            test.done()
+        })
+    },
+    testDecryptFail2:function(test){
+        key_promise.then(function(keypair){
+            var client=new jsrp.client()  
+            client.init({username:username,password:password},
+            function(){
+                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+         
+                decrypt("")
+                .then(null,
+                function(err){
+                    test.ok(err);
+                    test.done()
+                })
+            })
+        })
+    },
 
     testEmail:function(test){
         test.expect(1);
         
-        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset","Test email")
+        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
         .then(function(err){
             test.ifError(err)
             test.done()
         })
     },
+    
+    testEmailFail1:function(test){
+        test.expect(1);
+        
+        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"NotATYPE")
+        .then(null,function(err){
+            test.ok(err)
+            test.done()
+        })
+
+    },
+    
+    testEmailFail2:function(test){
+        test.expect(1);
+        var save=process.env.EMAIL_SOURCE="test@jmc.ninja"
+        process.env.EMAIL_SOURCE="notvalid"
+        
+        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
+        .then(null,function(err){
+            test.ok(err)
+            process.env.EMAIL_SOURCE=save
+            test.done()
+        })
+
+    },
+
     testValidate:function(test){
         var validate=require('jsonschema').validate
         var schema=require(__dirname+'/../source/assets/messageschema.json')
@@ -239,6 +314,10 @@ module.exports={
 
     testDB:{
         setUp:function(callback){
+            process.env.DB_ENDPOINT="127.0.0.1"
+            process.env.DB_USER="manage"
+            process.env.DB_NAME='test'
+
             var connection=mysql.createConnection({
                     host:process.env.DB_ENDPOINT,
                     user:"root",
@@ -437,17 +516,36 @@ module.exports={
         },
         
         testConnect:function(test){
+            test.expect(1);
             
             connect()
             .then(function(con){
-                test.expect(1);
                 test.ok(con)
                 con.end()
                 test.done()
-            },
+            })
+        },
+ 
+        testConnectFail1:function(test){
+            test.expect(1);
+            
+            process.env.DB_USER="incorret"
+            connect()
+            .then(null,
             function(err){
-                test.expect(1);
-                test.ifError(err);
+                test.ok(err);
+                test.done()
+            })
+        },
+ 
+        testConnectFail2:function(test){
+            test.expect(1);
+            
+            process.env.DB_ENDPOINT="incorret"
+            connect()
+            .then(null,
+            function(err){
+                test.ok(err);
                 test.done()
             })
         },

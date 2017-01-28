@@ -2,30 +2,16 @@ var speakeasy=require('speakeasy')
 var qr=require('qr-image')
 var ops=require('./operations')
 
-var aws=require('aws-sdk')
-var kms=new aws.KMS({region:process.env.REGION})
-
-var kms_encrypt=function(input,id){
-    return new Promise(function(resolve,reject){
-        kms.encrypt({
-            KeyId:process.env.KMS_KEY,
-            Plaintext:input,
-            EncryptionContext:{
-                id:id,
-                type:"MFA_Secret"
-            }
-        },function(err,data){
-            if(err){
-                reject(err)
-            }else{
-                resolve(data.CiphertextBlob.toString('base64'))
-            }
-        })
-    })
-}
+var KMS=require('./KMS.js')
 
 exports.gen=function(id){
-    var out=kms_encrypt(speakeasy.generateSecret().base32,id)
+    var out=KMS.encrypt(
+        speakeasy.generateSecret().base32,
+        {
+            id:id,
+            type:"MFA_Secret"
+        }
+        )
     .then(function(ciphertext){
         return ops.update(id,{
             mfaSecret:ciphertext,
@@ -36,31 +22,16 @@ exports.gen=function(id){
     return(out)
 }
 
-var kms_decrypt=function(text,id){
-    return new Promise(function(resolve,reject){
-        kms.decrypt(
-            {
-                CiphertextBlob:Buffer.from(text,'base64'),
-                EncryptionContext:{
-                    id:id,
-                    type:"MFA_Secret"
-                }
-            },
-            function(err,data){
-                if(err){
-                    reject(err)
-                }else{
-                    resolve(data.Plaintext.toString())
-                }
-            }
-        )
-    })
-}
-
 exports.get=function(id){
     var out=ops.get(id)
     .then(function(results){
-        return kms_decrypt(results.mfaSecret,id)
+        return KMS.decrypt(
+            Buffer.from(results.mfaSecret,'base64'),
+            {
+                id:id,
+                type:"MFA_Secret"
+            }
+        )
     })
     .then(function(secret){
         return({
