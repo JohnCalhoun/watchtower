@@ -40,8 +40,13 @@ actions.create=function(message,callback){
         .then(function(){
             return email.send(message.email,{secret:pass,user:message.id},"invite")
         })
-        .then(Success(callback))
+        .then(function(){
+            sign({password:pass},
+                callback,
+                message)
+        })
         .then(null,Error(callback))
+    
     })})
 }
 

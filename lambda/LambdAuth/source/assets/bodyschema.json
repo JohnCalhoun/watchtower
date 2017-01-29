@@ -32,7 +32,8 @@
         },
         "B":{
             "type":"sting",
-            "minLength":"1"
+            "minLength":"512",
+            "pattern":"^[0-9a-fA-F]+$"
         }
     },
     "required":[

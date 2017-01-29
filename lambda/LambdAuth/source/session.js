@@ -10,7 +10,7 @@ module.exports=function(user,B,token){
         return(ops.get(user))
     })
     .then(function(result){
-        return(role.getCredentials(user,result.groupId))
+        return(role.getCredentials(user,result.groupId,result.mfaEnabled))
     })
     .then(null,function(err){
         log.log(err,log.levels.error)

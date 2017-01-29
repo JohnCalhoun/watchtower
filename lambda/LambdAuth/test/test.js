@@ -34,6 +34,9 @@ process.env.ROLE_ARN=config.roleArn
 process.env.EMAIL_SOURCE="test@jmc.ninja"
 process.env.LOG_LEVEL='warn'
 
+validate=require('jsonschema').validate
+messageschema=require(__dirname+'/../source/assets/messageschema.json')
+
 var username='johndoe'
 var password='passowrd'
 
@@ -148,7 +151,7 @@ module.exports={
            var message={
                 id:'john',
                 token:'111111',
-                B:"11"
+                B:crypto.randomBytes(4096).toString('hex')
             }
             decrypt(message)
             .then(function(data){
@@ -159,7 +162,7 @@ module.exports={
             },
             function(err){
                 test.expect(1);
-                test.ifError(err);
+                test.ifError(err,"should not return erro");
                 test.done()
             })
         },
@@ -169,10 +172,10 @@ module.exports={
                 client.init({username:username,password:password},
                 function(){
                     payload_object={
-                                action:"get",
+                                action:"changePassword",
                                 id:username,
                                 verifier:client.getPublicKey(),
-                                salt:"test"
+                                salt:crypto.randomBytes(4096).toString('hex')
                             }
                     payload=JSON.stringify(payload_object)
 
@@ -204,6 +207,7 @@ module.exports={
                         test.done()
                     },
                     function(err){
+                        console.log(err)
                         test.expect(1);
                         test.ifError(err);
                         test.done()
@@ -274,73 +278,107 @@ module.exports={
 
     },
 
-    testValidate:function(test){
-        var validate=require('jsonschema').validate
-        var schema=require(__dirname+'/../source/assets/messageschema.json')
-        
-        test.ok(!validate({},schema).valid,"reject empty body")
-        
-        test.ok(validate({
-            action:"create",
-            id:"john"
-        },schema).valid,"accept proper action and id")
-     
-        test.ok(!validate({
-            action:"Create",
-            id:"john"
-        },schema).valid,"reject improper action")
-    
-        test.ok(validate({
-            action:"create",
-            id:"john",
-            email:"johnm@john.com"
-        },schema).valid,"accept valid email")
-     
-        test.ok(!validate({
-            action:"create",
-            id:"john",
-            email:"johnm"
-        },schema).valid,"reject invalid email")
- 
-        test.ok(!validate({
-            action:"create",
-            id:"john",
-            token:"1"
-        },schema).valid,"reject invalid token")
- 
-        test.ok(validate({
-            action:"create",
-            id:"john",
-            token:"111111",
-            B:"1"
-        },schema).valid,"aceept valid token")
+    testValidate:{
+        testCreate:function(test){
+            test.expect(2)
+            test.ok(validate({
+                action:"create",
+                id:"john",
+                email:"john@johnmcalhoun.com",
+                B:crypto.randomBytes(4096).toString('hex'),
+                group:"user"
+            },messageschema).valid,"accept proper create")
+            
+            test.ok(!validate({
+                action:"create",
+                id:"john",
+                B:"11",
+                group:"user"
+            },messageschema).valid,"reject invalid create")
+            
+            test.done()
+        },
+        testDelete:function(test){
+            test.expect(2)
+            test.ok(validate({
+                action:"delete",
+                id:"john"
+            },messageschema).valid,"accept proper delete")
+            
+            test.ok(!validate({
+                action:"Delete",
+                id:"john"
+            },messageschema).valid,"reject invalid delete")
+            
+            test.done()
+        },
+        testsession:function(test){
+            test.expect(2)
+            test.ok(validate({
+                action:"session",
+                id:"john",
+                B:crypto.randomBytes(4096).toString('hex'),
+                token:"111111"
+            },messageschema).valid,"accept proper session")
+            
+            test.ok(!validate({
+                action:"session",
+                id:"john",
+                B:"11",
+                token:"11"
+            },messageschema).valid,"reject invalid session")
+            
+            test.done()
+        },
+        testchangeEmail:function(test){
+            test.expect(2)
+            test.ok(validate({
+                action:"changeEmail",
+                id:"john",
+                email:"john@m.com"
+            },messageschema).valid,"accept proper changeEmail")
+            
+            test.ok(!validate({
+                action:"changeEmail",
+                id:"john",
+                email:"johnm.com"
+            },messageschema).valid,"reject invalid changeEmail")
+            
+            test.done()
+        },
+        testget:function(test){
+            test.expect(2)
+            test.ok(validate({
+                action:"delete",
+                id:"john"
+            },messageschema).valid,"accept proper get")
+            
+            test.ok(!validate({
+                action:"delete",
+                id:"john",
+                email:"johnm.com"
+            },messageschema).valid,"reject invalid get")
+            
+            test.done()
+        },
+        testchangePassword:function(test){
+            test.expect(2)
+            test.ok(validate({
+                action:"changePassword",
+                id:"john",
+                salt:crypto.randomBytes(32).toString('hex'),
+                verifier:crypto.randomBytes(4096).toString('hex')
+            },messageschema).valid,"accept proper changePassword")
+            
+            test.ok(!validate({
+                action:"changePassword",
+                id:"john",
+                email:"johnm.com"
+            },messageschema).valid,"reject invalid changePassword")
+            
+            test.done()
+        }
 
-        test.ok(!validate({
-            action:"create",
-            id:"!1john",
-        },schema).valid,"reject invalid username")
- 
-        test.ok(validate({
-            action:"create",
-            id:"john"
-        },schema).valid,"aceept valid username")
-        
-        var schema2=require(__dirname+'/../source/assets/bodyschema.json')
-        
-        test.ok(validate({
-            key:"create",
-            algorithm:"aes-256-cbc-hmac-sha256",
-            payload:"a"
-        },schema2).valid,"aceept valid message")
- 
-        test.ok(!validate({
-            key:"create",
-            algorithm:"john",
-            payload:""
-        },schema2).valid,"reject invalid message")
-
-
-        test.done()
     },
 
     testDB:{
@@ -684,12 +722,15 @@ module.exports={
                 var message={
                     action:"create",
                     id:"bill",
-                    email:"johnmcalhoun123@gmail.com"
+                    email:"johnmcalhoun123@gmail.com",
+                    token:"111111",
+                    B:"aa"
                 }
                 var callback=function(err,data){
                     test.ifError(err)
                     test.done()
                 }
+                
                 handler.actions.create(message,callback)
             },
           
@@ -727,8 +768,8 @@ module.exports={
                 var message={
                     action:"changePassword",
                     id:username,
-                    salt:"salt",
-                    verifier:"verfife"
+                    salt:crypto.randomBytes(4096).toString('hex'),
+                    verifier:crypto.randomBytes(4096).toString('hex')
                 }
                 var callback=function(err,data){
                     test.ifError(err)
@@ -783,7 +824,7 @@ module.exports={
                     payload_object={
                                 action:"get",
                                 id:username,
-                                B:'dd'
+                                B:crypto.randomBytes(4096).toString('hex')
                             }
                     payload=JSON.stringify(payload_object)
 
@@ -812,6 +853,7 @@ module.exports={
                     }
 
                     callback=function(err,data){
+                        if(err)console.log(err)
                         test.expect(1);
                         test.ifError(err)
                         test.done()

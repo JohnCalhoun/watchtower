@@ -9,13 +9,13 @@ exports.decrypt=function(input,context={}){
                 EncryptionContext:context
             },
             function(err,data){
-                if(err){
+                if(err){    
                     reject(err)
                 }else{
                     resolve(data.Plaintext.toString())
                 }
             }
-        )  
+        )
     })
 }
 

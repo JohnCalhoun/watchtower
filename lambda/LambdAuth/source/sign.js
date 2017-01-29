@@ -13,10 +13,10 @@ var KMS=require('./KMS.js')
 module.exports=function(output,callback,message){
     var private_key_promise=KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64'))
     var shared_key_promise=srp.getSharedKey(message.B,message.id)
-
+   
     Promise.all([private_key_promise,shared_key_promise])
     .then(function(keys){
-        try{
+        try{    
             const cipher = crypto.createCipher(algorithm,keys[1].sharedKey);
             var payload=JSON.stringify({
                 result:output,
@@ -40,5 +40,6 @@ module.exports=function(output,callback,message){
             callback(err)
         }
     })
+    .then(null,function(err){callback(err)})
 }
 

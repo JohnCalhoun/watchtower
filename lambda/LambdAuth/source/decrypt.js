@@ -5,12 +5,14 @@ var messageschema=require(__dirname+'/assets/messageschema.json')
 var bodyschema=require(__dirname+'/assets/bodyschema.json')
 
 var KMS=require('./KMS.js')
-
+var fail=function(){
+    return new Promise(function(res,reject){
+        reject("Invalid Input")
+    })
+}
 module.exports=function(input){
     if(!validate(input,bodyschema).valid){
-        return new Promise(function(res,reject){
-            reject("Invalid Input")
-        })
+        return fail()
     }else if(input.payload){
         return KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64'))
         .then(function(privateKey){ 
@@ -21,16 +23,24 @@ module.exports=function(input){
             dec += decipher.final('utf8');
             
             var message=JSON.parse(dec)
-            validate(message,messageschema,{throwError:true}) 
-            return(message)
+            if(validate(message,messageschema).valid){
+                return(message)
+            }else{
+                console.log(validate(message,messageschema))
+                return(fail())  
+            }
         })
 
     }else{
-        return new Promise(function(res){   
+        return new Promise(function(resolve,reject){   
             var message=input
             message.action='session'
-            validate(message,messageschema,{throwError:true}) 
-            res(message)
+            validate(message,messageschema) 
+            if(validate(message,messageschema).valid){
+                resolve(message)
+            }else{
+                reject(fail)  
+            }
         })
     }
 }

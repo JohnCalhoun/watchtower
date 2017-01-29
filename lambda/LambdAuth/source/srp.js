@@ -10,14 +10,17 @@ var srp=function(salt,verifier,B){
             verifier:verifier
         },
         function(){
-            server.setClientPublicKey(B)
-            var publicKey=server.getPublicKey()
-              
-            resolve({
-                salt:salt,
-                publicKey:server.getPublicKey(),
-                sharedKey:server.getSharedKey()
-            })
+            try{ 
+                server.setClientPublicKey(B)
+                var publicKey=server.getPublicKey()
+                resolve({
+                    salt:salt,
+                    publicKey:server.getPublicKey(),
+                    sharedKey:server.getSharedKey()
+                })
+            }catch(e){
+                reject(e)
+            }
         })
     })
 }

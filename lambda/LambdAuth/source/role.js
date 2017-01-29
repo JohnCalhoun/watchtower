@@ -17,14 +17,17 @@ var assume_role=function(params){
     })
 }
 
-exports.getCredentials = function(id,group) {
+exports.getCredentials = function(id,group,mfa) {
     var template=hb.compile(fs.readFileSync(__dirname+"/assets/user-role.json").toString())
 
+    tempdata={user:id}
     if(group==="admin"){
-        var tempdata={user:id,admin:true}
-    }else{
-        var tempdata={user:id}
+        tempdata.admin=true
     }
+    if(mfa){
+        tempdata.mfa=true
+    }
+
     var params={
         RoleArn: process.env.ROLE_ARN, 
         RoleSessionName: id,
@@ -32,3 +35,8 @@ exports.getCredentials = function(id,group) {
     }
     return assume_role(params)
 }
+
+
+
+
+
