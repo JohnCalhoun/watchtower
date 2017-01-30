@@ -75,8 +75,8 @@ var verifier_promise=new Promise(function(resolve,reject){
     )
 })
 module.exports={
-    testKMS:{
-        testEncrypt:function(test){
+    KMS:{
+        Encrypt:function(test){
             test.expect(1)
             KMS.encrypt("test")
             .then(function(cipher){
@@ -85,7 +85,7 @@ module.exports={
             })
         },
         
-        testEncryptFail:function(test){
+        EncryptFail:function(test){
             test.expect(1)
             process.env.KMS_KEY="adf"
             KMS.encrypt("test")
@@ -96,7 +96,7 @@ module.exports={
             })
         },
         
-        testDecrypt:function(test){
+        Decrypt:function(test){
             test.expect(1)
             var text="test"
 
@@ -110,8 +110,8 @@ module.exports={
             })
         }
     },
-    testHandler:{
-        testError:function(test){ 
+    Handler:{
+        Error:function(test){ 
             var callback=function(err){
                 test.expect(1)
                 test.ok(err)
@@ -119,7 +119,7 @@ module.exports={
             }
             handler.Error(callback)("you should see this")
         },
-        testSuccess:function(test){ 
+        Success:function(test){ 
             var callback=function(err){
                 test.expect(1)
                 test.ifError(err)
@@ -128,13 +128,13 @@ module.exports={
             handler.Success(callback)("you should not see this")
         }
     },
-    testlog:function(test){
+    log:function(test){
         var log=require_helper('log.js')
         log.log("you should see this",log.levels.error)  
         log.log("you should not see this",log.levels.info)  
         test.done()
     },
-    testrole:function(test){
+    role:function(test){
         test.expect(3);
         role.getCredentials(username,"admin")
         .then(function(result){
@@ -146,8 +146,8 @@ module.exports={
             console.log(err) 
         })
     },
-    testDecrypt:{
-        testSkip:function(test){
+    Decrypt:{
+        Skip:function(test){
            var message={
                 id:'john',
                 token:'111111',
@@ -166,7 +166,7 @@ module.exports={
                 test.done()
             })
         },
-        testSuccess:function(test){
+        Success:function(test){
             key_promise.then(function(keypair){
                 var client=new jsrp.client()  
                 client.init({username:username,password:password},
@@ -215,7 +215,7 @@ module.exports={
                 })
             })
         },
-        testFail1:function(test){
+        Fail1:function(test){
             test.expect(1);
             process.env.RSA_PRIVATE_KEY=""
             
@@ -226,24 +226,20 @@ module.exports={
                 test.done()
             })
         },
-        testFail2:function(test){
+        Fail2:function(test){
             key_promise.then(function(keypair){
-                var client=new jsrp.client()  
-                client.init({username:username,password:password},
-                function(){
-                    process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
-             
-                    decrypt("")
-                    .then(null,
-                    function(err){
-                        test.ok(err);
-                        test.done()
-                    })
+                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+         
+                decrypt("")
+                .then(null,
+                function(err){
+                    test.ok(err);
+                    test.done()
                 })
             })
         }
     },
-    testEmail:function(test){
+    Email:function(test){
         test.expect(1);
         
         email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
@@ -253,7 +249,7 @@ module.exports={
         })
     },
     
-    testEmailFail1:function(test){
+    EmailFail1:function(test){
         test.expect(1);
         
         email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"NotATYPE")
@@ -264,7 +260,7 @@ module.exports={
 
     },
     
-    testEmailFail2:function(test){
+    EmailFail2:function(test){
         test.expect(1);
         var save=process.env.EMAIL_SOURCE="test@jmc.ninja"
         process.env.EMAIL_SOURCE="notvalid"
@@ -278,8 +274,8 @@ module.exports={
 
     },
 
-    testValidate:{
-        testCreate:function(test){
+    Validate:{
+        Create:function(test){
             test.expect(2)
             test.ok(validate({
                 action:"create",
@@ -298,7 +294,7 @@ module.exports={
             
             test.done()
         },
-        testDelete:function(test){
+        Delete:function(test){
             test.expect(2)
             test.ok(validate({
                 action:"delete",
@@ -312,7 +308,7 @@ module.exports={
             
             test.done()
         },
-        testsession:function(test){
+        session:function(test){
             test.expect(2)
             test.ok(validate({
                 action:"session",
@@ -330,7 +326,7 @@ module.exports={
             
             test.done()
         },
-        testchangeEmail:function(test){
+        changeEmail:function(test){
             test.expect(2)
             test.ok(validate({
                 action:"changeEmail",
@@ -346,7 +342,7 @@ module.exports={
             
             test.done()
         },
-        testget:function(test){
+        get:function(test){
             test.expect(2)
             test.ok(validate({
                 action:"delete",
@@ -361,7 +357,7 @@ module.exports={
             
             test.done()
         },
-        testchangePassword:function(test){
+        changePassword:function(test){
             test.expect(2)
             test.ok(validate({
                 action:"changePassword",
@@ -381,7 +377,7 @@ module.exports={
 
     },
 
-    testDB:{
+    DB:{
         setUp:function(callback){
             process.env.DB_ENDPOINT="127.0.0.1"
             process.env.DB_USER="manage"
@@ -443,29 +439,7 @@ module.exports={
             )
         },
 
-        testsrp:function(test){
-            test.expect(1);
-           
-            var client=new jsrp.client()  
-            client.init({username:username,password:password},
-            function(){
-                var B = client.getPublicKey();
-                srp.getSharedKey(B,username)
-                .then(function(result){
-                    client.setSalt(result.salt);
-                    client.setServerPublicKey(result.publicKey);
-
-                    test.equal(
-                        client.getSharedKey(),
-                        result.sharedKey,
-                        "Shared Key should be the same"
-                    )
-                    test.done()
-                },function(err){console.log(err)})
-            })
-        },
-
-        testSign:function(test){
+        Sign:function(test){
             key_promise.then(function(keypair){
                 process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
                 var data={a:"b"}
@@ -485,7 +459,7 @@ module.exports={
             })
         }, 
 
-        testMfa:function(test){
+        Mfa:function(test){
             mfa.gen(username)
             .then(function(){
                 return mfa.get(username)
@@ -506,7 +480,7 @@ module.exports={
             })
         },
      
-        testMfa2:function(test){
+        Mfa2:function(test){
             mfa.gen(username)
             .then(function(){
                 return mfa.get(username)
@@ -535,7 +509,7 @@ module.exports={
                 })
             })
         },
-        testRemove:function(test){
+        Remove:function(test){
             test.expect(1);
             
             ops.remove(username)
@@ -547,7 +521,7 @@ module.exports={
 
         
      
-        testCreate:function(test){
+        Create:function(test){
             test.expect(1);
             
             ops.create("1","1308180","asdfasdfasdf","admin")
@@ -557,7 +531,7 @@ module.exports={
             })
         },
      
-        testUpdate:function(test){
+        Update:function(test){
             test.expect(1);
             
             ops.update(username,{email:"jerry"})
@@ -567,7 +541,7 @@ module.exports={
             })
         },
 
-        testGet:function(test){
+        Get:function(test){
             
             ops.get(username)
             .then(function(results){
@@ -584,7 +558,7 @@ module.exports={
             )
         },
         
-        testConnect:function(test){
+        Connect:function(test){
             test.expect(1);
             
             connect()
@@ -595,7 +569,7 @@ module.exports={
             })
         },
  
-        testConnectFail1:function(test){
+        ConnectFail1:function(test){
             test.expect(1);
             
             process.env.DB_USER="incorret"
@@ -607,7 +581,7 @@ module.exports={
             })
         },
  
-        testConnectFail2:function(test){
+        ConnectFail2:function(test){
             test.expect(1);
             
             process.env.DB_ENDPOINT="incorret"
@@ -618,8 +592,8 @@ module.exports={
                 test.done()
             })
         },
-        testSession:{ 
-            testSuccess:function(test){
+        Session:{ 
+            Success:function(test){
                 var client=new jsrp.client()  
                 client.init({username:username,password:password},
                 function(){
@@ -649,7 +623,7 @@ module.exports={
                     })
                 })
             },
-            testFail:function(test){
+            Fail:function(test){
                 mfa.gen(username)
                 .then(function(){
                     return(ops.update(username,{mfaEnabled:true}))
@@ -665,7 +639,7 @@ module.exports={
                 )  
             }
         },
-        testLambda:{
+        Lambda:{
             setUp:function(callback){
                 key_promise.then(function(keypair){
                     process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
@@ -673,7 +647,7 @@ module.exports={
                 })
             },
             
-            testLambdaMFACreate:function(test){
+            LambdaMFACreate:function(test){
                 var message={
                     action:"createMFA",
                     id:username,
@@ -687,7 +661,7 @@ module.exports={
                 handler.actions.createMFA(message,callback)
             },
          
-            testLambdaMFAVal:function(test){
+            LambdaMFAVal:function(test){
                 var message={
                     action:"valMFA",
                     id:username,
@@ -704,7 +678,7 @@ module.exports={
                 })
             },
           
-            testLambdaGet:function(test){
+            LambdaGet:function(test){
                 var message={
                     action:"get",
                     id:username,
@@ -718,7 +692,7 @@ module.exports={
                 handler.actions.get(message,callback)
             },
             
-            testLambdaCreate:function(test){
+            LambdaCreate:function(test){
                 var message={
                     action:"create",
                     id:"bill",
@@ -734,7 +708,7 @@ module.exports={
                 handler.actions.create(message,callback)
             },
           
-            testLambdaRemove:function(test){
+            LambdaRemove:function(test){
                 var message={
                     action:"delete",
                     id:username
@@ -749,7 +723,7 @@ module.exports={
             },
 
          
-            testLambdaChangeEmail:function(test){
+            LambdaChangeEmail:function(test){
                 var message={
                     action:"changeEmail",
                     id:username,
@@ -764,7 +738,7 @@ module.exports={
                 handler.actions.changeEmail(message,callback)
             },
 
-            testLambdaChangePassword:function(test){
+            LambdaChangePassword:function(test){
                 var message={
                     action:"changePassword",
                     id:username,
@@ -779,7 +753,7 @@ module.exports={
                 handler.actions.changePassword(message,callback)
             },
 
-            testLambdaResetPassword:function(test){
+            LambdaResetPassword:function(test){
                 var message={
                     action:"resetPassword",
                     id:username
@@ -790,7 +764,7 @@ module.exports={
                 }
                 handler.actions.resetPassword(message,callback)
             },
-            testLambdaSession:function(test){
+            LambdaSession:function(test){
                 var client=new jsrp.client()  
                 client.init({username:username,password:password},
                     function(){
@@ -819,7 +793,7 @@ module.exports={
                         })
                 })
             },
-            testHandler:function(test){
+            Handler:function(test){
                 key_promise.then(function(keypair){
                     payload_object={
                                 action:"get",

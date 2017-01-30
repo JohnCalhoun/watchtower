@@ -4,6 +4,7 @@ module.exports={
             {expand:true,src:["source/*.js","!source/test*.js"],dest:"build",flatten:true},
             {expand:true,src:["source/package.json"],dest:"build",flatten:true},
             {expand:true,cwd:"source/assets",src:["*"],dest:"build/assets",flatten:false},
+            {expand:true,cwd:"source/SRP",src:["*"],dest:"build/SRP",flatten:false},
         ]
     },
     coverage:{
