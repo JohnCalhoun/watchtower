@@ -6,7 +6,6 @@ var kms=new aws.KMS({region:process.env.REGION})
 
 var mysql=require('mysql')
 var sql=require('sql')
-var jsrp=require('jsrp')
 var crypto=require('crypto')
 var speakeasy=require('speakeasy')
 var qr=require('qr-image')
@@ -58,21 +57,17 @@ var password_promise=new Promise(function(resolve,reject){
 })
 
 var verifier_promise=new Promise(function(resolve,reject){
-   var client=new jsrp.client()  
+    var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
+    var client = require_helper('SRP/client.js')('modp18',1024,64)
+    var srp = require_helper('srp.js');
     
-    client.init({username:username,password:password},
-        function(){
-            client.createVerifier(function(err,result){
-                if(err){reject(err)}else{
-                    resolve({
-                        salt:result.salt,
-                        verifier:result.verifier,
-                        B:client.getPublicKey()
-                    })
-                }
-            })
-        }
-    )
+    var material=srp.genVerifier(username,password) 
+    var A=client.genA()
+    resolve({
+        salt:material.salt,
+        verifier:material.v,
+        A:A.A
+    })
 })
 module.exports={
     KMS:{
@@ -167,51 +162,48 @@ module.exports={
             })
         },
         Success:function(test){
-            key_promise.then(function(keypair){
-                var client=new jsrp.client()  
-                client.init({username:username,password:password},
-                function(){
-                    payload_object={
-                                action:"changePassword",
-                                id:username,
-                                verifier:client.getPublicKey(),
-                                salt:crypto.randomBytes(4096).toString('hex')
-                            }
-                    payload=JSON.stringify(payload_object)
-
-                    //generate symetric key
-                    var pass=crypto.randomBytes(20).toString('hex')
-                    var algorithm='aes-256-cbc-hmac-sha256'
-
-                    //encrypt payload with symetric key
-                    var cipher = crypto.createCipher(algorithm,pass)
-                    var ciphertext = cipher.update(payload,'utf8','hex')
-                    ciphertext += cipher.final('hex');
-
-                    //encrypt symetric key with private key
-                    var cipherKey=crypto.publicEncrypt(keypair.publicKey,new Buffer(pass)).toString('base64')
-
-                    var body={
-                            payload:ciphertext,
-                            key:cipherKey,
-                            algorithm:algorithm
+            Promise.all([key_promise,verifier_promise])
+            .then(function(material){
+                payload_object={
+                            action:"changePassword",
+                            id:username,
+                            verifier:material[1].A,
+                            salt:crypto.randomBytes(4096).toString('hex')
                         }
-                    process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
-                    process.env.RSA_KMS_KEY=config.keyArn
-                    
-                    decrypt(body)
-                    .then(function(data){
-                        test.expect(2);
-                        test.equal(payload_object.id,data.id)
-                        test.equal(payload_object.verifiver,data.verifiver)
-                        test.done()
-                    },
-                    function(err){
-                        console.log(err)
-                        test.expect(1);
-                        test.ifError(err);
-                        test.done()
-                    })
+                payload=JSON.stringify(payload_object)
+
+                //generate symetric key
+                var pass=crypto.randomBytes(20).toString('hex')
+                var algorithm='aes-256-cbc-hmac-sha256'
+
+                //encrypt payload with symetric key
+                var cipher = crypto.createCipher(algorithm,pass)
+                var ciphertext = cipher.update(payload,'utf8','hex')
+                ciphertext += cipher.final('hex');
+
+                //encrypt symetric key with private key
+                var cipherKey=crypto.publicEncrypt(material[0].publicKey,new Buffer(pass)).toString('base64')
+
+                var body={
+                        payload:ciphertext,
+                        key:cipherKey,
+                        algorithm:algorithm
+                    }
+                process.env.RSA_PRIVATE_KEY=material[0].privateKeyEncrypted
+                process.env.RSA_KMS_KEY=config.keyArn
+                
+                decrypt(body)
+                .then(function(data){
+                    test.expect(2);
+                    test.equal(payload_object.id,data.id)
+                    test.equal(payload_object.verifiver,data.verifiver)
+                    test.done()
+                },
+                function(err){
+                    console.log(err)
+                    test.expect(1);
+                    test.ifError(err);
+                    test.done()
                 })
             })
         },
@@ -419,6 +411,25 @@ module.exports={
                     )
            }) 
         },
+        srp:function(test){
+            var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
+            var srp = require_helper('srp.js');
+            
+            var material=srp.genVerifier(username,password) 
+            test.ok(material.v)
+            test.ok(material.salt)
+
+            var A=SRP.A(64)
+
+            srp.getSharedKey(A,username,password)
+            .then(function(result){
+                test.ok(result.b)
+                test.ok(result.B)
+                test.ok(result.key)
+                test.done()
+            })
+        },
+
         tearDown:function(callback){
             var connection=mysql.createConnection({
                     host:process.env.DB_ENDPOINT,
@@ -594,9 +605,7 @@ module.exports={
         },
         Session:{ 
             Success:function(test){
-                var client=new jsrp.client()  
-                client.init({username:username,password:password},
-                function(){
+                verifier_promise.then(function(material){
                     mfa.gen(username)
                     .then(function(){
                         return mfa.get(username)
@@ -606,7 +615,7 @@ module.exports={
                             secret:results.secret,
                             encoding:'base32'
                         })
-                        var B=client.getPublicKey()
+                        var B=material.A
 
                         session(username,B,token).then(
                             function(results){
@@ -647,7 +656,7 @@ module.exports={
                 })
             },
             
-            LambdaMFACreate:function(test){
+            MFACreate:function(test){
                 var message={
                     action:"createMFA",
                     id:username,
@@ -661,7 +670,7 @@ module.exports={
                 handler.actions.createMFA(message,callback)
             },
          
-            LambdaMFAVal:function(test){
+            MFAVal:function(test){
                 var message={
                     action:"valMFA",
                     id:username,
@@ -678,7 +687,7 @@ module.exports={
                 })
             },
           
-            LambdaGet:function(test){
+            Get:function(test){
                 var message={
                     action:"get",
                     id:username,
@@ -692,7 +701,7 @@ module.exports={
                 handler.actions.get(message,callback)
             },
             
-            LambdaCreate:function(test){
+            Create:function(test){
                 var message={
                     action:"create",
                     id:"bill",
@@ -708,7 +717,7 @@ module.exports={
                 handler.actions.create(message,callback)
             },
           
-            LambdaRemove:function(test){
+            Remove:function(test){
                 var message={
                     action:"delete",
                     id:username
@@ -723,7 +732,7 @@ module.exports={
             },
 
          
-            LambdaChangeEmail:function(test){
+            ChangeEmail:function(test){
                 var message={
                     action:"changeEmail",
                     id:username,
@@ -738,7 +747,7 @@ module.exports={
                 handler.actions.changeEmail(message,callback)
             },
 
-            LambdaChangePassword:function(test){
+            ChangePassword:function(test){
                 var message={
                     action:"changePassword",
                     id:username,
@@ -753,7 +762,7 @@ module.exports={
                 handler.actions.changePassword(message,callback)
             },
 
-            LambdaResetPassword:function(test){
+            ResetPassword:function(test){
                 var message={
                     action:"resetPassword",
                     id:username
@@ -764,33 +773,31 @@ module.exports={
                 }
                 handler.actions.resetPassword(message,callback)
             },
-            LambdaSession:function(test){
-                var client=new jsrp.client()  
-                client.init({username:username,password:password},
-                    function(){
-                        mfa.gen(username)
-                        .then(function(){
-                            return mfa.get(username)
+            Session:function(test){
+                verifier_promise.then(function(material){
+                    mfa.gen(username)
+                    .then(function(){
+                        return mfa.get(username)
+                    })
+                    .then(function(results){
+                        var token=speakeasy.totp({
+                            secret:results.secret,
+                            encoding:'base32'
                         })
-                        .then(function(results){
-                            var token=speakeasy.totp({
-                                secret:results.secret,
-                                encoding:'base32'
-                            })
 
-                            var message={
-                                action:"session",
-                                id:username,
-                                B:client.getPublicKey(),
-                                token:token
-                            }
+                        var message={
+                            action:"session",
+                            id:username,
+                            B:material.A,
+                            token:token
+                        }
 
-                            var callback=function(err,data){
-                                test.ifError(err)
-                                test.done()
-                            }
-                            handler.actions.session(message,callback)
-                        })
+                        var callback=function(err,data){
+                            test.ifError(err)
+                            test.done()
+                        }
+                        handler.actions.session(message,callback)
+                    })
                 })
             },
             Handler:function(test){

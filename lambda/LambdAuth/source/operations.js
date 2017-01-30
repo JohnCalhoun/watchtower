@@ -1,6 +1,5 @@
 var mysql=require('mysql')
 var sql=require('sql')
-var jsrp=require('jsrp')
 var connect=require('./connect.js')
 
 sql.setDialect('mysql')

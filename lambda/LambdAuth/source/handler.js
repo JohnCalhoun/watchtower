@@ -1,5 +1,4 @@
 var decrypt=require('./decrypt.js')
-var jsrp=require('jsrp')
 var crypto=require('crypto')
 var ops=require('./operations.js')
 var email=require('./email.js')
@@ -7,6 +6,8 @@ var mfa=require('./mfa.js')
 var session=require('./session.js')
 var sign=require('./sign.js')
 var log=require('./log.js')
+var srp = require('./srp.js');
+
 actions={}
 
 var Error=function(callback){
@@ -26,28 +27,26 @@ exports.Success=Success
 
 actions.create=function(message,callback){
     var pass=crypto.randomBytes(20).toString('hex')
-    var client=new jsrp.client()  
     
-    client.init({username:message.id,password:pass},
-    function(){client.createVerifier(function(err,result){
-        ops.create(
-            message.id,
-            message.email,
-            result.salt,
-            result.verifier,
-            message.group
-        )
-        .then(function(){
-            return email.send(message.email,{secret:pass,user:message.id},"invite")
-        })
-        .then(function(){
-            sign({password:pass},
-                callback,
-                message)
-        })
-        .then(null,Error(callback))
-    
-    })})
+    var material=srp.genVerifier(message.id,pass) 
+
+    ops.create(
+        message.id,
+        message.email,
+        material.salt,
+        material.v,
+        message.group
+    )
+    .then(function(){
+        return email.send(message.email,{user:message.id},"invite")
+    })
+    .then(function(){
+        sign({password:pass},
+            callback,
+            message)
+    })
+    .then(null,Error(callback))
+
 }
 
 actions.createMFA=function(message,callback){
@@ -98,25 +97,22 @@ actions.changePassword=function(message,callback){
 
 actions.resetPassword=function(message,callback){
     var pass=crypto.randomBytes(20).toString('hex')
-    var client=new jsrp.client()  
-    
-    client.init({username:message.id,password:pass},
-    function(){client.createVerifier(function(err,result){
-        ops.update(
-            message.id,
-            {salt:result.salt,
-            verifier:result.verifier,
-            reset:1,
-            mfaEnabled:false})
-        .then(function(){
-            return ops.get(message.id)
-        })
-        .then(function(results){
-            return email.send(results.email,{secret:pass},"reset")
-        })
-        .then(Success(callback))
-        .then(null,Error(callback))
-    })})
+
+    var material=srp.genVerifier(message.id,pass) 
+    ops.update(
+        message.id,
+        {salt:material.salt,
+        verifier:material.v,
+        reset:1,
+        mfaEnabled:false})
+    .then(function(){
+        return ops.get(message.id)
+    })
+    .then(function(results){
+        return email.send(results.email,{secret:pass},"reset")
+    })
+    .then(Success(callback))
+    .then(null,Error(callback))
 } 
     
 

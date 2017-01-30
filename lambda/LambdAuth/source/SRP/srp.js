@@ -119,9 +119,3 @@ module.exports=function(group,keylength,saltLength){
 }
 
 
-
-
-
-
-
-

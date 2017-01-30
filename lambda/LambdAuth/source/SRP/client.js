@@ -1,7 +1,7 @@
 module.exports=function(group,keylength){
     var srp=require('./srp.js')(group,keylength,64)
     var out={}
-
+    
     out.getSaltVerifier=function(I,P){
         var salt=srp.generateSalt()
         var x=srp.x(I,P,salt)
@@ -10,6 +10,7 @@ module.exports=function(group,keylength){
             salt:salt
         }
     }
+
     out.genA=function(){
         return srp.A()  
     }

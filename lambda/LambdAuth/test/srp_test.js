@@ -6,6 +6,7 @@ var bitlength=32
 var SRP=require_helper('SRP/srp.js')('modp18',bitlength)
 var SRPClient = require_helper('SRP/client.js')('modp18',bitlength);
 var SRPServer = require_helper('SRP/server.js')('modp18',bitlength);
+
 var util=require_helper('SRP/util.js')
 
 module.exports={
@@ -222,8 +223,7 @@ module.exports={
         )
 
         test.done()
-    }
-}
+    }}
      
 
 
