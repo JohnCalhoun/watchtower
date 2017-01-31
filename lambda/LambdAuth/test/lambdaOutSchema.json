@@ -1,0 +1,39 @@
+{"anyOf":[
+    {   "type":"boolean"},
+    {
+        "type":"object",
+        "properties":{
+            "result":{
+                "type":"string"
+            },
+            "signature":{
+                "type":"string"
+            },
+            "hash":{
+                "type":"string",
+                "enum":["RSA-SHA512"]
+            },
+            "algorithm":{
+                "type":"string",
+                "enum":["aes-256-cbc-hmac-sha256"]
+            }
+        },
+        "required":[
+            "result","signature","hash","algorithm"
+        ],
+        "additionalProperties":false
+    },
+    {
+        "type":"object",
+        "properties":{
+            "salt":{
+                "type":"string"
+            }
+        },
+        "required":[
+            "salt"
+        ],
+        "additionalProperties":false
+    }
+
+]}
