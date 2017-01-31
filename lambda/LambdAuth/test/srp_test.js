@@ -77,13 +77,12 @@ module.exports={
             var P = new Buffer("password123");
             var s = new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex');
 
-            test.expect(1)
-            var ver=SRP.x(I,P,s)
-            var value=SRP.hotp(ver)
-            test.ok(value)
+            var ver=SRP.v(SRP.x(I,P,s))
+            var value=SRP.clientHotp(I,P,s)
+            
+            var check=SRP.check(ver,value)
+            
             test.done()
-
-
         },
         v:function(test){
             test.expect(1)
@@ -127,7 +126,7 @@ module.exports={
             username='john'
             password='password'
 
-            var value=SRP.clientS(A,B,a,username,password,s)
+            var value=SRP.clientS(A,B,a,username,password,s).key
             test.ok(value)
             test.done()
         },
@@ -139,7 +138,7 @@ module.exports={
             var b =util.toBigInteger(new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex'))
             var v =new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex')
             
-            var value=SRP.serverS(A,B,b,v)
+            var value=SRP.serverS(A,B,b,v).key
             test.ok(value)
             test.done()
         },
@@ -152,7 +151,7 @@ module.exports={
             var b =util.toBigInteger(new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex'))
             var v =new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex')
             
-            var value=SRP.serverS(A,B,b,v)
+            var value=SRP.serverS(A,B,b,v).key
             test.ok(!value)
             test.done()
         }
@@ -177,10 +176,15 @@ module.exports={
         test.ok(verifier.v)
         test.ok(verifier.salt)
 
+        var hotp=SRPClient.getHotp(username,password,verifier.salt)
+        test.ok(hotp)
+
         var clientMaterial=SRPClient.genA()  
         test.ok(clientMaterial.A)
         test.ok(clientMaterial.a)
 
+        var check=SRPServer.checkHotp(verifier.v,hotp) 
+        test.ok(check)
         var serverMaterial=SRPServer.genBandShared(
             clientMaterial.A,
             verifier.salt,
@@ -189,7 +193,7 @@ module.exports={
 
         test.ok(serverMaterial.key)
         test.ok(serverMaterial.B)
-
+        
         var clientKey=SRPClient.getShared(
             clientMaterial.A,
             serverMaterial.B,
@@ -198,8 +202,8 @@ module.exports={
             password,
             verifier.salt)
 
-        test.ok(clientKey) 
-         
+        test.ok(clientKey.key) 
+        
         var common=SRP.debug(
             clientMaterial.A,
             serverMaterial.B,
@@ -210,7 +214,7 @@ module.exports={
             verifier.salt
         )
         test.equal(
-            clientKey,
+            clientKey.key,
             common
         )
         test.equal(
@@ -219,9 +223,9 @@ module.exports={
         )
         test.equal(
             serverMaterial.key,
-            clientKey
+            clientKey.key
         )
-
+        
         test.done()
     }}
      

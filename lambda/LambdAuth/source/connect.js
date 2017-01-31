@@ -1,5 +1,6 @@
 var mysql=require('mysql')
 var KMS=require('./KMS.js')
+var Promise=require('bluebird')
 
 var connect=function(password){
     return new Promise(function(resolve,reject){

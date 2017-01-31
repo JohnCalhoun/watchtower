@@ -28,10 +28,10 @@ exports.Success=Success
 actions.create=function(message,callback){
     var pass=crypto.randomBytes(20).toString('hex')
     
-    var material=srp.genVerifier(message.id,pass) 
+    var material=srp.genVerifier(message.newId,pass) 
 
     ops.create(
-        message.id,
+        message.newId,
         message.email,
         material.salt,
         material.v,

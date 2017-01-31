@@ -46,22 +46,20 @@ exports.db=users
 var run_query=function(query){
     return new Promise(function(resolve,reject){
         connect()
-        .then(
-            function(conn){
-                conn.query(
-                    query.text,
-                    query.values,
-                    function(err,results){
-                        conn.end()
-                        if(err){
-                            reject(err)
-                        }else{
-                            resolve(results)
-                        }
+        .then(function(conn){
+            conn.query(
+                query.text,
+                query.values,
+                function(err,results){
+                    conn.end()
+                    if(err){
+                        reject(err)
+                    }else{
+                        resolve(results)
                     }
-                )
-            }
-        )
+                }
+            )
+        })
     })
 }
 

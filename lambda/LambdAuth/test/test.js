@@ -14,6 +14,7 @@ var keys=require('./testKeys.js')
 var require_helper=require('./require_helper.js')
 var config=require('./config.json')
 
+var SRPClient = require_helper('SRP/client.js')('modp18',1024);
 var handler=require_helper('handler.js')
 var ops=require_helper('operations.js')
 var email=require_helper('email.js')
@@ -63,9 +64,10 @@ var verifier_promise=new Promise(function(resolve,reject){
     
     var material=srp.genVerifier(username,password) 
     var A=client.genA()
+    
     resolve({
-        salt:material.salt,
-        verifier:material.v,
+        salt:material.salt.toString('hex'),
+        verifier:material.v.toString('hex'),
         A:A.A
     })
 })
@@ -146,7 +148,8 @@ module.exports={
            var message={
                 id:'john',
                 token:'111111',
-                B:crypto.randomBytes(4096).toString('hex')
+                B:crypto.randomBytes(4096).toString('hex'),
+                hotp:"1241314da"
             }
             decrypt(message)
             .then(function(data){
@@ -272,9 +275,11 @@ module.exports={
             test.ok(validate({
                 action:"create",
                 id:"john",
+                newId:"bill",
                 email:"john@johnmcalhoun.com",
                 B:crypto.randomBytes(4096).toString('hex'),
-                group:"user"
+                group:"user",
+                hotp:"1241314da"
             },messageschema).valid,"accept proper create")
             
             test.ok(!validate({
@@ -306,7 +311,8 @@ module.exports={
                 action:"session",
                 id:"john",
                 B:crypto.randomBytes(4096).toString('hex'),
-                token:"111111"
+                token:"111111",
+                hotp:crypto.randomBytes(1024).toString('hex')
             },messageschema).valid,"accept proper session")
             
             test.ok(!validate({
@@ -384,6 +390,7 @@ module.exports={
             verifier_promise.then(function(result){
                     connection.query(
                         [   
+                            "DROP DATABASE IF EXISTS `"+process.env.DB_NAME+"`",
                             "CREATE DATABASE IF NOT EXISTS "+process.env.DB_NAME,
                             "CREATE USER IF NOT EXISTS `manage` IDENTIFIED BY '"+config.DBPassword+"'",
                             "USE `"+process.env.DB_NAME+"`",
@@ -412,21 +419,21 @@ module.exports={
            }) 
         },
         srp:function(test){
-            var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
-            var srp = require_helper('srp.js');
-            
-            var material=srp.genVerifier(username,password) 
-            test.ok(material.v)
-            test.ok(material.salt)
+            verifier_promise.then(function(result){
+                var SRPClient = require_helper('SRP/client.js')('modp18',1024);
+                var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
+                var srp = require_helper('srp.js');
+                
+                var hotp=SRPClient.getHotp(username,password,result.salt)
+                var A=SRP.A(64)
 
-            var A=SRP.A(64)
-
-            srp.getSharedKey(A,username,password)
-            .then(function(result){
-                test.ok(result.b)
-                test.ok(result.B)
-                test.ok(result.key)
-                test.done()
+                srp.getSharedKey(A,username,hotp)
+                .then(function(result){
+                    test.ok(result.b)
+                    test.ok(result.B)
+                    test.ok(result.key)
+                    test.done()
+                },function(err){console.log(err);test.done();})
             })
         },
 
@@ -451,8 +458,9 @@ module.exports={
         },
 
         Sign:function(test){
-            key_promise.then(function(keypair){
-                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+            Promise.all([verifier_promise,key_promise])
+            .then(function(result){
+                process.env.RSA_PRIVATE_KEY=result[1].privateKeyEncrypted
                 var data={a:"b"}
                  
                 var callback=function(err,out){
@@ -462,11 +470,12 @@ module.exports={
                     verify = crypto.createVerify(out.hash);
                     verify.update(out.result);
 
-                    test.ok(verify.verify(keypair.publicKey, out.signature,'hex'));
+                    test.ok(verify.verify(result[1].publicKey, out.signature,'hex'));
                     test.done()
                 }
-                
-                sign(data,callback,{id:username,B:"ad"})
+                var SRPClient = require_helper('SRP/client.js')('modp18',1024);
+                var hotp=SRPClient.getHotp(username,password,result[0].salt)
+                sign(data,callback,{id:username,B:"ad",hotp:hotp})
             })
         }, 
 
@@ -650,24 +659,29 @@ module.exports={
         },
         Lambda:{
             setUp:function(callback){
-                key_promise.then(function(keypair){
-                    process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+                Promise.all([key_promise])
+                .then(function(results){
+                    process.env.RSA_PRIVATE_KEY=results[0].privateKeyEncrypted
                     callback() 
                 })
             },
             
             MFACreate:function(test){
-                var message={
-                    action:"createMFA",
-                    id:username,
-                    token:"111111",
-                    B:"ad"
-                }
-                var callback=function(err){
-                    test.ifError(err)
-                    test.done()
-                }
-                handler.actions.createMFA(message,callback)
+                Promise.all([verifier_promise])
+                .then(function(results){
+                    var message={
+                        action:"createMFA",
+                        id:username,
+                        token:"111111",
+                        B:"ad",
+                        hotp:SRPClient.getHotp(username,password,results[0].salt)
+                    }
+                    var callback=function(err){
+                        test.ifError(err)
+                        test.done()
+                    }
+                    handler.actions.createMFA(message,callback)
+                })
             },
          
             MFAVal:function(test){
@@ -688,33 +702,44 @@ module.exports={
             },
           
             Get:function(test){
-                var message={
-                    action:"get",
-                    id:username,
-                    B:"ad"
-                }           
-                var callback=function(err,data){
-                    test.ifError(err)
-                    test.ok(data)
-                    test.done()
-                }
-                handler.actions.get(message,callback)
+                Promise.all([verifier_promise])
+                .then(function(results){
+
+                    var message={
+                        action:"get",
+                        id:username,
+                        B:"ad",
+                        hotp:SRPClient.getHotp(username,password,results[0].salt)
+                    }           
+                    var callback=function(err,data){
+                        test.ifError(err)
+                        test.ok(data)
+                        test.done()
+                    }
+                    handler.actions.get(message,callback)
+                })
             },
             
             Create:function(test){
-                var message={
-                    action:"create",
-                    id:"bill",
-                    email:"johnmcalhoun123@gmail.com",
-                    token:"111111",
-                    B:"aa"
-                }
-                var callback=function(err,data){
-                    test.ifError(err)
-                    test.done()
-                }
-                
-                handler.actions.create(message,callback)
+                Promise.all([verifier_promise])
+                .then(function(results){
+
+                    var message={
+                        action:"create",
+                        id:username,
+                        newId:"bill",
+                        email:"johnmcalhoun123@gmail.com",
+                        token:"111111",
+                        B:"aa",
+                        hotp:SRPClient.getHotp(username,password,results[0].salt)
+                    }
+                    var callback=function(err,data){
+                        test.ifError(err)
+                        test.done()
+                    }
+                    
+                    handler.actions.create(message,callback)
+                })
             },
           
             Remove:function(test){
@@ -789,7 +814,8 @@ module.exports={
                             action:"session",
                             id:username,
                             B:material.A,
-                            token:token
+                            token:token,
+                            hotp:SRPClient.getHotp(username,password,material.salt)
                         }
 
                         var callback=function(err,data){
@@ -801,11 +827,14 @@ module.exports={
                 })
             },
             Handler:function(test){
-                key_promise.then(function(keypair){
+                Promise.all([key_promise,verifier_promise])
+                .then(function(results){
+                    var keypair=results[0]
                     payload_object={
                                 action:"get",
                                 id:username,
-                                B:crypto.randomBytes(4096).toString('hex')
+                                B:crypto.randomBytes(4096).toString('hex'),
+                                hotp:SRPClient.getHotp(username,password,results[1].salt)
                             }
                     payload=JSON.stringify(payload_object)
 

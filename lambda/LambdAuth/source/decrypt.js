@@ -26,7 +26,6 @@ module.exports=function(input){
             if(validate(message,messageschema).valid){
                 return(message)
             }else{
-                console.log(validate(message,messageschema))
                 return(fail())  
             }
         })
@@ -35,7 +34,6 @@ module.exports=function(input){
         return new Promise(function(resolve,reject){   
             var message=input
             message.action='session'
-            validate(message,messageschema) 
             if(validate(message,messageschema).valid){
                 resolve(message)
             }else{

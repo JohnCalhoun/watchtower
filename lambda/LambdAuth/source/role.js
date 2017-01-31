@@ -35,8 +35,3 @@ exports.getCredentials = function(id,group,mfa) {
     }
     return assume_role(params)
 }
-
-
-
-
-

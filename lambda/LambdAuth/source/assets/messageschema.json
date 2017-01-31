@@ -10,6 +10,10 @@
                 "type":"string",
                 "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
             },
+            "newId":{
+                "type":"string",
+                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+            },
             "email":{
                 "type":"string",
                 "format":"email"
@@ -22,10 +26,15 @@
             "group":{
                 "type":"sting",
                 "enum":["admin","user"]
+            },
+            "hotp":{
+                "type":"sting",
+                "minLength":"1",
+                "pattern":"^[0-9a-fA-F]+$"
             }
         },
         "required":[
-            "action","id","email","B","group"
+            "action","id","newId","email","B","group","hotp"
         ],
         "additionalProperties":false},
     {
@@ -73,10 +82,16 @@
                 "type":"sting",
                 "minLength":"512",
                 "pattern":"^[0-9a-fA-F]+$"
+            },
+            "hotp":{
+                "type":"sting",
+                "minLength":"1",
+                "pattern":"^[0-9a-fA-F]+$"
             }
+
         },
         "required":[
-            "action","id","B"
+            "action","id","B","hotp"
         ],
         "additionalProperties":false},
     {

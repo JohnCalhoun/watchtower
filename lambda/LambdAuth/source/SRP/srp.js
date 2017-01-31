@@ -4,6 +4,7 @@ var util=require('./util.js')
 var crypto = require('crypto');
 var SRP={}
 var hash_type='sha512'
+
 var passwordHash=util.hash(hash_type)
 var keyHash=util.hash(hash_type)
 var scrambleHash=util.hash(hash_type)
@@ -13,7 +14,7 @@ module.exports=function(group,keylength,saltLength){
     var dh=require('crypto').getDiffieHellman(group)
     var g=util.toBigInteger(dh.getGenerator())
     var N=util.toBigInteger(dh.getPrime())
-    var htop_window=30
+    var htop_window=60
 
     SRP.constants=function(){
         return {
@@ -42,12 +43,6 @@ module.exports=function(group,keylength,saltLength){
         return result;
     };
 
-    SRP.hotp=function(verifier,win=htop_window){
-        var t=Math.floor((new Date()).getTime/1000/win)
-
-        return util.toBigInteger(passwordHash(verifier.toString(16)+t))
-    }
-
     SRP.v = function(x) {
         var result = g.modPow(x, N);
         return util.toN(result);
@@ -58,7 +53,10 @@ module.exports=function(group,keylength,saltLength){
         var result = g.modPow(a, N);
         var A=util.toN(result);
 
-        return {A:A,a:a}
+        return {
+            A:A,
+            a:a
+        }
     };
 
     SRP.k = function() {
@@ -83,24 +81,59 @@ module.exports=function(group,keylength,saltLength){
         );
     };
 
+    SRP.clientHotp=function(I,P,s,win=htop_window){
+        var x=SRP.x(I,P,s)
+        var v_int=g.modPow(x, N)
+        var t=Math.floor((new Date()).getTime()/1000/win)
+        var hmac=crypto.createHmac('sha512',v_int.toString(16))
+        hmac.update(t.toString())
+        return hmac.digest('hex')
+    }
+
+    SRP.serverHotp=function(v_int,date=(new Date()),offset=0,win=htop_window){
+        var t=Math.floor(date.getTime()/1000/win)-offset
+        var hmac=crypto.createHmac('sha512',v_int.toString(16))
+        hmac.update(t.toString())
+        return hmac.digest('hex')
+    }
+
+    SRP.check=function(verifier,x){
+        var now=new Date()
+       
+        var check_time=function(offset){
+            var mine=SRP.serverHotp(util.toBigInteger(verifier),now,offset) 
+            return crypto.timingSafeEqual(
+                    Buffer.from(mine,'hex'),
+                    Buffer.from(x,'hex')
+                )
+        }
+        return (check_time(0) || check_time(1))
+     }
+
     SRP.clientS = function(A,B,a,I,P,s) {
         var x=SRP.x(I,P,s)
         var k=SRP.k()
         var u=SRP.u(A,B)
         var B_int=util.toBigInteger(B)
+        var v_int=g.modPow(x, N)
+        
+        var result = B_int.subtract(k.multiply(v_int)).modPow(a.add(u.multiply(x)), N);
+        var key=util.toN(result);
 
-        result = B_int.subtract(k.multiply(g.modPow(x, N))).modPow(a.add(u.multiply(x)), N);
-        return util.toN(result);
+        return {key:key} 
     };
 
     SRP.serverS = function(A,B,b,v) {
         if(!util.toBigInteger(B).mod(N).equals(BigInteger.ZERO)){
-            var A_int=util.toBigInteger(A)
-            var u_int=SRP.u(A,B)
             var v_int=util.toBigInteger(v)
 
-            result = A_int.multiply(v_int.modPow(u_int, N)).modPow(b, N);
-            return util.toN(result);
+            var A_int=util.toBigInteger(A)
+            var u_int=SRP.u(A,B)
+ 
+            var result = A_int.multiply(v_int.modPow(u_int, N)).modPow(b, N);
+            var key=util.toN(result);
+
+            return {key:key} 
         }else{
             return false
         }

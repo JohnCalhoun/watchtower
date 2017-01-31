@@ -9,13 +9,14 @@ exports.genVerifier=function(I,P){
     return client.getSaltVerifier(I,P)
 }
 
-exports.getSharedKey = function(A,user) {
-    var out=KMS.decrypt(
-            Buffer.from(process.env.DB_PASSWORD,'base64'),
-            {user:process.env.DB_USER}
-        )
-        .then(function(password){
-            return ops.get(user)
+exports.getSharedKey = function(A,user,hotp) {
+    var out=ops.get(user)
+        .then(function(results){
+            if(server.checkHotp(Buffer.from(results.verifier,'hex'),hotp)){
+                return results
+            }else{
+                return Promise.reject('failed')
+            }
         })
         .then(function(results){
             return server.genBandShared(A,results.salt,results.verifier)

@@ -14,9 +14,16 @@ module.exports=function(group,keylength){
     out.genA=function(){
         return srp.A()  
     }
+
+    out.getHotp=function(I,P,S){
+        return srp.clientHotp(I,P,S) 
+    }
+
     out.getShared=function(A,B,a,I,P,s){
-        var key=srp.clientS(A,B,a,I,P,s)
-        return srp.K(key)
+        var material=srp.clientS(A,B,a,I,P,s)
+        return {
+            key:srp.K(material.key)
+        }
     }
 
     return out
