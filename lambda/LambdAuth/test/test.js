@@ -36,6 +36,7 @@ process.env.LOG_LEVEL='warn'
 
 validate=require('jsonschema').validate
 messageschema=require(__dirname+'/../source/assets/messageschema.json')
+lambdaOutSchema=require('./lambdaOutSchema.json')
 
 var username='johndoe'
 var password='passowrd'
@@ -700,8 +701,8 @@ module.exports={
                     }
                     return handler.actions.createMFA(message)
                 })
-                .then(function(){
-                    test.ok(true)
+                .then(function(out){
+                    test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -718,8 +719,8 @@ module.exports={
                 .then(function(){
                     return handler.actions.valMFA(message)
                 })
-                .then(function(){
-                    test.ok(true)
+                .then(function(out){
+                    test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -739,7 +740,7 @@ module.exports={
                     return handler.actions.get(message)
                 })
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -753,7 +754,7 @@ module.exports={
                
                 handler.actions.salt(message)
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -776,7 +777,7 @@ module.exports={
                     return handler.actions.create(message)
                 })
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -791,7 +792,7 @@ module.exports={
                 
                 handler.actions.delete(message)
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -806,7 +807,7 @@ module.exports={
                 
                 handler.actions.changeEmail(message)
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -822,7 +823,7 @@ module.exports={
                
                 handler.actions.changePassword(message)
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -836,7 +837,7 @@ module.exports={
                 
                 handler.actions.resetPassword(message)
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -867,7 +868,7 @@ module.exports={
                     return handler.actions.session(message)
                 })
                 .then(function(data){
-                    test.ok(data)
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },

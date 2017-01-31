@@ -29,16 +29,16 @@ module.exports=function(output,message){
             result:output,
             publicKey:keys.publicKey
         })
+
         var result = cipher.update(payload, 'utf8', 'hex');
         result += cipher.final('hex');
         sign = crypto.createSign(hash);
         sign.update(result);
-
+        console.log(keys.salt)
         var out={
             result:result,
-            hash:hash,
             signature:sign.sign(keys[0], 'hex'),
-            salt:keys.salt,
+            hash:hash,
             algorithm:algorithm
         }
         return out
@@ -46,7 +46,6 @@ module.exports=function(output,message){
         var size=Math.floor(Math.random()*(100-20)+20)
          var out={
             result:     crypto.randomBytes(size).toString('hex'),
-            salt:       crypto.randomBytes(64).toString('hex'),
             signature:  crypto.randomBytes(64).toString('hex'),
             hash:hash,
             algorithm:algorithm

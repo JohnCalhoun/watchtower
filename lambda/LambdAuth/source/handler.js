@@ -120,7 +120,6 @@ actions.salt=function(message){
     .then(function(result){
         var output=result || {salt:crypto.randomBytes(64).toString('hex')} 
         return {
-            id:message.id,
             salt:output.salt
         }
     })
