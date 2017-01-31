@@ -6,20 +6,19 @@
             "result":{
                 "type":"string"
             },
-            "signature":{
+            "tag":{
                 "type":"string"
             },
-            "hash":{
-                "type":"string",
-                "enum":["RSA-SHA512"]
-            },
+            "iv":{
+                "type":"string"
+            },            
             "algorithm":{
                 "type":"string",
-                "enum":["aes-256-cbc-hmac-sha256"]
+                "enum":["aes-256-gcm"]
             }
         },
         "required":[
-            "result","signature","hash","algorithm"
+            "result","tag","iv","algorithm"
         ],
         "additionalProperties":false
     },

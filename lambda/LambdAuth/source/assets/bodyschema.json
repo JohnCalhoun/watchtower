@@ -13,6 +13,9 @@
         "payload":{
             "type":"string",
             "minLength":1
+        },
+        "messageId":{
+            "type":"string"
         }
     },
     "required":[
@@ -39,6 +42,9 @@
             "type":"sting",
             "minLength":"1",
             "pattern":"^[0-9a-fA-F]+$"
+        },
+        "messageId":{
+            "type":"string"
         }
     },
     "required":[

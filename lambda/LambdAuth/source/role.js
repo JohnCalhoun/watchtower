@@ -27,7 +27,6 @@ exports.getCredentials = function(id,group,mfa) {
     if(mfa){
         tempdata.mfa=true
     }
-
     var params={
         RoleArn: process.env.ROLE_ARN, 
         RoleSessionName: id,

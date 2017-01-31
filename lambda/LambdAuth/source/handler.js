@@ -8,6 +8,11 @@ var sign=require('./sign.js')
 var log=require('./log.js')
 var srp = require('./srp.js');
 
+var validate=require('jsonschema').validate
+var messageschema=require(__dirname+'/assets/messageschema.json')
+var bodyschema=require(__dirname+'/assets/bodyschema.json')
+
+
 actions={}
 actions.create=function(message){
     var pass=crypto.randomBytes(20).toString('hex')
@@ -129,14 +134,34 @@ actions.session=function(message){
     
     return session(message.id,message.B,message.token)
     .then(function(results){  
-        return sign(results,message)
+        return sign({
+            credentials:results,
+            publicKey:process.env.RSA_PUBLIC_KEY
+            },message)
     })
 } 
 
 exports.actions=actions
 
+var val=function(doc,schema){
+    return new Promise(function(resolve,reject){
+        if(validate(doc,schema).valid){
+            resolve(doc)
+        }else{
+            reject()
+        }
+    })
+}
+
 exports.handler = function(event, context,callback) {
-    decrypt(JSON.parse(event.body))
+
+    val(JSON.parse(event.body),bodyschema)
+    .then(function(message){ 
+        return decrypt(message)
+    })
+    .then(function(message){
+        return val(message,messageschema)
+    })
     .then(function(message){
         if(message.action!=='create'){
             return ops.check(message)
@@ -145,7 +170,7 @@ exports.handler = function(event, context,callback) {
         }
     })
     .then(function(message){
-        actions[message.action](message) 
+        return actions[message.action](message) 
     })
     .then(
         function(material){

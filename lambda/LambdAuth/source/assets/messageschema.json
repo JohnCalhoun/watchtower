@@ -31,10 +31,13 @@
                 "type":"sting",
                 "minLength":"1",
                 "pattern":"^[0-9a-fA-F]+$"
+            },
+            "messageId":{
+                "type":"string"
             }
         },
         "required":[
-            "action","id","newId","email","B","group","hotp"
+            "action","id","newId","email","B","group","hotp","messageId"
         ],
         "additionalProperties":false},
     {
@@ -87,11 +90,13 @@
                 "type":"sting",
                 "minLength":"1",
                 "pattern":"^[0-9a-fA-F]+$"
+            },
+            "messageId":{
+                "type":"string"
             }
-
         },
         "required":[
-            "action","id","B","hotp"
+            "action","id","B","hotp","messageId"
         ],
         "additionalProperties":false},
     {

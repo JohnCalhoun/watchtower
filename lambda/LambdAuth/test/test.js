@@ -15,6 +15,9 @@ var require_helper=require('./require_helper.js')
 var config=require('./config.json')
 
 var SRPClient = require_helper('SRP/client.js')('modp18',1024);
+var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
+var srp = require_helper('srp.js');
+
 var handler=require_helper('handler.js')
 var ops=require_helper('operations.js')
 var email=require_helper('email.js')
@@ -132,6 +135,7 @@ module.exports={
                 id:'john',
                 token:'111111',
                 B:crypto.randomBytes(4096).toString('hex'),
+                messageId:"addd",
                 hotp:"1241314da"
             }
             decrypt(message)
@@ -176,6 +180,7 @@ module.exports={
                         algorithm:algorithm
                     }
                 process.env.RSA_PRIVATE_KEY=material[0].privateKeyEncrypted
+                process.env.RSA_PUBLIC_KEY=material[0].publicKey
                 process.env.RSA_KMS_KEY=config.keyArn
                 
                 decrypt(body)
@@ -189,29 +194,6 @@ module.exports={
                     console.log(err)
                     test.expect(1);
                     test.ifError(err);
-                    test.done()
-                })
-            })
-        },
-        Fail1:function(test){
-            test.expect(1);
-            process.env.RSA_PRIVATE_KEY=""
-            
-            decrypt("")
-            .then(null,
-            function(err){
-                test.ok(err);
-                test.done()
-            })
-        },
-        Fail2:function(test){
-            key_promise.then(function(keypair){
-                process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
-         
-                decrypt("")
-                .then(null,
-                function(err){
-                    test.ok(err);
                     test.done()
                 })
             })
@@ -262,6 +244,7 @@ module.exports={
                 email:"john@johnmcalhoun.com",
                 B:crypto.randomBytes(4096).toString('hex'),
                 group:"user",
+                messageId:"addd",
                 hotp:"1241314da"
             },messageschema).valid,"accept proper create")
             
@@ -295,6 +278,7 @@ module.exports={
                 id:"john",
                 B:crypto.randomBytes(4096).toString('hex'),
                 token:"111111",
+                messageId:"addd",
                 hotp:crypto.randomBytes(1024).toString('hex')
             },messageschema).valid,"accept proper session")
             
@@ -403,9 +387,6 @@ module.exports={
         },
         srp:function(test){
             verifier_promise.then(function(result){
-                var SRPClient = require_helper('SRP/client.js')('modp18',1024);
-                var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
-                var srp = require_helper('srp.js');
                 
                 var hotp=SRPClient.getHotp(username,password,result.salt)
                 var A=SRP.A(64)
@@ -452,14 +433,10 @@ module.exports={
                     var SRPClient = require_helper('SRP/client.js')('modp18',1024);
                     var hotp=SRPClient.getHotp(username,password,result[0].salt)
 
-                    return sign(data,{id:username,B:"ad",hotp:hotp})
+                    return sign(data,{id:username,B:"ad",hotp:hotp,messageId:"100"})
                 })
                 .then(function(out){
-                    test.expect(1);
-                    
-                    verify = crypto.createVerify(out.hash);
-                    verify.update(out.result);
-                    test.ok(verify.verify(publicKey, out.signature,'hex'));
+                    test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             },
@@ -467,8 +444,7 @@ module.exports={
                 var data={a:"b"}
                 sign(data,null)
                 .then(function(out){
-                    test.expect(1);
-                    test.ok(out);
+                    test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
                     test.done()
                 })
             }
@@ -697,6 +673,7 @@ module.exports={
                         id:username,
                         token:"111111",
                         B:"ad",
+                        messageId:"addd",
                         hotp:SRPClient.getHotp(username,password,results[0].salt)
                     }
                     return handler.actions.createMFA(message)
@@ -734,7 +711,8 @@ module.exports={
                         action:"get",
                         id:username,
                         B:"ad",
-                        hotp:SRPClient.getHotp(username,password,results[0].salt)
+                        hotp:SRPClient.getHotp(username,password,results[0].salt),
+                        messageId:"addd"
                     }           
                     
                     return handler.actions.get(message)
@@ -771,6 +749,7 @@ module.exports={
                         email:"johnmcalhoun123@gmail.com",
                         token:"111111",
                         B:"aa",
+                        messageId:"addd",
                         hotp:SRPClient.getHotp(username,password,results[0].salt)
                     }
                     
@@ -862,7 +841,8 @@ module.exports={
                         id:username,
                         B:results[1].A,
                         token:token,
-                        hotp:SRPClient.getHotp(username,password,results[1].salt)
+                        hotp:SRPClient.getHotp(username,password,results[1].salt),
+                        messageId:"addd"
                     }
                     
                     return handler.actions.session(message)
@@ -880,6 +860,7 @@ module.exports={
                                 action:"get",
                                 id:username,
                                 B:crypto.randomBytes(4096).toString('hex'),
+                                messageId:"addd",
                                 hotp:SRPClient.getHotp(username,password,results[1].salt)
                             }
                     payload=JSON.stringify(payload_object)
