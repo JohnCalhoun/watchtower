@@ -1,7 +1,7 @@
-var randomBytes = require('randombytes');
 var BigInteger = require('jsbn').BigInteger;
 var util=require('./util.js')
 var crypto = require('crypto');
+var randomBytes = crypto.randomBytes;
 var SRP={}
 var hash_type='sha512'
 

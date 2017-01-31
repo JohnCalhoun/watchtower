@@ -107,24 +107,6 @@ module.exports={
             })
         }
     },
-    Handler:{
-        Error:function(test){ 
-            var callback=function(err){
-                test.expect(1)
-                test.ok(err)
-                test.done()
-            }
-            handler.Error(callback)("you should see this")
-        },
-        Success:function(test){ 
-            var callback=function(err){
-                test.expect(1)
-                test.ifError(err)
-                test.done()
-            }
-            handler.Success(callback)("you should not see this")
-        }
-    },
     log:function(test){
         var log=require_helper('log.js')
         log.log("you should see this",log.levels.error)  
@@ -457,28 +439,39 @@ module.exports={
             )
         },
 
-        Sign:function(test){
-            Promise.all([verifier_promise,key_promise])
-            .then(function(result){
-                process.env.RSA_PRIVATE_KEY=result[1].privateKeyEncrypted
-                var data={a:"b"}
-                 
-                var callback=function(err,out){
-                    test.expect(2);
-                    test.ifError(err)
+        Sign:{
+            message:function(test){
+                var publicKey
+                Promise.all([verifier_promise,key_promise])
+                .then(function(result){
+                    process.env.RSA_PRIVATE_KEY=result[1].privateKeyEncrypted
+                    publicKey=result[1].publicKey
+                    var data={a:"b"}
+                     
+                    var SRPClient = require_helper('SRP/client.js')('modp18',1024);
+                    var hotp=SRPClient.getHotp(username,password,result[0].salt)
+
+                    return sign(data,{id:username,B:"ad",hotp:hotp})
+                })
+                .then(function(out){
+                    test.expect(1);
                     
                     verify = crypto.createVerify(out.hash);
                     verify.update(out.result);
-
-                    test.ok(verify.verify(result[1].publicKey, out.signature,'hex'));
+                    test.ok(verify.verify(publicKey, out.signature,'hex'));
                     test.done()
-                }
-                var SRPClient = require_helper('SRP/client.js')('modp18',1024);
-                var hotp=SRPClient.getHotp(username,password,result[0].salt)
-                sign(data,callback,{id:username,B:"ad",hotp:hotp})
-            })
-        }, 
-
+                })
+            },
+            noMessage:function(test){
+                var data={a:"b"}
+                sign(data,null)
+                .then(function(out){
+                    test.expect(1);
+                    test.ok(out);
+                    test.done()
+                })
+            }
+        },
         Mfa:function(test){
             mfa.gen(username)
             .then(function(){
@@ -560,7 +553,34 @@ module.exports={
                 test.done()
             })
         },
-
+        check:{
+            found:function(test){
+                test.expect(1);
+                ops.check({id:username})
+                .then(function(results){
+                    test.ok(results)
+                    test.done()
+                },
+                function(err){
+                    test.ifError(err);
+                    test.done()
+                }
+                )
+            },
+            missing:function(test){
+                test.expect(1);
+                var tmp=ops.check({id:username+'not_here'})
+                tmp.then(function(results){
+                    test.ok(!results)
+                    test.done()
+                },
+                function(err){
+                    test.ok(err);
+                    test.done()
+                }
+                )
+            }
+        },
         Get:function(test){
             
             ops.get(username)
@@ -667,6 +687,8 @@ module.exports={
             },
             
             MFACreate:function(test){
+                test.expect(1)
+
                 Promise.all([verifier_promise])
                 .then(function(results){
                     var message={
@@ -676,32 +698,34 @@ module.exports={
                         B:"ad",
                         hotp:SRPClient.getHotp(username,password,results[0].salt)
                     }
-                    var callback=function(err){
-                        test.ifError(err)
-                        test.done()
-                    }
-                    handler.actions.createMFA(message,callback)
+                    return handler.actions.createMFA(message)
+                })
+                .then(function(){
+                    test.ok(true)
+                    test.done()
                 })
             },
          
             MFAVal:function(test){
+                test.expect(1)
                 var message={
                     action:"valMFA",
                     id:username,
                     token:"111111"
                 }
-                var callback=function(err){
-                    test.ifError(err)
-                    test.done()
-                }
                 
                 mfa.gen(username)
                 .then(function(){
-                    handler.actions.valMFA(message,callback)
+                    return handler.actions.valMFA(message)
+                })
+                .then(function(){
+                    test.ok(true)
+                    test.done()
                 })
             },
           
             Get:function(test){
+                test.expect(1)
                 Promise.all([verifier_promise])
                 .then(function(results){
 
@@ -711,16 +735,31 @@ module.exports={
                         B:"ad",
                         hotp:SRPClient.getHotp(username,password,results[0].salt)
                     }           
-                    var callback=function(err,data){
-                        test.ifError(err)
-                        test.ok(data)
-                        test.done()
-                    }
-                    handler.actions.get(message,callback)
+                    
+                    return handler.actions.get(message)
+                })
+                .then(function(data){
+                    test.ok(data)
+                    test.done()
                 })
             },
-            
+             
+            Salt:function(test){
+                test.expect(1)
+                var message={
+                    action:"salt",
+                    id:username
+                }           
+               
+                handler.actions.salt(message)
+                .then(function(data){
+                    test.ok(data)
+                    test.done()
+                })
+            },
+           
             Create:function(test){
+                test.expect(1)
                 Promise.all([verifier_promise])
                 .then(function(results){
 
@@ -733,97 +772,103 @@ module.exports={
                         B:"aa",
                         hotp:SRPClient.getHotp(username,password,results[0].salt)
                     }
-                    var callback=function(err,data){
-                        test.ifError(err)
-                        test.done()
-                    }
                     
-                    handler.actions.create(message,callback)
+                    return handler.actions.create(message)
+                })
+                .then(function(data){
+                    test.ok(data)
+                    test.done()
                 })
             },
           
             Remove:function(test){
+                test.expect(1)
+                
                 var message={
                     action:"delete",
                     id:username
                 }
-                var callback=function(err,data){
-                    test.ifError(err)
+                
+                handler.actions.delete(message)
+                .then(function(data){
+                    test.ok(data)
                     test.done()
-                }
-                
-                handler.actions.delete(message,callback)
-                
+                })
             },
-
          
             ChangeEmail:function(test){
+                test.expect(1)
                 var message={
                     action:"changeEmail",
                     id:username,
                     email:"test@test.com"
                 }
                 
-                var callback=function(err,data){
-                    test.ifError(err)
+                handler.actions.changeEmail(message)
+                .then(function(data){
+                    test.ok(data)
                     test.done()
-                }
-                
-                handler.actions.changeEmail(message,callback)
+                })
             },
 
             ChangePassword:function(test){
+                test.expect(1)
                 var message={
                     action:"changePassword",
                     id:username,
                     salt:crypto.randomBytes(4096).toString('hex'),
                     verifier:crypto.randomBytes(4096).toString('hex')
                 }
-                var callback=function(err,data){
-                    test.ifError(err)
+               
+                handler.actions.changePassword(message)
+                .then(function(data){
+                    test.ok(data)
                     test.done()
-                }
-
-                handler.actions.changePassword(message,callback)
+                })
             },
 
             ResetPassword:function(test){
+                test.expect(1)
                 var message={
                     action:"resetPassword",
                     id:username
                 }
-                var callback=function(err,data){
-                    test.ifError(err)
+                
+                handler.actions.resetPassword(message)
+                .then(function(data){
+                    test.ok(data)
                     test.done()
-                }
-                handler.actions.resetPassword(message,callback)
+                })
             },
             Session:function(test){
-                verifier_promise.then(function(material){
-                    mfa.gen(username)
-                    .then(function(){
-                        return mfa.get(username)
-                    })
-                    .then(function(results){
-                        var token=speakeasy.totp({
-                            secret:results.secret,
-                            encoding:'base32'
-                        })
+                test.expect(1)
 
-                        var message={
-                            action:"session",
-                            id:username,
-                            B:material.A,
-                            token:token,
-                            hotp:SRPClient.getHotp(username,password,material.salt)
-                        }
-
-                        var callback=function(err,data){
-                            test.ifError(err)
-                            test.done()
-                        }
-                        handler.actions.session(message,callback)
+                mfa.gen(username)
+                .then(function(){
+                    return Promise.all([
+                            mfa.get(username),
+                            verifier_promise
+                            ])
+                })
+                .then(function(results){
+                    var token=speakeasy.totp({
+                        secret:results[0].secret,
+                        encoding:'base32'
                     })
+
+                    var message={
+                        action:"session",
+                        id:username,
+                        B:results[1].A,
+                        token:token,
+                        hotp:SRPClient.getHotp(username,password,results[1].salt)
+                    }
+                    
+                    return handler.actions.session(message)
+                })
+                .then(function(data){
+                    test.ok(data)
+                    test.done()
                 })
             },
             Handler:function(test){

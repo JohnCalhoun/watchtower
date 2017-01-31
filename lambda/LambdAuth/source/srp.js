@@ -10,7 +10,7 @@ exports.genVerifier=function(I,P){
 }
 
 exports.getSharedKey = function(A,user,hotp) {
-    var out=ops.get(user)
+    return ops.get(user)
         .then(function(results){
             if(server.checkHotp(Buffer.from(results.verifier,'hex'),hotp)){
                 return results
@@ -21,7 +21,6 @@ exports.getSharedKey = function(A,user,hotp) {
         .then(function(results){
             return server.genBandShared(A,results.salt,results.verifier)
         })
-    return out   
 }
 
 

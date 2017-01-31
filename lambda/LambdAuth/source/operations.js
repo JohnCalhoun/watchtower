@@ -78,6 +78,25 @@ exports.get=function(id){
 
     return out
 }
+exports.check=function(message){
+    var query=users
+        .select(
+            users.id
+        )
+        .from(users)
+        .where(users.id.equals(message.id)).toQuery()
+
+    var out=run_query(query)
+    .then(function(result){
+        if(result.length===1){
+            return Promise.resolve(message)
+        }else{
+            return Promise.reject('err')
+        }
+    })
+    return out
+}
+
 
 exports.create=function(id,email,salt,verifier,group){
     var query=users

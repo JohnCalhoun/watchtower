@@ -9,28 +9,12 @@ var log=require('./log.js')
 var srp = require('./srp.js');
 
 actions={}
-
-var Error=function(callback){
-    return function(err){
-        log.log(err,log.levels.error)
-        callback(true)
-    }
-}
-exports.Error=Error
-
-var Success=function(callback){
-    return function(){
-        callback(null)
-    }
-}
-exports.Success=Success
-
-actions.create=function(message,callback){
+actions.create=function(message){
     var pass=crypto.randomBytes(20).toString('hex')
     
     var material=srp.genVerifier(message.newId,pass) 
 
-    ops.create(
+    return ops.create(
         message.newId,
         message.email,
         material.salt,
@@ -41,65 +25,67 @@ actions.create=function(message,callback){
         return email.send(message.email,{user:message.id},"invite")
     })
     .then(function(){
-        sign({password:pass},
-            callback,
-            message)
+        return sign({password:pass},message)
     })
-    .then(null,Error(callback))
-
 }
 
-actions.createMFA=function(message,callback){
-    mfa.gen(message.id)
+actions.createMFA=function(message){
+
+    return mfa.gen(message.id)
     .then(function(){
         return mfa.get(message.id)
     })
     .then(function(results){
-        sign({
+        return sign({
             secret:results.secret,
             qr:results.qr
-        },callback,message) 
+        },message) 
     })
-    .then(null,Error(callback))
 }
 
-actions.valMFA=function(message,callback){
-    mfa.val(message.id,message.token)
-    .then(Success(callback))
-    .then(null,Error(callback))
+actions.valMFA=function(message){
+    
+    return mfa.val(message.id,message.token)
+    .then(function(){
+        return true
+    })
 }
 
-actions.delete=function(message,callback){
-    ops.remove(message.id)
-    .then(Success(callback))
-    .then(null,Error(callback))
+actions.delete=function(message){
+
+    return ops.remove(message.id)
+    .then(function(){
+        return true
+    })
 }
 
-actions.changeEmail=function(message,callback){
-    ops.update(
+actions.changeEmail=function(message){
+    return ops.update(
         message.id,
         {email:message.email})
-    .then(Success(callback))
-    .then(null,Error(callback))
+    .then(function(){
+        return true
+    })
 } 
-    
 
-actions.changePassword=function(message,callback){
-    ops.update(
+actions.changePassword=function(message){
+    return ops.update(
         message.id,
         {salt:message.salt,
         verifier:message.verifier,
         reset:0})
-    .then(Success(callback))
-    .then(null,Error(callback))
+    .then(function(){
+        return true
+    })
 } 
     
 
-actions.resetPassword=function(message,callback){
+actions.resetPassword=function(message){
     var pass=crypto.randomBytes(20).toString('hex')
 
     var material=srp.genVerifier(message.id,pass) 
-    ops.update(
+    
+    return ops.update(
         message.id,
         {salt:material.salt,
         verifier:material.v,
@@ -111,28 +97,41 @@ actions.resetPassword=function(message,callback){
     .then(function(results){
         return email.send(results.email,{secret:pass},"reset")
     })
-    .then(Success(callback))
-    .then(null,Error(callback))
+    .then(function(){
+        return true
+    })
 } 
+
+actions.get=function(message){
     
-
-actions.get=function(message,callback){
-    ops.get(message.id)
+    return ops.get(message.id)
     .then(function(result){
-        sign({
+        return sign({
             id:result.id,
-            email:result.email
-        },callback,message) 
+            email:result.email,
+            salt:result.salt
+        },message) 
     })
-    .then(null,Error(callback))
 } 
 
-actions.session=function(message,callback){
-    session(message.id,message.B,message.token)
-    .then(function(results){  
-        sign(results,callback,message)
+actions.salt=function(message){
+    
+    return ops.get(message.id)
+    .then(function(result){
+        var output=result || {salt:crypto.randomBytes(64).toString('hex')} 
+        return {
+            id:message.id,
+            salt:output.salt
+        }
     })
-    .then(null,Error(callback))
+} 
+
+actions.session=function(message){
+    
+    return session(message.id,message.B,message.token)
+    .then(function(results){  
+        return sign(results,message)
+    })
 } 
 
 exports.actions=actions
@@ -140,9 +139,24 @@ exports.actions=actions
 exports.handler = function(event, context,callback) {
     decrypt(JSON.parse(event.body))
     .then(function(message){
-        actions[message.action](message,callback) 
+        if(message.action!=='create'){
+            return ops.check(message)
+        }else{
+            return message
+        }
     })
-    .then(null,Error(callback))
+    .then(function(message){
+        actions[message.action](message) 
+    })
+    .then(
+        function(material){
+            callback(null,material)
+        },
+        function(err){
+            log.log(err,log.levels.error)
+            callback(true)
+        }
+    )
 }
 
 

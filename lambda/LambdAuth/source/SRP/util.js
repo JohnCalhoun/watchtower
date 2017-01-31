@@ -1,5 +1,5 @@
 var BigInteger = require('jsbn').BigInteger;
-var createHash=require('create-hash')
+var crypto=require('crypto')
 
 exports.toN = function(number) {
     var thisHexString = number.toString(16);
@@ -15,7 +15,7 @@ exports.toBigInteger = function(bufferObj) {
 
 exports.hash=function(type){
     return function(text){
-        return createHash(type)
+        return crypto.createHash(type)
             .update(text)
             .digest()
     }
