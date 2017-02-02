@@ -100,7 +100,52 @@
             ]]}
         ]
     }
+},
+"userTable":{
+    "Type" : "Custom::DBTable",
+    "Properties" : {
+        "ServiceToken":{"Fn::GetAtt":["InitDataBase","Arn"]},
+        "TableName":"users",
+        "type":"table",
+        "TableSchema":[
+            {
+                "name":"id",
+                "dataType":"text"
+            },
+            {
+                "name":"email",
+                "dataType":"text"
+            },
+            {
+                "name":"salt",
+                "dataType":"text"
+            },
+            {
+                "name":"verifier",
+                "dataType":"text"
+            },
+            {
+                "name":"type",
+                "dataType":"text"
+            },
+            {
+                "name":"reset",
+                "dataType":"bool"
+            },
+            {
+                "name":"mfaSecret",
+                "dataType":"text"
+            },
+            {
+                "name":"mfaEnabled",
+                "dataType":"bool"
+            }]
+    }
 }
+
+
+
+
 ,
 "key":{
     "Type" : "AWS::KMS::Key",

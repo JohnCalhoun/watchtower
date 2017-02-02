@@ -1,0 +1,32 @@
+"DBSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"Allows traffic through load balancer",
+        "SecurityGroupIngress" : [
+            {
+                "SourceSecurityGroupId":{"Ref":"RDSlambdaSG"}, 
+                "FromPort" : "3306",
+                "ToPort" : "3306",
+                "IpProtocol" : "tcp"
+            }
+        ],
+        "VpcId" :{"Fn::Join":["",[
+                {"Fn::ImportValue":
+                    {"Fn::Sub":"${NetworkStackName}-VPC"}
+                }
+            ]]}
+    }
+},
+"RDSlambdaSG":{
+    "Type" : "AWS::EC2::SecurityGroup",
+    "Properties" : {
+        "GroupDescription":"na",
+        "SecurityGroupIngress" : [],
+        "VpcId" :{"Fn::Join":["",[
+            {"Fn::ImportValue":
+                {"Fn::Sub":"${NetworkStackName}-VPC"}
+            }
+        ]]}
+    }
+}
+

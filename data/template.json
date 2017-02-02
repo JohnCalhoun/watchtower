@@ -1,0 +1,83 @@
+{ 
+"AWSTemplateFormatVersion":"2010-09-09",
+"Description":"",
+"Conditions" : {
+    "CreateFromBackup" : {"Fn::Not":[
+        {"Fn::Equals" : [{"Ref" : "SnapshotIdentifier"}, "false"]}
+    ]}
+}
+,
+"Mappings":{
+    
+},
+"Outputs":{
+    "DBID":{
+        "Value":{"Ref":"DB"}
+    }
+}
+,
+"Parameters":{
+    "SnapshotIdentifier":{
+        "Type" : "String",
+        "Default":"false"
+    },
+    "DBName" : {
+        "Type" : "String",
+        "Default":"test"
+    },
+    "DBUser" : {
+        "NoEcho":"true",
+        "Default" :"root",
+        "Type" : "String"
+    },
+    "DBPassword" : {
+        "NoEcho":"true",
+        "Type" : "String",
+        "Default":"walwala123"
+    },
+    "EndPointURL":{
+        "Type" : "String"
+    },
+    "HostedZone":{
+        "Type" : "String"
+    }
+}
+,
+"Resources":{ 
+"DB" : {
+    "Type" : "AWS::RDS::DBInstance",
+    "Properties" : {
+        "AllocatedStorage" : "5",
+        "DBInstanceClass" : "db.t2.micro",
+        "Engine" : "MySQL",
+        "MultiAZ": "false",
+        "EngineVersion":"5.7",
+        "AllowMajorVersionUpgrade":true,
+        "DBSnapshotIdentifier":{"Fn::If" : [
+            "CreateFromBackup",
+            {"Ref":"SnapshotIdentifier"},
+            {"Ref":"AWS::NoValue"}
+            ]
+        },
+        "MasterUsername" :      { "Ref" : "DBUser" },
+        "MasterUserPassword" :  { "Ref" : "DBPassword" },
+        "DBName":               { "Ref" : "DBName" },
+        "PubliclyAccessible":"true"
+    }
+}
+,
+"DNSRecord" : {
+    "Type" : "AWS::Route53::RecordSet",
+    "Properties" : {
+        "HostedZoneId" :{"Ref":"HostedZone"},
+        "Name":{"Ref":"EndPointURL"},
+        "Type" : "CNAME",
+        "TTL" : "30",
+        "ResourceRecords" : [
+            { "Fn::GetAtt" : ["DB", "Endpoint.Address"] }
+        ]
+    },
+    "DependsOn":"DB"
+}
+
+}}

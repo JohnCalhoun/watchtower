@@ -4,6 +4,7 @@
         "AllocatedStorage" : "5",
         "DBInstanceClass" : "db.t2.micro",
         "Engine" : "MySQL",
+        "EngineVersion":"5.7",
         "MultiAZ":{"Fn::If" : [
             "CreateProdResources",
             "true",
@@ -43,3 +44,6 @@
         ]
     }
 }
+
+
+

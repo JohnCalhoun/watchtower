@@ -37,10 +37,10 @@ module.exports=function(output,message){
             return Promise.reject()
         }
     }().then(function(){
-        var private_key_promise=KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64'))
-        var shared_key_promise=srp.getSharedKey(message.B,message.id,message.hotp)
-        
-        return Promise.all([private_key_promise,shared_key_promise])
+        return Promise.all([
+            KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64')),
+            srp.getSharedKey(message.B,message.id,message.hotp)
+            ])
     })
     .then(function(keys){
         return encapsulate(output,keys[1].key,message.messageId)

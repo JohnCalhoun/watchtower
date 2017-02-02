@@ -12,5 +12,10 @@ module.exports={
                 dest:"tmp",
                 flatten:true}
         ]
+    },
+    sql:{
+        files:[
+            {expand:true,src:["lambda/LambdAuth/tmp/auth.sql"],dest:"data/scripts",flatten:true}
+        ]
     }
 }

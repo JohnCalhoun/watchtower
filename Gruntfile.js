@@ -17,17 +17,20 @@ module.exports=function(grunt){
         grunt.config.set("DBPasswordRead",  DBPassword=crypto.randomBytes(20).toString('hex'))
         grunt.config.set("DBPasswordWrite", DBPassword=crypto.randomBytes(20).toString('hex'))
     })
-    grunt .registerTask('lambda',[
+    grunt.registerTask('lambda',[
         "shell:buildLambda", 
         "copy:lambda",
         "shell:uploadLambda"
         ])
 
-    grunt .registerTask('cloudformation',[
+    grunt.registerTask('cloudformation',[
         "copy:cloudformation",
         "shell:uploadCloudformation"
         ])
-
+    grunt.registerTask('sql',[
+        "shell:AuthScript",
+        "copy:sql"
+    ])
 }
 
 

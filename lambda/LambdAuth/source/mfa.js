@@ -5,7 +5,7 @@ var ops=require('./operations')
 var KMS=require('./KMS.js')
 
 exports.gen=function(id){
-    var out=KMS.encrypt(
+    return KMS.encrypt(
         speakeasy.generateSecret().base32,
         {
             id:id,
@@ -18,8 +18,6 @@ exports.gen=function(id){
             mfaEnabled:false
         })
     })
-
-    return(out)
 }
 
 exports.get=function(id){

@@ -1,6 +1,6 @@
 {
     "ProjectName":"watchtower", 
-    "StackName":"database",
+    "StackName":"database2",
     
     "NetworkStackName":"watchtower-network",
 
