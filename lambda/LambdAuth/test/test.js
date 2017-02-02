@@ -1,7 +1,8 @@
 process.env.REGION='us-east-1'
+process.env.AWS_LAMBDA_FUNCTION_NAME='test' 
 
 var aws=require('aws-sdk')
-
+var Promise=require('bluebird')
 var kms=new aws.KMS({region:process.env.REGION})
 
 var mysql=require('mysql')
@@ -29,6 +30,7 @@ var srp=require_helper('srp.js')
 var session=require_helper('session.js')
 var sign=require_helper('sign.js')
 var KMS=require_helper('KMS.js')
+var log=require_helper('log.js')
 
 var db=ops.db
 process.env.KMS_KEY=config.keyArn
@@ -41,8 +43,9 @@ validate=require('jsonschema').validate
 messageschema=require(__dirname+'/../source/assets/messageschema.json')
 lambdaOutSchema=require('./lambdaOutSchema.json')
 
-var username='johndoe'
-var password='passowrd'
+var faker=require('faker')
+var username=faker.internet.userName()
+var password=faker.internet.password()
 
 var key_promise=keys(config.keyArn)
 var password_promise=new Promise(function(resolve,reject){
@@ -79,43 +82,59 @@ module.exports={
     KMS:{
         Encrypt:function(test){
             test.expect(1)
-            KMS.encrypt("test")
+            var text=faker.lorem.word()
+            KMS.encrypt(text)
             .then(function(cipher){
                 test.ok(cipher.toString("base32"))
-                test.done()
             })
+            .finally(test.done)
         },
         
         EncryptFail:function(test){
             test.expect(1)
             process.env.KMS_KEY="adf"
-            KMS.encrypt("test")
+            var text=faker.lorem.word()
+            KMS.encrypt(text)
             .then(null,function(err){
                 process.env.KMS_KEY=config.keyArn
                 test.ok(err)
-                test.done()
             })
+            .finally(test.done)
         },
         
         Decrypt:function(test){
             test.expect(1)
-            var text="test"
+            var text=faker.lorem.word()
 
             KMS.encrypt(text)
             .then(function(cipher){
-                KMS.decrypt(cipher)
-                .then(function(result){
-                    test.equal(text,result)
-                    test.done()
-                })
+                return KMS.decrypt(cipher)
             })
+            .then(function(result){
+                test.equal(text,result)
+            })
+            .finally(test.done)
         }
     },
-    log:function(test){
-        var log=require_helper('log.js')
-        log.log("you should see this",log.levels.error)  
-        log.log("you should not see this",log.levels.info)  
-        test.done()
+    Log:{
+        log:function(test){
+            log.log("you should see this",log.levels.error)  
+            log.log("you should not see this",log.levels.info)  
+            test.done()
+        },
+        metric:function(test){
+            test.expect(1)
+            var infos=[]
+            var start=process.hrtime()
+
+            infos.push({name:'example',time:process.hrtime(start)})
+            
+            log.metric('test',infos)
+            .then(function(){
+                test.ok(true)
+            })
+            .finally(test.done)
+        }
     },
     role:function(test){
         test.expect(3);
@@ -124,15 +143,15 @@ module.exports={
             test.ok(result.AccessKeyId)
             test.ok(result.SecretAccessKey)
             test.ok(result.SessionToken)
-            test.done()
         },function(err){
             console.log(err) 
         })
+        .finally(test.done)
     },
     Decrypt:{
         Skip:function(test){
            var message={
-                id:'john',
+                id:faker.internet.userName(),
                 token:'111111',
                 B:crypto.randomBytes(4096).toString('hex'),
                 messageId:"addd",
@@ -143,13 +162,12 @@ module.exports={
                 test.expect(2);
                 test.ok(data)
                 test.equal(data.action,'session')
-                test.done()
             },
             function(err){
                 test.expect(1);
                 test.ifError(err,"should not return erro");
-                test.done()
             })
+            .finally(test.done)
         },
         Success:function(test){
             Promise.all([key_promise,verifier_promise])
@@ -188,35 +206,34 @@ module.exports={
                     test.expect(2);
                     test.equal(payload_object.id,data.id)
                     test.equal(payload_object.verifiver,data.verifiver)
-                    test.done()
                 },
                 function(err){
                     console.log(err)
                     test.expect(1);
                     test.ifError(err);
-                    test.done()
                 })
+                .finally(test.done)
             })
         }
     },
     Email:function(test){
         test.expect(1);
         
-        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
+        email.send("johnmcalhoun123@gmail.com",{secret:faker.internet.password()},"reset")
         .then(function(err){
             test.ifError(err)
-            test.done()
         })
+        .finally(test.done)
     },
     
     EmailFail1:function(test){
         test.expect(1);
         
-        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"NotATYPE")
+        email.send("johnmcalhoun123@gmail.com",{secret:faker.internet.password()},"NotATYPE")
         .then(null,function(err){
             test.ok(err)
-            test.done()
         })
+        .finally(test.done)
 
     },
     
@@ -225,12 +242,12 @@ module.exports={
         var save=process.env.EMAIL_SOURCE="test@jmc.ninja"
         process.env.EMAIL_SOURCE="notvalid"
         
-        email.send("johnmcalhoun123@gmail.com",{secret:"asdfasdfasdfa"},"reset")
+        email.send("johnmcalhoun123@gmail.com",{secret:faker.internet.password()},"reset")
         .then(null,function(err){
             test.ok(err)
             process.env.EMAIL_SOURCE=save
-            test.done()
         })
+        .finally(test.done)
 
     },
 
@@ -239,9 +256,9 @@ module.exports={
             test.expect(2)
             test.ok(validate({
                 action:"create",
-                id:"john",
-                newId:"bill",
-                email:"john@johnmcalhoun.com",
+                id:faker.internet.userName(),
+                newId:faker.internet.userName(),
+                email:faker.internet.email(),
                 B:crypto.randomBytes(4096).toString('hex'),
                 group:"user",
                 messageId:"addd",
@@ -250,7 +267,7 @@ module.exports={
             
             test.ok(!validate({
                 action:"create",
-                id:"john",
+                id:faker.internet.userName(),
                 B:"11",
                 group:"user"
             },messageschema).valid,"reject invalid create")
@@ -261,30 +278,32 @@ module.exports={
             test.expect(2)
             test.ok(validate({
                 action:"delete",
-                id:"john"
+                id:faker.internet.userName()
             },messageschema).valid,"accept proper delete")
             
             test.ok(!validate({
                 action:"Delete",
-                id:"john"
+                id:faker.internet.userName()
             },messageschema).valid,"reject invalid delete")
             
             test.done()
         },
         session:function(test){
             test.expect(2)
-            test.ok(validate({
+            
+            var data={
                 action:"session",
-                id:"john",
+                id:faker.internet.userName(),
                 B:crypto.randomBytes(4096).toString('hex'),
                 token:"111111",
                 messageId:"addd",
                 hotp:crypto.randomBytes(1024).toString('hex')
-            },messageschema).valid,"accept proper session")
+            }
+            test.ok(validate(data,messageschema).valid,"accept proper session")
             
             test.ok(!validate({
                 action:"session",
-                id:"john",
+                id:faker.internet.userName(),
                 B:"11",
                 token:"11"
             },messageschema).valid,"reject invalid session")
@@ -295,13 +314,13 @@ module.exports={
             test.expect(2)
             test.ok(validate({
                 action:"changeEmail",
-                id:"john",
-                email:"john@m.com"
+                id:faker.internet.userName(),
+                email:faker.internet.email()
             },messageschema).valid,"accept proper changeEmail")
             
             test.ok(!validate({
                 action:"changeEmail",
-                id:"john",
+                id:faker.internet.userName(),
                 email:"johnm.com"
             },messageschema).valid,"reject invalid changeEmail")
             
@@ -311,12 +330,12 @@ module.exports={
             test.expect(2)
             test.ok(validate({
                 action:"delete",
-                id:"john"
+                id:faker.internet.userName()
             },messageschema).valid,"accept proper get")
             
             test.ok(!validate({
                 action:"delete",
-                id:"john",
+                id:faker.internet.userName(),
                 email:"johnm.com"
             },messageschema).valid,"reject invalid get")
             
@@ -326,14 +345,14 @@ module.exports={
             test.expect(2)
             test.ok(validate({
                 action:"changePassword",
-                id:"john",
+                id:faker.internet.userName(),
                 salt:crypto.randomBytes(32).toString('hex'),
                 verifier:crypto.randomBytes(4096).toString('hex')
             },messageschema).valid,"accept proper changePassword")
             
             test.ok(!validate({
                 action:"changePassword",
-                id:"john",
+                id:faker.internet.userName(),
                 email:"johnm.com"
             },messageschema).valid,"reject invalid changePassword")
             
@@ -391,14 +410,14 @@ module.exports={
                 var hotp=SRPClient.getHotp(username,password,result.salt)
                 var A=SRP.A(64)
 
-                srp.getSharedKey(A,username,hotp)
-                .then(function(result){
-                    test.ok(result.b)
-                    test.ok(result.B)
-                    test.ok(result.key)
-                    test.done()
-                },function(err){console.log(err);test.done();})
+                return srp.getSharedKey(A,username,hotp)
             })
+            .then(function(result){
+                test.ok(result.b)
+                test.ok(result.B)
+                test.ok(result.key)
+            })
+            .finally(test.done)
         },
 
         tearDown:function(callback){
@@ -437,19 +456,20 @@ module.exports={
                 })
                 .then(function(out){
                     test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
             noMessage:function(test){
                 var data={a:"b"}
                 sign(data,null)
                 .then(function(out){
                     test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             }
         },
         Mfa:function(test){
+            test.expect(3);
             mfa.gen(username)
             .then(function(){
                 return mfa.get(username)
@@ -459,45 +479,45 @@ module.exports={
                     secret:results.secret,
                     encoding:'base32'
                 })
-                mfa.val(username,token)
-                .then(function(result){
-                    test.expect(3);
-                    test.ok(results.secret,"should return secret") 
-                    test.ok(results.qr,"should return qr") 
-                    test.ok(result,'should return something')
-                    test.done()
-                })
+                test.ok(results.secret,"should return secret") 
+                test.ok(results.qr,"should return qr") 
+                return mfa.val(username,token)
             })
+            .then(function(result){
+                test.ok(result,'should return something')
+            })
+            .finally(test.done)
         },
      
         Mfa2:function(test){
+            var secret
             mfa.gen(username)
             .then(function(){
                 return mfa.get(username)
             })
             .then(function(results){
+                secret=results.secret
                 var token=speakeasy.totp({
-                    secret:results.secret,
+                    secret:secret,
                     encoding:'base32'
                 })
-                mfa.val(username,token)
-                .then(function(result){
-                     var token=speakeasy.totp({
-                        secret:results.secret,
-                        encoding:'base32'
-                    })
-                    mfa.auth(username,token)
-                    .then(function(result){
-                        test.expect(1)
-                        test.ok(result)
-                        test.done()
-                    },function(err){
-                        test.expect(1)
-                        test.ifError(err)
-                        test.done()
-                    })
-                })
+                return mfa.val(username,token)
             })
+            .then(function(result){
+                 var token=speakeasy.totp({
+                    secret:secret,
+                    encoding:'base32'
+                })
+                return mfa.auth(username,token)
+            })
+            .then(function(result){
+                test.expect(1)
+                test.ok(result)
+            },function(err){
+                test.expect(1)
+                test.ifError(err)
+            })
+            .finally(test.done)
         },
         Remove:function(test){
             test.expect(1);
@@ -505,30 +525,28 @@ module.exports={
             ops.remove(username)
             .then(function(){
                 test.ok(true)
-                test.done()
             })
+            .finally(test.done)
         },
-
-        
      
         Create:function(test){
             test.expect(1);
             
-            ops.create("1","1308180","asdfasdfasdf","admin")
+            ops.create(faker.internet.userName(),faker.internet.email(),"1308180","asdfasdfasdf","admin")
             .then(function(){
                 test.ok(true)
-                test.done()
             })
+            .finally(test.done)
         },
      
         Update:function(test){
             test.expect(1);
             
-            ops.update(username,{email:"jerry"})
+            ops.update(username,{email:faker.internet.email()})
             .then(function(){
                 test.ok(true)
-                test.done()
             })
+            .finally(test.done)
         },
         check:{
             found:function(test){
@@ -536,26 +554,22 @@ module.exports={
                 ops.check({id:username})
                 .then(function(results){
                     test.ok(results)
-                    test.done()
                 },
                 function(err){
                     test.ifError(err);
-                    test.done()
-                }
-                )
+                })
+                .finally(test.done)
             },
             missing:function(test){
                 test.expect(1);
                 var tmp=ops.check({id:username+'not_here'})
                 tmp.then(function(results){
                     test.ok(!results)
-                    test.done()
                 },
                 function(err){
                     test.ok(err);
-                    test.done()
-                }
-                )
+                })
+                .finally(test.done)
             }
         },
         Get:function(test){
@@ -565,25 +579,22 @@ module.exports={
                 test.expect(2);
                 test.ok(results)
                 test.equal(results.id,username)
-                test.done()
             },
             function(err){
                 test.expect(1);
                 test.ifError(err);
-                test.done()
-            }
-            )
+            })
+            .finally(test.done)
         },
         
         Connect:function(test){
             test.expect(1);
-            
             connect()
             .then(function(con){
-                test.ok(con)
                 con.end()
-                test.done()
+                test.ok(con)
             })
+            .finally(test.done)
         },
  
         ConnectFail1:function(test){
@@ -594,8 +605,8 @@ module.exports={
             .then(null,
             function(err){
                 test.ok(err);
-                test.done()
             })
+            .finally(test.done)
         },
  
         ConnectFail2:function(test){
@@ -606,37 +617,39 @@ module.exports={
             .then(null,
             function(err){
                 test.ok(err);
-                test.done()
             })
+            .finally(test.done)
         },
         Session:{ 
             Success:function(test){
-                verifier_promise.then(function(material){
-                    mfa.gen(username)
-                    .then(function(){
-                        return mfa.get(username)
-                    })
-                    .then(function(results){
-                        var token=speakeasy.totp({
-                            secret:results.secret,
-                            encoding:'base32'
-                        })
-                        var B=material.A
-
-                        session(username,B,token).then(
-                            function(results){
-                                test.expect(1);
-                                test.ok(results)
-                                test.done()
-                            },
-                            function(err){
-                                test.expect(1);
-                                test.ifError(err)
-                                test.done()
-                            }
-                        )
-                    })
+                
+                mfa.gen(username)
+                .then(function(){
+                    return Promise.join(
+                        verifier_promise,mfa.get(username),
+                        function(material,results){
+                            return {secret:results.secret,A:material.A} 
+                        } 
+                    )
                 })
+                .then(function(results){
+                    var token=speakeasy.totp({
+                        secret:results.secret,
+                        encoding:'base32'
+                    })
+                    var B=results.A
+
+                    return session(username,B,token)
+                })
+                .then(function(results){
+                    test.expect(1);
+                    test.ok(results)
+                },
+                function(err){
+                    test.expect(1);
+                    test.ifError(err)
+                })
+                .finally(test.done)
             },
             Fail:function(test){
                 mfa.gen(username)
@@ -647,11 +660,10 @@ module.exports={
                     return(session(username,"1","111111"))
                 })     
                 .then(function(results){
-                        test.expect(1);
-                        test.ok(!results)
-                        test.done()
-                    }
-                )  
+                    test.expect(1);
+                    test.ok(!results)
+                })  
+                .finally(test.done)
             }
         },
         Lambda:{
@@ -680,8 +692,8 @@ module.exports={
                 })
                 .then(function(out){
                     test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
          
             MFAVal:function(test){
@@ -698,8 +710,8 @@ module.exports={
                 })
                 .then(function(out){
                     test.ok(validate(out,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
           
             Get:function(test){
@@ -719,8 +731,8 @@ module.exports={
                 })
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
              
             Salt:function(test){
@@ -733,8 +745,8 @@ module.exports={
                 handler.actions.salt(message)
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
            
             Create:function(test){
@@ -757,8 +769,8 @@ module.exports={
                 })
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
           
             Remove:function(test){
@@ -772,8 +784,8 @@ module.exports={
                 handler.actions.delete(message)
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
          
             ChangeEmail:function(test){
@@ -781,14 +793,14 @@ module.exports={
                 var message={
                     action:"changeEmail",
                     id:username,
-                    email:"test@test.com"
+                    email:faker.internet.email()
                 }
                 
                 handler.actions.changeEmail(message)
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
 
             ChangePassword:function(test){
@@ -803,8 +815,8 @@ module.exports={
                 handler.actions.changePassword(message)
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
 
             ResetPassword:function(test){
@@ -817,8 +829,8 @@ module.exports={
                 handler.actions.resetPassword(message)
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
             Session:function(test){
                 test.expect(1)
@@ -849,8 +861,8 @@ module.exports={
                 })
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
-                    test.done()
                 })
+                .finally(test.done)
             },
             Handler:function(test){
                 Promise.all([key_promise,verifier_promise])
@@ -884,19 +896,36 @@ module.exports={
                         }
                     process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
                     process.env.RSA_KMS_KEY=config.keyArn
-                    
-                    var event={
-                        body:JSON.stringify(body)
-                    }
+                   
+                    test.expect(2);
+                    var success=new Promise(function(resolve,reject){
+                        var event={
+                            body:JSON.stringify(body)
+                        }
 
-                    callback=function(err,data){
-                        if(err)console.log(err)
-                        test.expect(1);
-                        test.ifError(err)
-                        test.done()
-                    }
+                        callback=function(err,data){
+                            test.ifError(err)
+                            resolve()
+                        }
+                        
+                        handler.handler(event,null,callback)
+                    })
                     
-                    handler.handler(event,null,callback)
+                    var fail=new Promise(function(resolve,reject){
+                        var event={
+                            body:crypto.randomBytes(20).toString('hex')
+                        }
+
+                        callback=function(err,data){
+                            test.ok(err)
+                            resolve()
+                        }
+                        
+                        handler.handler(event,null,callback)
+                    })
+
+                    Promise.all([success,fail])
+                    .finally(test.done)
                 }
             )
         }

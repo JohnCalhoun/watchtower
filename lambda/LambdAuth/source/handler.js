@@ -7,6 +7,7 @@ var session=require('./session.js')
 var sign=require('./sign.js')
 var log=require('./log.js')
 var srp = require('./srp.js');
+var Promise=require('bluebird')
 
 var validate=require('jsonschema').validate
 var messageschema=require(__dirname+'/assets/messageschema.json')
@@ -143,44 +144,47 @@ actions.session=function(message){
 
 exports.actions=actions
 
-var val=function(doc,schema){
-    return new Promise(function(resolve,reject){
-        if(validate(doc,schema).valid){
-            resolve(doc)
-        }else{
-            reject()
-        }
-    })
+var val=function(doc,schema,id){
+    return validate(doc,schema).valid ? Promise.resolve(doc) : Promise.reject("ValidationFailed:"+id)
 }
 
 exports.handler = function(event, context,callback) {
 
-    val(JSON.parse(event.body),bodyschema)
+    var work=Promise.try(function(){
+        return JSON.parse(event.body)
+    })
+    .then(function(body){
+        return val(body,bodyschema,"Body")
+    })
     .then(function(message){ 
         return decrypt(message)
     })
     .then(function(message){
-        return val(message,messageschema)
+        return val(message,messageschema,"message")
     })
     .then(function(message){
-        if(message.action!=='create'){
-            return ops.check(message)
-        }else{
-            return message
-        }
+        return message.action!=='create' ? ops.check(message) : message
     })
     .then(function(message){
         return actions[message.action](message) 
     })
     .then(
         function(material){
-            callback(null,material)
+            return {err:null,data:material}
         },
         function(err){
-            log.log(err,log.levels.error)
-            callback(true)
+            log.log("Error: "+err,log.levels.error)
+            return {err:true,data:null}
         }
     )
+    .finally(function(){})
+
+    Promise.join(
+        work,
+        Promise.delay(1*1000),
+        function(result){
+            callback(result.err,result.data) 
+        })
 }
 
 

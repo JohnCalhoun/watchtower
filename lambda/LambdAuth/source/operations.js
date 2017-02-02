@@ -1,7 +1,7 @@
 var mysql=require('mysql')
 var sql=require('sql')
 var connect=require('./connect.js')
-
+var Promise=require('bluebird')
 sql.setDialect('mysql')
 
 var users=sql.define({
@@ -52,11 +52,7 @@ var run_query=function(query){
                 query.values,
                 function(err,results){
                     conn.end()
-                    if(err){
-                        reject(err)
-                    }else{
-                        resolve(results)
-                    }
+                    err ? reject(err) : resolve(results)
                 }
             )
         })

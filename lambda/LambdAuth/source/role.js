@@ -2,16 +2,13 @@ var aws=require('aws-sdk')
 var sts=new aws.STS({region:process.env.REGION})
 var hb=require('handlebars')
 var fs=require('fs')
+var Promise=require('bluebird')
 
 var assume_role=function(params){
     return new Promise(function(resolve,reject){ 
         sts.assumeRole(params,
             function(err,data){
-                if(err){
-                    reject(err)  
-                }else{
-                    resolve(data.Credentials)
-                }
+                err ? reject(err) : resolve(data.Credentials)
             }
         )
     })

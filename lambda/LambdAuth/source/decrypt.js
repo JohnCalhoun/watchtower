@@ -4,6 +4,7 @@ var validate=require('jsonschema').validate
 var messageschema=require(__dirname+'/assets/messageschema.json')
 var bodyschema=require(__dirname+'/assets/bodyschema.json')
 
+var Promise=require('bluebird')
 var KMS=require('./KMS.js')
 
 module.exports=function(input){

@@ -1,6 +1,7 @@
 var speakeasy=require('speakeasy')
 var qr=require('qr-image')
 var ops=require('./operations')
+var Promise=require('bluebird')
 
 var KMS=require('./KMS.js')
 

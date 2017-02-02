@@ -5,6 +5,8 @@ var schema=require(__dirname+'/assets/returnschema.json')
 var srp=require('./srp.js')
 var log=require('./log.js')
 
+var Promise=require('bluebird')
+
 var algorithm="aes-256-gcm"
 
 var KMS=require('./KMS.js')

@@ -6,6 +6,7 @@ var bitlength=32
 var SRP=require_helper('SRP/srp.js')('modp18',bitlength)
 var SRPClient = require_helper('SRP/client.js')('modp18',bitlength);
 var SRPServer = require_helper('SRP/server.js')('modp18',bitlength);
+var faker=require('faker')
 
 var util=require_helper('SRP/util.js')
 
@@ -22,7 +23,7 @@ module.exports={
         hash:function(test){
             test.expect(1)
             
-            var text='hello'
+            var text=faker.lorem.words()
             var result=util.hash('sha256')(text)
             
             test.notEqual(text,result)
@@ -122,9 +123,9 @@ module.exports={
             var A =new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex')
             var a =util.toBigInteger(new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex'))
             var s = new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex');
-             
-            username='john'
-            password='password'
+ 
+            var username=faker.internet.userName()
+            var password=faker.internet.password()
 
             var value=SRP.clientS(A,B,a,username,password,s).key
             test.ok(value)
@@ -157,8 +158,9 @@ module.exports={
         }
     },
     register:function(test){
-        var username="john"
-        var password="password"
+        var username=faker.internet.userName()
+        var password=faker.internet.password()
+
 
         var verifier=SRPClient.getSaltVerifier(username,password)
        
@@ -168,8 +170,8 @@ module.exports={
         test.done()
     },
     exchange:function(test){
-        var username="john"
-        var password="password"
+        var username=faker.internet.userName()
+        var password=faker.internet.password()
 
         var verifier=SRPClient.getSaltVerifier(username,password)
 

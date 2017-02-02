@@ -8,11 +8,11 @@
             },
             "id":{
                 "type":"string",
-                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,30}$"
             },
             "newId":{
                 "type":"string",
-                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,30}$"
             },
             "email":{
                 "type":"string",
@@ -75,7 +75,7 @@
             },
             "id":{
                 "type":"string",
-                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,30}$"
             },
             "token":{
                 "type":"sting",
@@ -108,7 +108,7 @@
             },
             "id":{
                 "type":"string",
-                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,30}$"
             },
             "email":{
                 "type":"string",
@@ -128,7 +128,7 @@
             },
             "id":{
                 "type":"string",
-                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,14}$"
+                "pattern":"^[A-Za-z][A-Za-z0-9._]{3,30}$"
             }
         },
         "required":[

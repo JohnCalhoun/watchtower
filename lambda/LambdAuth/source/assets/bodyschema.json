@@ -13,9 +13,6 @@
         "payload":{
             "type":"string",
             "minLength":1
-        },
-        "messageId":{
-            "type":"string"
         }
     },
     "required":[
@@ -48,7 +45,7 @@
         }
     },
     "required":[
-        "id","token","B","hotp"
+        "id","token","B","hotp","messageId"
     ],
     "additionalProperties":false
     }

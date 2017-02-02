@@ -2,6 +2,7 @@ var aws=require('aws-sdk')
 var ses=new aws.SES({region:process.env.REGION})
 var hb=require('handlebars')
 var fs=require('fs')
+var Promise=require('bluebird')
 
 var EmailTemplate = require('email-templates').EmailTemplate
 var path = require('path')
