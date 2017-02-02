@@ -138,6 +138,7 @@ module.exports=function(group,keylength,saltLength){
         if(util.isZero(B_int)) throw "Invalid B"
         if(util.isZero(A_int)) throw "Invalid A"
         if(!B_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
+        if(!A_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
     }
 
     SRP.clientS = function(A,B,a,I,P,s) {
