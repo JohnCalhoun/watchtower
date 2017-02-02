@@ -177,11 +177,13 @@ module.exports={
                 payload=JSON.stringify(payload_object)
 
                 //generate symetric key
+                var iv=crypto.randomBytes(64).toString('hex')
                 var pass=crypto.randomBytes(20).toString('hex')
-                var algorithm='aes-256-cbc-hmac-sha256'
+                var algorithm='aes-256-gcm'
 
                 //encrypt payload with symetric key
-                var cipher = crypto.createCipher(algorithm,pass)
+                var cipher = crypto.createCipher(algorithm,pass,iv)
+                
                 var ciphertext = cipher.update(payload,'utf8','hex')
                 ciphertext += cipher.final('hex');
 
@@ -191,8 +193,11 @@ module.exports={
                 var body={
                         payload:ciphertext,
                         key:cipherKey,
-                        algorithm:algorithm
+                        algorithm:algorithm,
+                        iv:iv,
+                        tag:cipher.getAuthTag().toString('hex')
                     }
+
                 process.env.RSA_PRIVATE_KEY=material[0].privateKeyEncrypted
                 process.env.RSA_PUBLIC_KEY=material[0].publicKey
                 process.env.RSA_KMS_KEY=config.keyArn
@@ -654,7 +659,7 @@ module.exports={
                     return(session(username,"1","111111"))
                 })     
                 .then(null,function(results){
-                    test.ok(!results)
+                    test.ok(results)
                 })  
                 .finally(test.done)
             }
@@ -871,11 +876,12 @@ module.exports={
                     payload=JSON.stringify(payload_object)
 
                     //generate symetric key
+                    var iv=crypto.randomBytes(64).toString('hex')
                     var pass=crypto.randomBytes(20).toString('hex')
-                    var algorithm='aes-256-cbc-hmac-sha256'
+                    var algorithm='aes-256-gcm'
 
                     //encrypt payload with symetric key
-                    var cipher = crypto.createCipher(algorithm,pass)
+                    var cipher = crypto.createCipher(algorithm,pass,iv)
                     var ciphertext = cipher.update(payload,'utf8','hex')
                     ciphertext += cipher.final('hex');
 
@@ -885,7 +891,9 @@ module.exports={
                     var body={
                             payload:ciphertext,
                             key:cipherKey,
-                            algorithm:algorithm
+                            algorithm:algorithm,
+                            iv:iv,
+                            tag:cipher.getAuthTag().toString('hex')
                         }
                     process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
                     process.env.RSA_KMS_KEY=config.keyArn

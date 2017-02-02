@@ -126,7 +126,9 @@ actions.salt=function(message){
     .then(function(result){
         var output=result || {salt:crypto.randomBytes(64).toString('hex')} 
         return {
-            salt:output.salt
+            salt:output.salt,
+            publicKey:process.env.RSA_PUBLIC_KEY,
+            group:'modp18'
         }
     })
 } 

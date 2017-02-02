@@ -16,6 +16,10 @@ module.exports=function(group,keylength,saltLength){
     var N=util.toBigInteger(dh.getPrime())
     var htop_window=60
 
+    var wraps=function(a){
+        return util.wraps(a,g,N)
+    }
+
     SRP.constants=function(){
         return {
             g:g,
@@ -49,10 +53,18 @@ module.exports=function(group,keylength,saltLength){
     };
 
     SRP.A = function() {
-        var a=SRP.randomInt(keylength)
-        var result = g.modPow(a, N);
-        var A=util.toN(result);
+        var a,A,tmp
+        
+        var make=function(t){ 
+            if(t<=0) throw "Failed to Generate A"
 
+            a=SRP.randomInt(keylength)
+            tmp = g.modPow(a, N);
+            return !util.isZero(tmp) || wraps(a) ? tmp : make(--t) 
+        }
+
+        A=util.toN(make(10));
+        
         return {
             A:A,
             a:a
@@ -65,20 +77,29 @@ module.exports=function(group,keylength,saltLength){
     };
 
     SRP.B = function(v) {
-        var b=SRP.randomInt(keylength)
+        var b,B,tmp
         var k=SRP.k()
+        
+        var make=function(t){ 
+            if(t<=0) throw "Failed to Generate B"
 
-        var result = k.multiply(util.toBigInteger(v)).add(g.modPow(b, N)).mod(N);
-        var B=util.toN(result);
+            b=SRP.randomInt(keylength)
+            tmp = k.multiply(util.toBigInteger(v)).add(g.modPow(b, N)).mod(N);
+            return !util.isZero(tmp) || wraps(b) ? tmp : make(--t) 
+        }
+
+        var B=util.toN(make(10));
         return {B:B,b:b}
     };
 
     SRP.u = function(A,B) {
-        return util.toBigInteger(
+        var tmp=util.toBigInteger(
             publicHash(
                 A.toString('hex')+B.toString('hex')
             )
         );
+        if(util.isZero(tmp)) throw "Invalid B"
+        return tmp
     };
 
     SRP.clientHotp=function(I,P,s,win=htop_window){
@@ -110,11 +131,23 @@ module.exports=function(group,keylength,saltLength){
         return (check_time(0) || check_time(1))
      }
 
+    var ABcheck=function(A,B){
+        var B_int=util.toBigInteger(B)
+        var A_int=util.toBigInteger(A)
+
+        if(util.isZero(B_int)) throw "Invalid B"
+        if(util.isZero(A_int)) throw "Invalid A"
+        if(!B_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
+    }
+
     SRP.clientS = function(A,B,a,I,P,s) {
+        ABcheck(A,B)
+        var B_int=util.toBigInteger(B)
+       
         var x=SRP.x(I,P,s)
         var k=SRP.k()
         var u=SRP.u(A,B)
-        var B_int=util.toBigInteger(B)
+
         var v_int=g.modPow(x, N)
         
         var result = B_int.subtract(k.multiply(v_int)).modPow(a.add(u.multiply(x)), N);
@@ -124,19 +157,16 @@ module.exports=function(group,keylength,saltLength){
     };
 
     SRP.serverS = function(A,B,b,v) {
-        if(!util.toBigInteger(B).mod(N).equals(BigInteger.ZERO)){
-            var v_int=util.toBigInteger(v)
+        ABcheck(A,B)
+        var A_int=util.toBigInteger(A)
 
-            var A_int=util.toBigInteger(A)
-            var u_int=SRP.u(A,B)
- 
-            var result = A_int.multiply(v_int.modPow(u_int, N)).modPow(b, N);
-            var key=util.toN(result);
+        var v_int=util.toBigInteger(v)
+        var u_int=SRP.u(A,B)
 
-            return {key:key} 
-        }else{
-            return false
-        }
+        var result = A_int.multiply(v_int.modPow(u_int, N)).modPow(b, N);
+        var key=util.toN(result);
+
+        return {key:key} 
     };
 
     SRP.K=function(key){

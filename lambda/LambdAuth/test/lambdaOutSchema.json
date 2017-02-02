@@ -27,10 +27,17 @@
         "properties":{
             "salt":{
                 "type":"string"
+            },
+            "publicKey":{
+                "type":"string"
+            },
+            "group":{
+                "type":"string",
+                "enum":["modp18"]
             }
         },
         "required":[
-            "salt"
+            "salt","publicKey","group"
         ],
         "additionalProperties":false
     }

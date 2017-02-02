@@ -8,15 +8,23 @@
         },
         "algorithm":{
             "type":"string",
-            "enum":["aes-256-cbc-hmac-sha256"]
+            "enum":["aes-256-gcm"]
         },
         "payload":{
+            "type":"string",
+            "minLength":1
+        },
+        "iv":{
+            "type":"string",
+            "minLength":1
+        },
+        "tag":{
             "type":"string",
             "minLength":1
         }
     },
     "required":[
-        "key","algorithm","payload"
+        "key","algorithm","payload","iv"
     ],    
     "additionalProperties":false
     },

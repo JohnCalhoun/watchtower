@@ -13,8 +13,10 @@ module.exports=function(input){
         return KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64'))
         .then(function(privateKey){ 
             var pass=crypto.privateDecrypt(privateKey,Buffer.from(input.key,'base64'))
+             
+            var decipher = crypto.createDecipher(input.algorithm,pass,input.iv)
             
-            var decipher = crypto.createDecipher(input.algorithm,pass)
+            decipher.setAuthTag(Buffer.from(input.tag,'hex')) 
             var dec = decipher.update(input.payload,'hex','utf8')
             dec += decipher.final('utf8');
             

@@ -48,6 +48,21 @@ module.exports={
             
             test.equal(num.toString(),integer.toString())
             test.done()
+        },
+        isZero:function(test){
+            test.ok(util.isZero(new BigInteger('0')))
+            test.ok(!util.isZero(new BigInteger('1')))
+            test.done()
+        },
+        wraps:function(test){
+            var g=new BigInteger("2")
+            var a=new BigInteger("2")
+            var n1=new BigInteger("2")
+            var n2=new BigInteger("10")
+
+            test.ok(util.wraps(g,a,n1))
+            test.ok(!util.wraps(g,a,n2))
+            test.done()
         }
     },
     SRP:{
@@ -151,10 +166,12 @@ module.exports={
             var B =util.toN(new BigInteger('0000'),bitlength)
             var b =util.toBigInteger(new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex'))
             var v =new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex')
-            
-            var value=SRP.serverS(A,B,b,v).key
-            test.ok(!value)
-            test.done()
+            try{ 
+                var value=SRP.serverS(A,B,b,v).key
+            }catch(e){
+                test.ok(e)
+                test.done()
+            }
         }
     },
     register:function(test){
