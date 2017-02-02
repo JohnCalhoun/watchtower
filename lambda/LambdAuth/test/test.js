@@ -1,5 +1,6 @@
 process.env.REGION='us-east-1'
 process.env.AWS_LAMBDA_FUNCTION_NAME='test' 
+process.env.LAMBDA_WAIT_TIME='2' 
 
 var aws=require('aws-sdk')
 var Promise=require('bluebird')
@@ -37,7 +38,7 @@ process.env.KMS_KEY=config.keyArn
 process.env.RSA_KMS_KEY=config.keyArn
 process.env.ROLE_ARN=config.roleArn
 process.env.EMAIL_SOURCE="test@jmc.ninja"
-process.env.LOG_LEVEL='warn'
+process.env.LOG_LEVEL='Warn'
 
 validate=require('jsonschema').validate
 messageschema=require(__dirname+'/../source/assets/messageschema.json')
@@ -47,22 +48,8 @@ var faker=require('faker')
 var username=faker.internet.userName()
 var password=faker.internet.password()
 
+
 var key_promise=keys(config.keyArn)
-var password_promise=new Promise(function(resolve,reject){
-    kms.encrypt({
-        KeyId:process.env.KMS_KEY,
-        Plaintext:config.DBPassword,
-        EncryptionContext:{
-            user:'manage' 
-        }
-    },function(err,data){
-        if(err){
-            reject(err)
-        }else{
-            resolve(data.CiphertextBlob.toString('base64'))
-        }
-    })
-})
 
 var verifier_promise=new Promise(function(resolve,reject){
     var SRP = require_helper('SRP/srp.js')('modp18',1024,64)
@@ -118,18 +105,27 @@ module.exports={
     },
     Log:{
         log:function(test){
-            log.log("you should see this",log.levels.error)  
-            log.log("you should not see this",log.levels.info)  
+            log.log("you should see this","Error")  
+            log.log("you should not see this","Info")  
             test.done()
         },
-        metric:function(test){
+        action:function(test){
+            test.expect(1)
+            
+            log.action('test')
+            .then(function(){
+                test.ok(true)
+            })
+            .finally(test.done)
+        },
+        time:function(test){
             test.expect(1)
             var infos=[]
             var start=process.hrtime()
 
             infos.push({name:'example',time:process.hrtime(start)})
             
-            log.metric('test',infos)
+            log.times(infos)
             .then(function(){
                 test.ok(true)
             })
@@ -138,7 +134,7 @@ module.exports={
     },
     role:function(test){
         test.expect(3);
-        role.getCredentials(username,"admin")
+        role.getCredentials(username,"admin",true)
         .then(function(result){
             test.ok(result.AccessKeyId)
             test.ok(result.SecretAccessKey)
@@ -200,7 +196,7 @@ module.exports={
                 process.env.RSA_PRIVATE_KEY=material[0].privateKeyEncrypted
                 process.env.RSA_PUBLIC_KEY=material[0].publicKey
                 process.env.RSA_KMS_KEY=config.keyArn
-                
+
                 decrypt(body)
                 .then(function(data){
                     test.expect(2);
@@ -366,6 +362,7 @@ module.exports={
             process.env.DB_ENDPOINT="127.0.0.1"
             process.env.DB_USER="manage"
             process.env.DB_NAME='test'
+            process.env.DB_PASSWORD=config.DBPassword
 
             var connection=mysql.createConnection({
                     host:process.env.DB_ENDPOINT,
@@ -394,12 +391,9 @@ module.exports={
                             ).toString()
                         ].join(';'),
                         function(err){
+                            connection.end()
                             if(err)console.log(err)
-                            password_promise.then(function(password){
-                                connection.end()
-                                process.env.DB_PASSWORD=password
-                                callback()
-                            })
+                            callback()
                         }
                     )
            }) 
@@ -659,8 +653,7 @@ module.exports={
                 .then(function(){
                     return(session(username,"1","111111"))
                 })     
-                .then(function(results){
-                    test.expect(1);
+                .then(null,function(results){
                     test.ok(!results)
                 })  
                 .finally(test.done)

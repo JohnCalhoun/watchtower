@@ -3,11 +3,12 @@ var algorithm='aes-256-ctr'
 var validate=require('jsonschema').validate
 var messageschema=require(__dirname+'/assets/messageschema.json')
 var bodyschema=require(__dirname+'/assets/bodyschema.json')
-
+var log=require('./log.js')
 var Promise=require('bluebird')
 var KMS=require('./KMS.js')
 
 module.exports=function(input){
+    log.log("Begin Decypting message","Info")
      if(input.payload){
         return KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64'))
         .then(function(privateKey){ 

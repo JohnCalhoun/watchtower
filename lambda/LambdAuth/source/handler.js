@@ -149,6 +149,8 @@ var val=function(doc,schema,id){
 }
 
 exports.handler = function(event, context,callback) {
+    var timers={}
+    var times=[]
 
     var work=Promise.try(function(){
         return JSON.parse(event.body)
@@ -157,7 +159,11 @@ exports.handler = function(event, context,callback) {
         return val(body,bodyschema,"Body")
     })
     .then(function(message){ 
+        timers.decrypt=process.hrtime()
         return decrypt(message)
+    })
+    .tap(function(){
+        times.push({name:'decrypt',time:process.hrtime(timers.decrypt)})
     })
     .then(function(message){
         return val(message,messageschema,"message")
@@ -166,22 +172,30 @@ exports.handler = function(event, context,callback) {
         return message.action!=='create' ? ops.check(message) : message
     })
     .then(function(message){
-        return actions[message.action](message) 
+        return log.action(message.action)
+        .then(function(){ 
+            return actions[message.action](message) 
+        })
+    })
+    .tap(function(){
+        times.push({name:'action',time:process.hrtime(timers.action)})
+        return log.times(times)
     })
     .then(
         function(material){
             return {err:null,data:material}
         },
         function(err){
-            log.log("Error: "+err,log.levels.error)
+            log.log(err,"Error")
             return {err:true,data:null}
         }
     )
-    .finally(function(){})
+    .finally(function(){
+    })
 
     Promise.join(
         work,
-        Promise.delay(1*1000),
+        Promise.delay(process.env.LAMBDA_WAIT_TIME*1000),
         function(result){
             callback(result.err,result.data) 
         })

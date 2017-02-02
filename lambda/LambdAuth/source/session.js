@@ -12,10 +12,6 @@ module.exports=function(user,B,token){
     .then(function(result){
         return(role.getCredentials(user,result.groupId,result.mfaEnabled))
     })
-    .then(null,function(err){
-        log.log(err,log.levels.error)
-        return(false)
-    })
     
     return(out)
 }

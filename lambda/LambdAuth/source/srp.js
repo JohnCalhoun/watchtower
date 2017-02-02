@@ -14,7 +14,7 @@ exports.getSharedKey = function(A,user,hotp) {
         .then(function(results){
             var check=server.checkHotp(Buffer.from(results.verifier,'hex'),hotp)
             
-            return check ? results : Promise.reject('failed')
+            return check ? results : Promise.reject('Hotp check Failed')
         })
         .then(function(results){
             return server.genBandShared(A,results.salt,results.verifier)

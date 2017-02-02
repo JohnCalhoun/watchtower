@@ -10,11 +10,7 @@ exports.decrypt=function(input,context={}){
                 EncryptionContext:context
             },
             function(err,data){
-                if(err){    
-                    reject(err)
-                }else{
-                    resolve(data.Plaintext.toString())
-                }
+                err ? reject(err) : resolve(data.Plaintext.toString())
             }
         )
     })
@@ -27,11 +23,7 @@ exports.encrypt=function(input,context={}){
             Plaintext:input,
             EncryptionContext:context
         },function(err,data){
-            if(err){
-                reject(err)
-            }else{
-                resolve(data.CiphertextBlob.toString('base64'))
-            }
+            err ? reject(err) : resolve(data.CiphertextBlob.toString('base64'))
         })
     })
 }

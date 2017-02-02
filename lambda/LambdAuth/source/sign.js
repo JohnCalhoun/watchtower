@@ -33,26 +33,24 @@ var encapsulate=function(payload,key,aad){
 module.exports=function(output,message){
 
     return function(){
-        if(message){
-            return Promise.resolve()
-        }else{
-            return Promise.reject()
-        }
-    }().then(function(){
-        return Promise.all([
+        return message ? Promise.resolve() : Promise.reject()
+    }()
+    .then(function(){
+        return Promise.join(
             KMS.decrypt(Buffer.from(process.env.RSA_PRIVATE_KEY,'base64')),
-            srp.getSharedKey(message.B,message.id,message.hotp)
-            ])
+            srp.getSharedKey(message.B,message.id,message.hotp),
+            function(keys){ 
+                return keys
+            })
     })
-    .then(function(keys){
-        return encapsulate(output,keys[1].key,message.messageId)
+    .then(function(key){
+        return encapsulate(output,key,message.messageId)
     },function(){
         var size=Math.floor(Math.random()*(100-20)+20)
 
         var data=crypto.randomBytes(size).toString('hex')
         var key=crypto.randomBytes(size).toString('hex')
         var aad=Math.floor(Math.random()*1000)
-
         return encapsulate(data,key,aad.toString())
     })
 }
