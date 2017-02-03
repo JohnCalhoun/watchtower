@@ -98,7 +98,7 @@ module.exports=function(group,keylength,saltLength){
                 A.toString('hex')+B.toString('hex')
             )
         );
-        if(util.isZero(tmp)) throw "Invalid B"
+        if(util.isZero(tmp)) throw "Invalid u"
         return tmp
     };
 
@@ -137,8 +137,8 @@ module.exports=function(group,keylength,saltLength){
 
         if(util.isZero(B_int)) throw "Invalid B"
         if(util.isZero(A_int)) throw "Invalid A"
-        if(!B_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
-        if(!A_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
+        if(B_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
+        if(A_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid A"
     }
 
     SRP.clientS = function(A,B,a,I,P,s) {
