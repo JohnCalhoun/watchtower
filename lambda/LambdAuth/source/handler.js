@@ -124,7 +124,7 @@ actions.salt=function(message){
     
     return ops.get(message.id)
     .then(function(result){
-        var output=result || {salt:crypto.randomBytes(64).toString('hex')} 
+        var output=result || {salt:crypto.createHash('sha512').update(message.id).digest('hex')} 
         return {
             salt:output.salt,
             publicKey:process.env.RSA_PUBLIC_KEY,

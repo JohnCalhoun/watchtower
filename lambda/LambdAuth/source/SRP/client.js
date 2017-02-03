@@ -5,6 +5,7 @@ module.exports=function(group,keylength){
     out.getSaltVerifier=function(I,P){
         var salt=srp.generateSalt()
         var x=srp.x(I,P,salt)
+       
         return {
             v:srp.v(x),
             salt:salt
@@ -21,9 +22,11 @@ module.exports=function(group,keylength){
 
     out.getShared=function(A,B,a,I,P,s){
         var material=srp.clientS(A,B,a,I,P,s)
-        return {
-            key:srp.K(material.key)
-        }
+        
+        return srp.K(material.key,s)
+        .then(function(key){
+            return {key:key}
+        })
     }
 
     return out

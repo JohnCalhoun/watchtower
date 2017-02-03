@@ -3,18 +3,27 @@ var util=require('./util.js')
 var crypto = require('crypto');
 var randomBytes = crypto.randomBytes;
 var SRP={}
-var hash_type='sha512'
+var Promise=require('bluebird')
+var argon2=require('argon2')
 
+var hash_type='sha512'
 var passwordHash=util.hash(hash_type)
 var keyHash=util.hash(hash_type)
 var scrambleHash=util.hash(hash_type)
 var publicHash=util.hash(hash_type)
 
-module.exports=function(group,keylength,saltLength){
+module.exports=function(group,keylength=64,saltLength=64,htop_window=60){
     var dh=require('crypto').getDiffieHellman(group)
     var g=util.toBigInteger(dh.getGenerator())
     var N=util.toBigInteger(dh.getPrime())
-    var htop_window=60
+
+    var argonParams={
+        timeCost: 4, 
+        memoryCost: 15, 
+        parallelism: 2, 
+        type: argon2.argon2d,
+        raw:true,
+        hashLength:64}
 
     var wraps=function(a){
         return util.wraps(a,g,N)
@@ -26,8 +35,7 @@ module.exports=function(group,keylength,saltLength){
             N:N,
             htop_window:htop_window,
             group:group,
-            keylength:keylength,
-            saltLength:saltLength,
+            argon:argonParams
         }
     }
     SRP.randomInt=function(size) {
@@ -35,7 +43,7 @@ module.exports=function(group,keylength,saltLength){
     };
 
     SRP.generateSalt=function() {
-        return randomBytes(saltLength).toString('hex')
+        return randomBytes(keylength).toString('hex')
     };
 
     SRP.x = function(I,P,salt) {
@@ -131,18 +139,16 @@ module.exports=function(group,keylength,saltLength){
         return (check_time(0) || check_time(1))
      }
 
-    var ABcheck=function(A,B){
-        var B_int=util.toBigInteger(B)
+    var PublicCheck=function(A){
         var A_int=util.toBigInteger(A)
-
-        if(util.isZero(B_int)) throw "Invalid B"
         if(util.isZero(A_int)) throw "Invalid A"
-        if(B_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid B"
         if(A_int.mod(N).equals(BigInteger.ZERO))   throw "Invalid A"
     }
 
     SRP.clientS = function(A,B,a,I,P,s) {
-        ABcheck(A,B)
+        PublicCheck(A)
+        PublicCheck(B)
+
         var B_int=util.toBigInteger(B)
        
         var x=SRP.x(I,P,s)
@@ -158,7 +164,9 @@ module.exports=function(group,keylength,saltLength){
     };
 
     SRP.serverS = function(A,B,b,v) {
-        ABcheck(A,B)
+        PublicCheck(A)
+        PublicCheck(B)
+
         var A_int=util.toBigInteger(A)
 
         var v_int=util.toBigInteger(v)
@@ -170,14 +178,17 @@ module.exports=function(group,keylength,saltLength){
         return {key:key} 
     };
 
-    SRP.K=function(key){
-        return keyHash(key.toString('hex')).toString('hex')
+    SRP.K=function(key,salt){
+        return argon2.hash(key.toString('hex'),Buffer.from(salt),argonParams)
+        .then(function(hash){
+            return hash.toString('hex')
+        })
     }
     SRP.debug=function(A,B,a,b,I,P,s){
         var u=SRP.u(A,B)
         var x=SRP.x(I,P,s)
 
-        return SRP.K(util.toN(g.modPow(b,N).modPow(a.add(u.multiply(x)),N)))
+        return SRP.K(util.toN(g.modPow(b,N).modPow(a.add(u.multiply(x)),N)),s)
     }
     return SRP
 }

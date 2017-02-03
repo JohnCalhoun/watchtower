@@ -1,4 +1,5 @@
 var aws=require('aws-sdk')
+
 var kms=new aws.KMS({region:process.env.REGION})
 var Promise=require('bluebird')
 

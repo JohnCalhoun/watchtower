@@ -12,6 +12,7 @@
   "author": "John M Calhoun",
   "license": "ISC",
   "dependencies": {
+    "argon2": "^0.15.0",
     "aws": "0.0.3-2",
     "bluebird": "^3.4.7",
     "email-templates": "^2.5.4",

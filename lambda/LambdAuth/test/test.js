@@ -734,17 +734,28 @@ module.exports={
             },
              
             Salt:function(test){
-                test.expect(1)
+                test.expect(2)
                 var message={
                     action:"salt",
                     id:username
                 }           
-               
-                handler.actions.salt(message)
+
+                var messagefalse={
+                    action:"salt",
+                    id:username+'notreal'
+                }
+                if(!process.env.RSA_PUBLIC_KEY)process.env.RSA_PUBLIC_KEY="dumbyvalue"
+                var success=handler.actions.salt(message)
                 .then(function(data){
                     test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
                 })
-                .finally(test.done)
+
+                var missing=handler.actions.salt(messagefalse)
+                .then(function(data){
+                    test.ok(validate(data,lambdaOutSchema).valid,"output doesnt match schema")
+                })
+                
+                Promise.all([success,missing]).finally(test.done)
             },
            
             Create:function(test){

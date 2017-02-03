@@ -2,7 +2,7 @@ var require_helper=require('./require_helper.js')
 var BigInteger = require('jsbn').BigInteger;
 var crypto=require('crypto')
 var bitlength=32
-
+var Promise=require('bluebird')
 var SRP=require_helper('SRP/srp.js')('modp18',bitlength)
 var SRPClient = require_helper('SRP/client.js')('modp18',bitlength);
 var SRPServer = require_helper('SRP/server.js')('modp18',bitlength);
@@ -132,6 +132,15 @@ module.exports={
             test.done()
 
         },
+        K:function(test){
+            test.expect(1)
+
+            SRP.K(new Buffer('asdfasdfasdf'),'111111111111111')
+            .then(function(value){
+                test.ok(value.length=64)
+                test.done()
+            })//.finally(test.done)
+        },
         clientS:function(test){
             test.expect(1)
             var B =new Buffer('beb25379d1a8581eb5a727673a2441ee', 'hex')
@@ -204,49 +213,68 @@ module.exports={
 
         var check=SRPServer.checkHotp(verifier.v,hotp) 
         test.ok(check)
-        var serverMaterial=SRPServer.genBandShared(
+        
+        var serverPromise=SRPServer.genBandShared(
             clientMaterial.A,
             verifier.salt,
             verifier.v
         )
 
-        test.ok(serverMaterial.key)
-        test.ok(serverMaterial.B)
-        
-        var clientKey=SRPClient.getShared(
-            clientMaterial.A,
-            serverMaterial.B,
-            clientMaterial.a,
-            username,
-            password,
-            verifier.salt)
 
-        test.ok(clientKey.key) 
-        
-        var common=SRP.debug(
-            clientMaterial.A,
-            serverMaterial.B,
-            clientMaterial.a,
-            serverMaterial.b,
-            username,
-            password,
-            verifier.salt
+        var clientPromise=serverPromise
+        .then(function(serverMaterial){
+
+            test.ok(serverMaterial.key)
+            test.ok(serverMaterial.B)
+            
+            return SRPClient.getShared(
+                clientMaterial.A,
+                serverMaterial.B,
+                clientMaterial.a,
+                username,
+                password,
+                verifier.salt)
+        })
+    
+        var debugPromise=Promise.join(
+            clientPromise,
+            serverPromise,
+            function(clientKey,serverMaterial){
+
+                test.ok(clientKey.key) 
+                return SRP.debug(
+                    clientMaterial.A,
+                    serverMaterial.B,
+                    clientMaterial.a,
+                    serverMaterial.b,
+                    username,
+                    password,
+                    verifier.salt
+                )
+            }
         )
-        test.equal(
-            clientKey.key,
-            common
-        )
-        test.equal(
-            serverMaterial.key,
-            common
-        )
-        test.equal(
-            serverMaterial.key,
-            clientKey.key
-        )
-        
-        test.done()
-    }}
+
+        Promise.join(
+            clientPromise,
+            serverPromise,
+            debugPromise,
+            function(clientKey,serverMaterial,common){
+                test.equal(
+                    clientKey.key,
+                    common
+                )
+                test.equal(
+                    serverMaterial.key,
+                    common
+                )
+                test.equal(
+                    serverMaterial.key,
+                    clientKey.key
+                )
+            }
+        ).finally(test.done)
+    }
+}
      
 
 

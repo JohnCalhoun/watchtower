@@ -51,13 +51,8 @@ var check=function(id,enabled,token){
                         encoding:'base32',
                         token:token
                     })
-                if(val){
-                    resolve(true)
-                }else{
-                    reject("Authenication Failed")
-                }
-            },
-            reject)
+                val ? resolve(true) : reject("Authenication Failed")
+            })
         }else{
             resolve(true)
         }

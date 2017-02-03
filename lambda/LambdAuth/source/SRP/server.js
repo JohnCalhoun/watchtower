@@ -14,11 +14,14 @@ module.exports=function(group,keylength){
             verifier
         ) 
 
-        return {
-            key:srp.K(key.key),
-            B:Bs.B,
-            b:Bs.b
-        }
+        return srp.K(key.key,salt)
+        .then(function(key){
+            return {
+                key:key,
+                B:Bs.B,
+                b:Bs.b
+            }
+        })
     }
 
     return out
