@@ -15,6 +15,9 @@
             "algorithm":{
                 "type":"string",
                 "enum":["aes-256-gcm"]
+            },
+            "B":{
+                "type":"string"
             }
         },
         "required":[

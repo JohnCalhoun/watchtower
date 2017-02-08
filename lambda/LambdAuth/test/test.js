@@ -30,7 +30,6 @@ var role=require_helper('role.js')
 var srp=require_helper('srp.js')
 var session=require_helper('session.js')
 var sign=require_helper('sign.js')
-var KMS=require_helper('KMS.js')
 var log=require_helper('log.js')
 
 var db=ops.db
@@ -66,43 +65,6 @@ var verifier_promise=new Promise(function(resolve,reject){
     })
 })
 module.exports={
-    KMS:{
-        Encrypt:function(test){
-            test.expect(1)
-            var text=faker.lorem.word()
-            KMS.encrypt(text)
-            .then(function(cipher){
-                test.ok(cipher.toString("base32"))
-            })
-            .finally(test.done)
-        },
-        
-        EncryptFail:function(test){
-            test.expect(1)
-            process.env.KMS_KEY="adf"
-            var text=faker.lorem.word()
-            KMS.encrypt(text)
-            .then(null,function(err){
-                process.env.KMS_KEY=config.keyArn
-                test.ok(err)
-            })
-            .finally(test.done)
-        },
-        
-        Decrypt:function(test){
-            test.expect(1)
-            var text=faker.lorem.word()
-
-            KMS.encrypt(text)
-            .then(function(cipher){
-                return KMS.decrypt(cipher)
-            })
-            .then(function(result){
-                test.equal(text,result)
-            })
-            .finally(test.done)
-        }
-    },
     Log:{
         log:function(test){
             log.log("you should see this","Error")  
@@ -197,8 +159,7 @@ module.exports={
                         iv:iv,
                         tag:cipher.getAuthTag().toString('hex')
                     }
-
-                process.env.RSA_PRIVATE_KEY=material[0].privateKeyEncrypted
+                process.env.RSA_PRIVATE_KEY=material[0].privateKey
                 process.env.RSA_PUBLIC_KEY=material[0].publicKey
                 process.env.RSA_KMS_KEY=config.keyArn
 
@@ -442,12 +403,9 @@ module.exports={
         Sign:{
             message:function(test){
                 var publicKey
-                Promise.all([verifier_promise,key_promise])
+                Promise.all([verifier_promise])
                 .then(function(result){
-                    process.env.RSA_PRIVATE_KEY=result[1].privateKeyEncrypted
-                    publicKey=result[1].publicKey
                     var data={a:"b"}
-                     
                     var SRPClient = require_helper('SRP/client.js')('modp18',1024);
                     var hotp=SRPClient.getHotp(username,password,result[0].salt)
 
@@ -668,7 +626,7 @@ module.exports={
             setUp:function(callback){
                 Promise.all([key_promise])
                 .then(function(results){
-                    process.env.RSA_PRIVATE_KEY=results[0].privateKeyEncrypted
+                    process.env.RSA_PRIVATE_KEY=results[0].privateKey
                     callback() 
                 })
             },
@@ -906,7 +864,7 @@ module.exports={
                             iv:iv,
                             tag:cipher.getAuthTag().toString('hex')
                         }
-                    process.env.RSA_PRIVATE_KEY=keypair.privateKeyEncrypted
+                    process.env.RSA_PRIVATE_KEY=keypair.privateKey
                     process.env.RSA_KMS_KEY=config.keyArn
                    
                     test.expect(2);

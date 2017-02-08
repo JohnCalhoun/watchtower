@@ -1,5 +1,4 @@
 var mysql=require('mysql')
-var KMS=require('./KMS.js')
 var Promise=require('bluebird')
 
 module.exports=function(){

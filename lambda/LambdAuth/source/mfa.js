@@ -3,39 +3,19 @@ var qr=require('qr-image')
 var ops=require('./operations')
 var Promise=require('bluebird')
 
-var KMS=require('./KMS.js')
-
 exports.gen=function(id){
-    return KMS.encrypt(
-        speakeasy.generateSecret().base32,
-        {
-            id:id,
-            type:"MFA_Secret"
-        }
-        )
-    .then(function(ciphertext){
-        return ops.update(id,{
-            mfaSecret:ciphertext,
-            mfaEnabled:false
-        })
+    return ops.update(id,{
+        mfaSecret:speakeasy.generateSecret().base32,
+        mfaEnabled:false
     })
 }
 
 exports.get=function(id){
     var out=ops.get(id)
     .then(function(results){
-        return KMS.decrypt(
-            Buffer.from(results.mfaSecret,'base64'),
-            {
-                id:id,
-                type:"MFA_Secret"
-            }
-        )
-    })
-    .then(function(secret){
         return({
-            secret:secret,
-            qr:qr.imageSync("otpauth://totp/SecretKey?secret="+secret).toString('base64')
+            secret:results.mfaSecret,
+            qr:qr.imageSync("otpauth://totp/SecretKey?secret="+results.mfaSecret).toString('base64')
         })
     })
     return(out)
