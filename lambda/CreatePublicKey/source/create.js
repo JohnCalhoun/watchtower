@@ -1,7 +1,5 @@
 var crypto=require('crypto')
 var rsa=require('node-rsa')
-var aws=require('aws-sdk')
-var kms=new aws.KMS({region:process.env.REGION})
 
 module.exports=function(params,reply){
     var keyArn=params.keyArn 
@@ -16,29 +14,14 @@ module.exports=function(params,reply){
     hash.update(pub)
     var fingerprint=hash.digest('hex')
 
-    kms.encrypt({
-        KeyId:keyArn,
-        Plaintext:priv,
-        EncryptionContext:{}
-    },function(err,data){
-        if(err){
-            reply(err)
-        }else{
-            priv=null
-            console.log(data.CiphertextBlob.toString('base64'))
-            console.log(pub)
-
-            reply(
-                null,
-                fingerprint,
-                { 
-                    privateKey:data.CiphertextBlob,
-                    publicKey:pub
-                }
-            )
+    reply(
+        null,
+        fingerprint,
+        { 
+            privateKey:priv,
+            publicKey:pub
         }
-    })
-
+    )
 }
 
 
