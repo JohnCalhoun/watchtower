@@ -10,11 +10,9 @@ var algorithm="aes-256-gcm"
 
 var encapsulate=function(payload,key,aad,B){
     var iv=crypto.randomBytes(64).toString('hex')
-
+    
     var cipher = crypto.createCipher(algorithm,key,iv);
-    
     cipher.setAAD(Buffer.from(aad))
-    
     var text=cipher.update(JSON.stringify(payload), 'utf8', 'hex');
     text+=cipher.final('hex')
     return {
@@ -35,7 +33,8 @@ module.exports=function(output,message){
     })
     .then(function(key){
         return encapsulate(output,Buffer.from(key.key,'hex'),message.messageId,key.B)
-    },function(){
+    },
+        function(){
         var size=Math.floor(Math.random()*(100-20)+20)
 
         var data=crypto.randomBytes(size).toString('hex')

@@ -3,10 +3,11 @@ var BigInteger = require('jsbn').BigInteger;
 var crypto=require('crypto')
 var bitlength=32
 var Promise=require('bluebird')
-var SRP=require_helper('SRP/srp.js')('modp18',bitlength)
-var SRPClient = require_helper('SRP/client.js')('modp18',bitlength);
-var SRPServer = require_helper('SRP/server.js')('modp18',bitlength);
 var faker=require('faker')
+
+var SRP=require_helper('SRP/srp.js')('modp14',bitlength)
+var SRPClient = require_helper('SRP/client.js')('modp14',bitlength);
+var SRPServer = require_helper('SRP/server.js')('modp14',bitlength);
 
 var util=require_helper('SRP/util.js')
 

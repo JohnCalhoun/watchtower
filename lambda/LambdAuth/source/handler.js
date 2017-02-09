@@ -6,8 +6,8 @@ var mfa=require('./mfa.js')
 var session=require('./session.js')
 var sign=require('./sign.js')
 var log=require('./log.js')
-var srp = require('./srp.js');
 var Promise=require('bluebird')
+var srp = require('./srp.js')('modp18');
 
 var validate=require('jsonschema').validate
 var messageschema=require(__dirname+'/assets/messageschema.json')
