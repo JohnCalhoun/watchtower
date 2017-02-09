@@ -8,11 +8,11 @@ var sign=require('./sign.js')
 var log=require('./log.js')
 var Promise=require('bluebird')
 var srp = require('./srp.js')('modp18');
+var config=require('./config.js')
 
 var validate=require('jsonschema').validate
 var messageschema=require(__dirname+'/assets/messageschema.json')
 var bodyschema=require(__dirname+'/assets/bodyschema.json')
-
 
 actions={}
 actions.create=function(message){
@@ -155,6 +155,12 @@ exports.handler = function(event, context,callback) {
     var times=[]
 
     var work=Promise.try(function(){
+        return config.get(process.env.CONFIG_BUCKET,process.env.CONFIG_FILE)         
+    })
+    .then(function(data){
+        config.merge(data,process.env)
+    })
+    .then(function(){
         return JSON.parse(event.body)
     })
     .then(function(body){

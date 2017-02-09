@@ -20,5 +20,6 @@ module.exports=function(group='modp18',bitlength=1024){
                 return server.genBandShared(A,results.salt,results.verifier)
             })
     }
+
     return out
 }

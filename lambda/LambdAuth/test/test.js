@@ -23,13 +23,11 @@ var role=require_helper('role.js')
 var session=require_helper('session.js')
 var sign=require_helper('sign.js')
 var log=require_helper('log.js')
+var Config=require_helper('config.js')
 
 var db=ops.db
-process.env.KMS_KEY=config.keyArn
-process.env.RSA_KMS_KEY=config.keyArn
 process.env.ROLE_ARN=config.roleArn
 process.env.EMAIL_SOURCE="test@jmc.ninja"
-process.env.LOG_LEVEL='Warn'
 
 var validate=require('jsonschema').validate
 var messageschema=require(__dirname+'/../source/assets/messageschema.json')
@@ -40,6 +38,26 @@ var SRP
 var srp
 
 module.exports={
+    Config:{
+        get:function(test){
+            Config.get("jmc-tmp-test","watchtower/config.json")
+            .then(function(data){
+                test.deepEqual(require('./test-config.json'),data)
+            })
+            .finally(test.done)
+        },
+        merge:function(test){
+            var input={a:'b',c:"d"}
+            var output={e:"f"}
+
+            Config.merge(input,output)
+            test.deepEqual(
+                output,
+                {a:'b',c:"d",e:"f"}
+                )
+            test.done()
+        }
+    },
     Log:{
         log:function(test){
             log.log("you should see this","Error")  
@@ -791,7 +809,8 @@ module.exports={
                         tag:cipher.getAuthTag().toString('hex')
                     }
                 process.env.RSA_PRIVATE_KEY=config.privateKey
-                process.env.RSA_KMS_KEY=config.keyArn
+                process.env.CONFIG_BUCKET="jmc-tmp-test"
+                process.env.CONFIG_FILE="watchtower/config.json"
                
                 test.expect(2);
                 var success=new Promise(function(resolve,reject){

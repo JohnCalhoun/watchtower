@@ -1,4 +1,4 @@
-"LambdaEncrypt":{
+"LambdaAuthRole":{
     "Type": "AWS::IAM::Role",
     "Properties": {
          "AssumeRolePolicyDocument": { 

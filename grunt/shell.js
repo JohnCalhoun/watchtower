@@ -9,7 +9,7 @@ module.exports={
         command:'aws s3 sync website/build s3://<%= WebsiteBucket %> '
     },
     buildLambda:{
-        command:'for dir in lambda/*; do cd lambda/$dir; grunt build;cd ../..; done'
+        command:'for dir in lambda/*; do cd $dir; grunt build;cd ../..; done'
     },
     AuthScript:{
         command:'cd lambda/LambdAuth; grunt dump'

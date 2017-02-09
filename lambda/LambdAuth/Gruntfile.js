@@ -69,7 +69,7 @@ module.exports=function(grunt){
         var ops=require('./source/operations.js')
         var SRP = require('./source/SRP/srp.js')('modp18',1024,64)
         var client = require('./source/SRP/client.js')('modp18',1024,64)
-        var srp = require('./source/srp.js');
+        var srp = require('./source/srp.js')('modp18',1024);
         
         var db=ops.db
         var material=srp.genVerifier(username,password) 
