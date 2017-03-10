@@ -9,15 +9,9 @@
         "Variables":{
             "LAMBDA_WAIT_TIME":"3",
             "LOG_LEVEL":"Info",
-            "DB_ENDPOINT":"",
-
-            "DB_USER":"",
-            "DB_PASSWORD":"",
-            "DB_NAME":"",
-            "EMAIL_SOURCE":"",
-            "ROLE_ARN":"",
-            "RSA_PRIVATE_KEY":"",
-            "RSA_PUBLIC_KEY":""
+            "DB_ENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+            "CONFIG_BUCKET":{"Ref":"ArtifactsBucket"},
+            "CONFIG_FILE":"watchtower/lambda/lambda-auth_config.json"
         } 
     },
     "Handler" : "handler.handler",

@@ -58,6 +58,11 @@
     },
     "Environment" : {
         "Variables":{
+            "LAMBDA_WAIT_TIME":"3",
+            "LOG_LEVEL":"Info",
+            "DB_ENDPOINT":{"Fn::GetAtt":["DB","Endpoint.Address"]},
+            "CONFIG_BUCKET":{"Ref":"ArtifactsBucket"},
+            "CONFIG_FILE":"watchtower/lambda/lambda-auth_config.json"
         } 
     },
     "Handler" : "handler.handler",

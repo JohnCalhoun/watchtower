@@ -48,6 +48,15 @@ module.exports=function(grunt){
         prepend.sync('./tmp/auth.sql','DROP DATABASE IF EXISTS auth;\n')
     })
 
+/*
+            "DB_USER":"",
+            "DB_PASSWORD":"",
+            "DB_NAME":"",
+            "EMAIL_SOURCE":"",
+            "ROLE_ARN":"",
+            "RSA_PRIVATE_KEY":"",
+            "RSA_PUBLIC_KEY":""
+*/
     
     grunt.registerTask('table',function(){
         var sql=require('sql')
